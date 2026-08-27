@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <clipPath id="circleClip">
+      <circle cx="256" cy="256" r="256"/>
+    </clipPath>
+  </defs>
+  <g clip-path="url(#circleClip)">
+    <path fill="#f0f0f0" d="M0 0h512v512H0z"/>
+    <path fill="#d80027" d="M0 39.385h512v39.385H0zm0 78.769h512v39.385H0zm0 78.769h512v39.385H0zm0 78.769h512v39.385H0zm0 78.77h512v39.384H0zm0 78.769h512v39.385H0zm0 78.769h512V512H0z"/>
+    <path fill="#0052b4" d="M0 0h256v275.692H0z"/>
+    <!-- Stars -->
+    <g fill="#f0f0f0">
+      <circle cx="36" cy="30" r="10"/>
+      <circle cx="84" cy="30" r="10"/>
+      <circle cx="132" cy="30" r="10"/>
+      <circle cx="180" cy="30" r="10"/>
+      <circle cx="228" cy="30" r="10"/>
+      
+      <circle cx="60" cy="62" r="10"/>
+      <circle cx="108" cy="62" r="10"/>
+      <circle cx="156" cy="62" r="10"/>
+      <circle cx="204" cy="62" r="10"/>
+
+      <circle cx="36" cy="94" r="10"/>
+      <circle cx="84" cy="94" r="10"/>
+      <circle cx="132" cy="94" r="10"/>
+      <circle cx="180" cy="94" r="10"/>
+      <circle cx="228" cy="94" r="10"/>
+
+      <circle cx="60" cy="126" r="10"/>
+      <circle cx="108" cy="126" r="10"/>
+      <circle cx="156" cy="126" r="10"/>
+      <circle cx="204" cy="126" r="10"/>
+
+      <circle cx="36" cy="158" r="10"/>
+      <circle cx="84" cy="158" r="10"/>
+      <circle cx="132" cy="158" r="10"/>
+      <circle cx="180" cy="158" r="10"/>
+      <circle cx="228" cy="158" r="10"/>
+
+      <circle cx="60" cy="190" r="10"/>
+      <circle cx="108" cy="190" r="10"/>
+      <circle cx="156" cy="190" r="10"/>
+      <circle cx="204" cy="190" r="10"/>
+
+      <circle cx="36" cy="222" r="10"/>
+      <circle cx="84" cy="222" r="10"/>
+      <circle cx="132" cy="222" r="10"/>
+      <circle cx="180" cy="222" r="10"/>
+      <circle cx="228" cy="222" r="10"/>
+
+      <circle cx="60" cy="254" r="10"/>
+      <circle cx="108" cy="254" r="10"/>
+      <circle cx="156" cy="254" r="10"/>
+      <circle cx="204" cy="254" r="10"/>
+    </g>
+  </g>
+</svg>

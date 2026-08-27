@@ -1,0 +1,151 @@
+import { NextResponse, type NextRequest } from "next/server";
+import { db } from "@/src/lib/db";
+import { users, refreshTokens, auditLogs } from "@/src/lib/db/schema";
+import { loginSchema } from "@/src/lib/auth/validation";
+import { verifyPassword } from "@/src/lib/auth/password";
+import {
+  signAccessToken,
+  generateRandomToken,
+  hashToken,
+  REFRESH_TOKEN_MAX_AGE_SECONDS,
+} from "@/src/lib/auth/jwt";
+import { setAuthCookies } from "@/src/lib/auth/cookies";
+import { eq } from "drizzle-orm";
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const validationResult = loginSchema.safeParse(body);
+
+    if (!validationResult.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Validation failed",
+          errors: validationResult.error.flatten().fieldErrors,
+        },
+        { status: 400 },
+      );
+    }
+
+    const { email, password } = validationResult.data;
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // 1. Fetch user by email
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, normalizedEmail))
+      .limit(1);
+
+    if (!user) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid email or password.",
+        },
+        { status: 401 },
+      );
+    }
+
+    // 2. Check if account is suspended
+    if (user.status === "SUSPENDED") {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Your account has been suspended. Please contact support.",
+        },
+        { status: 403 },
+      );
+    }
+
+    // 3. Verify password
+    const isPasswordValid = await verifyPassword(password, user.passwordHash);
+    if (!isPasswordValid) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid email or password.",
+        },
+        { status: 401 },
+      );
+    }
+
+    // 4. Generate new refresh token
+    const rawRefreshToken = generateRandomToken();
+    const hashedRefreshToken = hashToken(rawRefreshToken);
+    const refreshTokenExpiresAt = new Date(
+      Date.now() + REFRESH_TOKEN_MAX_AGE_SECONDS * 1000,
+    );
+
+    const ipAddress =
+      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      request.headers.get("x-real-ip") ||
+      "unknown";
+    const userAgent = request.headers.get("user-agent") || "unknown";
+
+    await db.insert(refreshTokens).values({
+      userId: user.id,
+      tokenHash: hashedRefreshToken,
+      userAgent,
+      ipAddress,
+      expiresAt: refreshTokenExpiresAt,
+    });
+
+    // 5. Audit log
+    await db.insert(auditLogs).values({
+      userId: user.id,
+      action: "USER_LOGIN",
+      ipAddress,
+      userAgent,
+      details: { email: normalizedEmail },
+    });
+
+    // 6. Sign JWT Access Token
+    const accessToken = await signAccessToken({
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+      status: user.status,
+      kycStatus: user.kycStatus,
+      fundingStatus: user.fundingStatus,
+    });
+
+    const response = NextResponse.json(
+      {
+        success: true,
+        message: "Login successful.",
+        data: {
+          user: {
+            id: user.id,
+            first_name: user.firstName,
+            last_name: user.lastName,
+            email: user.email,
+            phone_number: user.phoneNumber,
+            country: user.country,
+            referral_code: user.referralCode,
+            status: user.status,
+            kyc_status: user.kycStatus,
+            funding_status: user.fundingStatus,
+            role: user.role,
+            created_at: user.createdAt,
+          },
+          accessToken,
+        },
+      },
+      { status: 200 },
+    );
+
+    // 7. Attach HTTP-only cookies
+    return setAuthCookies(response, accessToken, rawRefreshToken);
+  } catch (error) {
+    console.error("Login error:", error);
+    return NextResponse.json(
+      {
+        success: false,
+        message: "An unexpected error occurred during login.",
+      },
+      { status: 500 },
+    );
+  }
+}
