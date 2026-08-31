@@ -8,6 +8,7 @@ import {
 } from "@/src/lib/hooks/useOnboardSetup";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
+import { useAppStore } from "@/src/lib/stores/appStore";
 
 const Complete = () => {
   const router = useRouter();
@@ -24,7 +25,9 @@ const Complete = () => {
   }, [run]);
 
   const handleFinish = () => {
-    router.push("/dashboard");
+    const isConnectedToRoboForex =
+      useAppStore.getState().isConnectedToRoboForex;
+    router.push(isConnectedToRoboForex ? "/dashboard" : "/dashboard/profile");
   };
 
   return (

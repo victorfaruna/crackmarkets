@@ -29,6 +29,9 @@ export interface UserProfile {
   email: string;
   phone_number: string;
   country: string;
+  telegram_handle?: string | null;
+  roboforex_linked?: boolean;
+  roboforex_id?: string | null;
   referral_code: string;
   referred_by_id?: string | null;
   status: "EMAIL_VERIFICATION_PENDING" | "ACTIVE" | "SUSPENDED";

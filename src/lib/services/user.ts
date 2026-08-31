@@ -11,6 +11,14 @@ export interface CurrentUserResponse {
   };
 }
 
+export interface UpdateUserPayload {
+  first_name?: string;
+  last_name?: string;
+  phone_number?: string;
+  country?: string;
+  telegram_handle?: string;
+}
+
 const getUser = async (): Promise<AuthResponse<CurrentUserResponse>> => {
   try {
     const { data } = await api.get("/auth/me");
@@ -20,5 +28,26 @@ const getUser = async (): Promise<AuthResponse<CurrentUserResponse>> => {
   }
 };
 
-export { getUser };
+const updateUser = async (
+  payload: UpdateUserPayload,
+): Promise<AuthResponse<{ user: UserProfile }>> => {
+  try {
+    const { data } = await api.patch("/auth/me", payload);
+    return data;
+  } catch (error) {
+    throw error;
+  }
+};
 
+const linkRoboForex = async (roboforexId: string): Promise<AuthResponse> => {
+  try {
+    const { data } = await api.post("/auth/link-roboforex", {
+      roboforex_id: roboforexId,
+    });
+    return data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export { getUser, updateUser, linkRoboForex };

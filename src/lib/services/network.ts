@@ -8,12 +8,22 @@ export interface NetworkMemberDTO {
   country: string;
   level: number;
   status: string;
+  referralCode?: string;
+  referredById?: string | null;
+  roboforexId?: string | null;
+  roboforexLinked?: boolean;
+  directsCount?: number;
+  indirectsCount?: number;
+  volume?: number;
+  lotsTraded?: number;
   createdAt: string;
 }
 
 export interface NetworkSummaryResponse {
   totalMembers: number;
   activeCount: number;
+  totalDirects: number;
+  totalIndirects: number;
   members: NetworkMemberDTO[];
 }
 

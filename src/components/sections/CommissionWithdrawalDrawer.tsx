@@ -6,6 +6,8 @@ import RightSideDrawer from "../shared/RightSideDrawer";
 import { useAppStore } from "@/src/lib/stores/appStore";
 import { formatCurrency } from "@/src/lib/utils/formatCurrency";
 
+import { useWithdrawFunds } from "@/src/lib/hooks/useWallet";
+
 interface CommissionWithdrawalDrawerProps {
   isOpen: boolean;
   onClose: () => void;
@@ -23,14 +25,15 @@ const NETWORKS = [
 export const CommissionWithdrawalDrawer: React.FC<
   CommissionWithdrawalDrawerProps
 > = ({ isOpen, onClose, availableBalance }) => {
-  const isConnectedToStockTrader = useAppStore(
-    (s) => s.isConnectedToStockTrader,
+  const isConnectedToRoboForex = useAppStore(
+    (s) => s.isConnectedToRoboForex,
   );
+  const { mutate: withdraw, isPending } = useWithdrawFunds();
 
   const [network, setNetwork] = useState("TRC20");
   const [address, setAddress] = useState("");
   const [amount, setAmount] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
   const [success, setSuccess] = useState(false);
 
   const numAmount = parseFloat(amount) || 0;
@@ -40,7 +43,7 @@ export const CommissionWithdrawalDrawer: React.FC<
   const netReceive = Math.max(0, numAmount - currentNetwork.fee);
 
   const handleMax = () => {
-    if (!isConnectedToStockTrader || !hasEnoughBalance) return;
+    if (!isConnectedToRoboForex || !hasEnoughBalance) return;
     setAmount(availableBalance.toString());
   };
 
@@ -55,8 +58,9 @@ export const CommissionWithdrawalDrawer: React.FC<
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMsg("");
     if (
-      !isConnectedToStockTrader ||
+      !isConnectedToRoboForex ||
       !hasEnoughBalance ||
       !address ||
       numAmount <= currentNetwork.fee ||
@@ -64,20 +68,30 @@ export const CommissionWithdrawalDrawer: React.FC<
     )
       return;
 
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      setSuccess(true);
-      setTimeout(() => {
-        setSuccess(false);
-        setAmount("");
-        setAddress("");
-        onClose();
-      }, 1200);
-    }, 700);
+    withdraw(
+      {
+        amount: numAmount,
+        address,
+        network,
+      },
+      {
+        onSuccess: () => {
+          setSuccess(true);
+          setTimeout(() => {
+            setSuccess(false);
+            setAmount("");
+            setAddress("");
+            onClose();
+          }, 1200);
+        },
+        onError: (err: any) => {
+          setErrorMsg(err?.response?.data?.message || "Failed to process withdrawal");
+        },
+      },
+    );
   };
 
-  const isFormDisabled = !isConnectedToStockTrader || !hasEnoughBalance;
+  const isFormDisabled = !isConnectedToRoboForex || !hasEnoughBalance || isPending;
 
   return (
     <RightSideDrawer
@@ -103,8 +117,8 @@ export const CommissionWithdrawalDrawer: React.FC<
           </span>
         </div>
 
-        {/* ─── Validation Alert 1: StockTrader Disconnected ─────────────── */}
-        {!isConnectedToStockTrader && (
+        {/* ─── Validation Alert 1: RoboForex Disconnected ─────────────── */}
+        {!isConnectedToRoboForex && (
           <div className="p-3 rounded-xl bg-error/10 border border-error/20 flex flex-col gap-2">
             <div className="flex items-start gap-2">
               <svg
@@ -121,10 +135,10 @@ export const CommissionWithdrawalDrawer: React.FC<
               </svg>
               <div className="flex flex-col gap-0.5">
                 <p className="text-xs font-medium text-error">
-                  StockTrader Not Connected
+                  RoboForex Not Connected
                 </p>
                 <p className="text-[11px] text-secondary/70">
-                  Connect your StockTrader account on your profile page to
+                  Connect your RoboForex account on your profile page to
                   enable commission withdrawals.
                 </p>
               </div>
@@ -140,7 +154,7 @@ export const CommissionWithdrawalDrawer: React.FC<
         )}
 
         {/* ─── Validation Alert 2: Insufficient Balance ─────────────────── */}
-        {isConnectedToStockTrader && !hasEnoughBalance && (
+        {isConnectedToRoboForex && !hasEnoughBalance && (
           <div className="p-3 rounded-xl bg-error/10 border border-error/20 flex items-start gap-2">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -273,6 +287,12 @@ export const CommissionWithdrawalDrawer: React.FC<
           </div>
         </div>
 
+        {errorMsg && (
+          <div className="p-3 rounded-xl bg-error/15 border border-error/30 text-error text-xs text-center font-medium">
+            {errorMsg}
+          </div>
+        )}
+
         {success && (
           <div className="p-3 rounded-xl bg-success/15 border border-success/30 text-success text-xs text-center font-medium">
             Withdrawal request submitted successfully.
@@ -283,8 +303,8 @@ export const CommissionWithdrawalDrawer: React.FC<
         <button
           type="submit"
           disabled={
-            loading ||
-            !isConnectedToStockTrader ||
+            isPending ||
+            !isConnectedToRoboForex ||
             !hasEnoughBalance ||
             !address ||
             numAmount <= currentNetwork.fee ||
@@ -292,10 +312,10 @@ export const CommissionWithdrawalDrawer: React.FC<
           }
           className="w-full h-12 rounded-full bg-secondary text-background font-medium text-xs hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed mt-1"
         >
-          {loading
+          {isPending
             ? "Processing..."
-            : !isConnectedToStockTrader
-              ? "Connect StockTrader to Withdraw"
+            : !isConnectedToRoboForex
+              ? "Connect RoboForex to Withdraw"
               : !hasEnoughBalance
                 ? "Insufficient Balance"
                 : "Withdraw Funds"}

@@ -12,6 +12,8 @@ export interface UserProfile {
   lastName?: string;
   phone_number?: string;
   country?: string;
+  telegram_handle?: string | null;
+  telegramHandle?: string | null;
   referral_code?: string;
   referred_by_id?: string | null;
   status?: "EMAIL_VERIFICATION_PENDING" | "ACTIVE" | "SUSPENDED" | string;

@@ -1,10 +1,12 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
-import { useUser } from "@/src/lib/hooks/useUser";
+import { useUser, useLinkRoboForex } from "@/src/lib/hooks/useUser";
 import { useUserStore } from "@/src/lib/stores/userStore";
 import { useAppStore } from "@/src/lib/stores/appStore";
+
+const ROBOFOREX_REGISTER_URL = "https://my.roboforex.com/en/?a=hkgtr";
 
 export const PlatformIntegrationCards: React.FC = () => {
   const { data: serverUserData } = useUser();
@@ -12,33 +14,74 @@ export const PlatformIntegrationCards: React.FC = () => {
   const user = serverUserData?.data?.user || storeUser;
   const userIdDisplay = user?.referral_code || "";
 
-  const isConnectedToStockTrader = useAppStore(
-    (s) => s.isConnectedToStockTrader,
+  const isConnectedToRoboForex = useAppStore(
+    (s) => s.isConnectedToRoboForex,
   );
+
+  const { mutateAsync: linkRoboForex, isPending: isLinking } =
+    useLinkRoboForex();
+  const [awaitingConfirmation, setAwaitingConfirmation] = useState(false);
+  const [brokerIdInput, setBrokerIdInput] = useState("");
+  const [linkError, setLinkError] = useState("");
+
+  // Real broker ID from server
+  const brokerIdDisplay =
+    serverUserData?.data?.user?.roboforex_id ||
+    (user as any)?.roboforex_id ||
+    "";
+
+  const handleConnectClick = () => {
+    // Open RoboForex registration in new tab
+    window.open(ROBOFOREX_REGISTER_URL, "_blank", "noopener,noreferrer");
+    // Show the confirmation step
+    setAwaitingConfirmation(true);
+    setLinkError("");
+  };
+
+  const handleConfirmLinked = async () => {
+    const trimmed = brokerIdInput.trim();
+    if (!trimmed) {
+      setLinkError("Please enter your RoboForex account ID.");
+      return;
+    }
+    try {
+      setLinkError("");
+      await linkRoboForex(trimmed);
+      setAwaitingConfirmation(false);
+    } catch {
+      setLinkError("Failed to link account. Please try again.");
+    }
+  };
+
+  const handleLoginClick = () => {
+    window.open(ROBOFOREX_REGISTER_URL, "_blank", "noopener,noreferrer");
+  };
 
   return (
     <div className="w-full max-w-320 flex flex-col gap-4 mt-2">
-      {/* ─── Card 1: StockTrader Registration (First Card) ────────────────────── */}
+      {/* ─── Card 1: RoboForex Registration (First Card) ────────────────────── */}
       <div className="w-full rounded-xl bg-tetiary border border-secondary/15 p-5 sm:p-6 flex flex-col justify-between gap-5 relative shadow-sm text-white">
         {/* Top Badges */}
         <div className="flex items-center gap-2 self-start sm:self-auto sm:absolute sm:top-5 sm:right-6">
           <span
             className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
-              isConnectedToStockTrader
+              isConnectedToRoboForex
                 ? "bg-success/25 text-success border-success/40"
                 : "bg-white/10 text-white/70 border-white/20"
             }`}
           >
             <span
               className={`size-1.5 rounded-full ${
-                isConnectedToStockTrader ? "bg-success" : "bg-white/40"
+                isConnectedToRoboForex ? "bg-success" : "bg-white/40"
               }`}
             />
-            {isConnectedToStockTrader ? "User Active" : "Not Connected"}
+            {isConnectedToRoboForex ? "Account Linked" : "Not Connected"}
           </span>
 
           <span className="px-2.5 py-0.5 rounded-full text-xs font-mono bg-white/10 border border-white/20 text-white/90">
-            ID: {userIdDisplay}
+            {isConnectedToRoboForex && brokerIdDisplay
+              ? `Broker ID: ${brokerIdDisplay}`
+              : "Not Linked"}
           </span>
         </div>
 
@@ -46,48 +89,117 @@ export const PlatformIntegrationCards: React.FC = () => {
           {/* Left Info & CTA */}
           <div className="flex flex-col gap-2.5 max-w-2xl">
             <h3 className="text-lg font-medium font-clash-display text-white tracking-tight">
-              StockTrader Registration
+              RoboForex Registration
             </h3>
 
             <p className="text-xs text-white/80 leading-relaxed max-w-xl">
-              To access all platform features, please register your Crack
+              To access all platform features, please register your Track
               Markets account exclusively using this button. Registering through
-              Crack Markets ensures proper linking and synchronization between
+              Track Markets ensures proper linking and synchronization between
               both accounts.
             </p>
 
             <div className="pt-2 flex items-center gap-3">
-              <button
-                type="button"
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-accent text-primary hover:bg-accent/90 text-xs font-semibold transition-all shadow-sm active:scale-98 cursor-pointer"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={2}
-                  stroke="currentColor"
-                  className="size-3.5"
+              {isConnectedToRoboForex ? (
+                /* Already linked — just open RoboForex login */
+                <button
+                  type="button"
+                  onClick={handleLoginClick}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-accent text-primary hover:bg-accent/90 text-xs font-semibold transition-all shadow-sm active:scale-98 cursor-pointer"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244"
-                  />
-                </svg>
-                <span>
-                  {isConnectedToStockTrader
-                    ? "Login to StockTrader"
-                    : "Connect to StockTrader"}
-                </span>
-              </button>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={2}
+                    stroke="currentColor"
+                    className="size-3.5"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"
+                    />
+                  </svg>
+                  <span>Login to RoboForex</span>
+                </button>
+              ) : awaitingConfirmation ? (
+                /* Awaiting user confirmation — collect broker ID */
+                <div className="flex flex-col gap-2 w-full max-w-sm">
+                  <label className="text-[11px] text-white/60 font-medium">
+                    Enter your RoboForex Account ID
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={brokerIdInput}
+                      onChange={(e) => {
+                        setBrokerIdInput(e.target.value);
+                        setLinkError("");
+                      }}
+                      placeholder="e.g. 28941054"
+                      className="flex-1 px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white text-xs font-mono placeholder:text-white/30 focus:outline-none focus:border-accent/60 transition-colors"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleConfirmLinked}
+                      disabled={isLinking}
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-success text-primary hover:bg-success/90 text-xs font-semibold transition-all shadow-sm active:scale-98 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth={2}
+                        stroke="currentColor"
+                        className="size-3.5"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="m4.5 12.75 6 6 9-13.5"
+                        />
+                      </svg>
+                      <span>{isLinking ? "Linking..." : "Confirm Link"}</span>
+                    </button>
+                  </div>
+                  {linkError && (
+                    <p className="text-[11px] text-error font-medium">
+                      {linkError}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                /* Not connected — open RoboForex registration */
+                <button
+                  type="button"
+                  onClick={handleConnectClick}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-accent text-primary hover:bg-accent/90 text-xs font-semibold transition-all shadow-sm active:scale-98 cursor-pointer"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={2}
+                    stroke="currentColor"
+                    className="size-3.5"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244"
+                    />
+                  </svg>
+                  <span>Connect to RoboForex</span>
+                </button>
+              )}
             </div>
           </div>
 
           {/* Right Brand Mark */}
           <div className="flex items-center justify-start md:justify-end shrink-0 pr-4">
             <span className="font-clash-display font-semibold text-3xl sm:text-4xl text-white/90 tracking-tight select-none">
-              STOCK-TRADER
+              ROBOFOREX
             </span>
           </div>
         </div>
@@ -95,7 +207,7 @@ export const PlatformIntegrationCards: React.FC = () => {
         {/* Warning Note */}
         <div className="pt-3 border-t border-white/10">
           <p className="text-[11px] text-accent font-medium tracking-wide">
-            ● DO NOT REGISTER DIRECTLY ON THE STOCKTRADER PLATFORM, AS THE
+            ● DO NOT REGISTER DIRECTLY ON THE ROBOFOREX PLATFORM, AS THE
             ACCOUNT WILL NOT BE SYNCHRONIZED. ●
           </p>
         </div>

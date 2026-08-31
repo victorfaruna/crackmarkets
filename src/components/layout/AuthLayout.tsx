@@ -47,7 +47,7 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
         }`}
       >
         <div className="inner max-w-87 sm:max-w-96 w-full flex flex-col gap-1 my-auto">
-          <p className="text-[22px] font-medium font-clash-display tracking-tight text-secondary">
+          <p className="text-[22px] font-medium tracking-tight text-secondary">
             {title}
           </p>
           <p className="text-secondary/50 font-medium mb-3">{subtitle}</p>

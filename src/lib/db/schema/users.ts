@@ -2,6 +2,7 @@ import {
   pgTable,
   uuid,
   varchar,
+  boolean,
   timestamp,
   index,
   type AnyPgColumn,
@@ -17,6 +18,9 @@ export const users = pgTable(
     email: varchar("email", { length: 255 }).notNull().unique(),
     phoneNumber: varchar("phone_number", { length: 50 }).notNull(),
     country: varchar("country", { length: 100 }).notNull(),
+    telegramHandle: varchar("telegram_handle", { length: 100 }),
+    roboforexLinked: boolean("roboforex_linked").notNull().default(false),
+    roboforexId: varchar("roboforex_id", { length: 50 }),
     passwordHash: varchar("password_hash", { length: 255 }).notNull(),
     referralCode: varchar("referral_code", { length: 50 }).notNull().unique(),
     referredById: uuid("referred_by_id").references((): AnyPgColumn => users.id, {

@@ -1,12 +1,12 @@
-# AGENTS.md — Crack Markets Engineering Guidelines & System Specification
+# AGENTS.md — Track Markets Engineering Guidelines & System Specification
 
-Welcome to **Crack Markets**. This document is the single source of truth for the domain specifications, technical architecture, theme standards, and agent behavior in this codebase.
+Welcome to **Track Markets**. This document is the single source of truth for the domain specifications, technical architecture, theme standards, and agent behavior in this codebase.
 
 ---
 
 ## 1. Project Overview & Architecture
 
-- **Domain**: Crack Markets — Advanced Service Provider & 10-Level Referral Management System integrated with RoboForex trading APIs.
+- **Domain**: Track Markets — Advanced Service Provider & 10-Level Referral Management System integrated with RoboForex trading APIs.
 - **Frontend Stack**: Next.js (App Router), React 19, TypeScript, Tailwind CSS v4, DaisyUI.
 - **State & Data Layer**: Zustand stores (`src/lib/stores/`), Axios (`src/lib/services/api.ts`), TanStack React Query.
 - **Font Stack**: Clash Display (`font-clash-display`), Satoshi (`font-satoshi`), Roobert (`font-roobert`), Rubik (`font-rubik`), Montserrat (`font-montserrat`), Geist Sans (`font-geist`).
@@ -141,7 +141,7 @@ Calculated per traded lot generated across the organization:
 
 - **ORM**: Drizzle ORM (`drizzle-orm`) with PostgreSQL driver (`postgres`). Config in `drizzle.config.ts`, DB client in `src/lib/db/index.ts`.
 - **Database Schema Models (`src/lib/db/schema/`)**:
-  - `users`: `id`, `first_name`, `last_name`, `email` (unique), `phone_number`, `country`, `password_hash`, `referral_code` (unique), `referred_by_id`, `status`, `kyc_status`, `funding_status`, `role`, `created_at`, `updated_at`.
+  - `users`: `id`, `first_name`, `last_name`, `email` (unique), `phone_number`, `country`, `telegram_handle`, `password_hash`, `referral_code` (unique), `referred_by_id`, `status`, `kyc_status`, `funding_status`, `role`, `created_at`, `updated_at`.
   - `refresh_tokens`: `id`, `user_id`, `token_hash` (unique), `user_agent`, `ip_address`, `expires_at`, `revoked_at`, `created_at`.
   - `email_verification_tokens`: `id`, `user_id`, `token_hash` (unique), `expires_at`, `created_at`.
   - `password_reset_tokens`: `id`, `user_id`, `token_hash` (unique), `expires_at`, `used_at`, `created_at`.
@@ -149,6 +149,7 @@ Calculated per traded lot generated across the organization:
   - `referral_nodes`: Lineage closure table (`ancestor_id`, `descendant_id`, `depth` 1–10) created atomically upon registration.
   - `wallets`: `id`, `user_id` (unique), `balance`, `available_balance`, `total_withdrawn`, `lifetime_earnings`.
   - `transactions`: `id`, `user_id`, `source_user_id`, `amount`, `transaction_type`, `reference_id`, `level`, `status`, `created_at`.
+  - `events`: `id`, `title`, `category`, `description`, `reward_pool`, `location`, `starts_at`, `ends_at`, `status`, `created_by`, `created_at`, `updated_at`.
 
 ---
 
@@ -165,46 +166,65 @@ Calculated per traded lot generated across the organization:
   - `POST /api/auth/verify-email`: Token validation, activates user (`status = "ACTIVE"`).
   - `POST /api/auth/forgot-password`: Generates reset token & sends recovery instructions.
   - `POST /api/auth/reset-password`: Validates token, updates password, revokes active sessions.
+  - `GET /api/events`: Query events with category, status, date, and month calendar filters.
+  - `GET /api/events/:id`: Retrieve single event details.
 
 ---
 
 ## 9. Dashboard Views & Architecture
 
-The Crack Markets Dashboard is structured with direct, top-level subviews:
+The Track Markets Dashboard uses a collapsible drawer with grouped navigation sections:
 
-1. **Overview (`/dashboard`)**:
-   - **Financial Balances Card**: Total Trading Capital, Total Trading Profit, 10-Level Referral Profit, Team Lot Bonus, Available Balance, Lifetime Earnings, Total Withdrawn.
-   - **Broker & Trading Card**: RoboForex connection status, server (`RoboForex-ECN-Pro`), equity, margin, today's/weekly/monthly profit.
-   - **10-Level Referral Overview**: Summary of team deposits, member counts, and direct referral link quick share.
-   - **Qualification Progress**: Strong Leg rule status (Tier 1 & Tier 2) and Volume Ladder (1% to 8%).
-   - **Leadership Rewards Tracker**: Status of Travel Benefit, Leader Pool 1, Leader Pool 2, Grand Prize Estate.
-   - **Recent Commission Ledger**: Live transaction feed with level attribution and type tags.
+**Drawer Structure:**
+```
+Overview                   /dashboard                 (flat, gated by RoboForex)
+Profile                    /dashboard/profile          (flat, always visible)
+Wallet                     [triggers withdrawal sheet] (flat, always visible)
+Events                     /dashboard/events           (flat, always visible)
+─────────
+▸ My Network              [collapsible, always visible]
+    Network                /dashboard/network
+    My Global Affiliates   /dashboard/network?view=global
+    My Top Affiliates      /dashboard/network?view=top
+▸ My Commissions          [collapsible, gated by RoboForex]
+    Commissions            /dashboard/commissions
+    Rewards & Incentives   /dashboard/rewards
+▸ Trading                 [collapsible, gated by RoboForex]
+    Trading Analytics      /dashboard/trading
+```
 
-2. **10-Level Network Lineage (`/dashboard/network`)**:
-   - Level filters (L1 through L10) with searchable member directory, deposit volumes, active trader indicators, and commission calculations.
+**Dashboard Views:**
 
-3. **Trading Analytics (`/dashboard/trading`)**:
-   - Detailed lot volume history, open trade positions, floating P/L, and broker sync timestamps.
+1. **Overview (`/dashboard`)**: Financial balances, broker & trading card, 10-level referral overview, qualification progress, leadership rewards tracker, recent commission ledger.
 
-4. **Commission Ledger (`/dashboard/commissions`)**:
-   - Full transaction history across all 5 bonuses (Referral Profit, Lot Bonus, Strong Leg Bonus, Ladder Tier Bonus, Leadership Pools) and wallet payout withdrawals.
+2. **10-Level Network Lineage System (`/dashboard/network`)**:
+   - **Overview Metrics**: Real-time counter cards for Direct Affiliates (Level 1: 5%), Indirect Affiliates (Levels 2–10), and Total Organization.
+   - **System View Tabs**:
+     - **Lineage Tree**: Clean visual hierarchy connecting root user to direct referrals and downlines with expandable child nodes.
+     - **Directs (L1)**: Filtered table focusing strictly on Level 1 direct affiliates with 5% profit share, status, and joined dates.
+     - **Total Network**: Full 10-level searchable member directory with multi-tier filter pills (`All`, `Level 1` through `Level 10`).
+     - **Tier Breakdown**: Summary grid of all 10 commission tiers (percentages, lot bonuses, and member counts).
 
-5. **Leadership Pools & Rewards (`/dashboard/rewards`)**:
-   - Milestone streak progress bars for Travel Benefit, Vacation Pool, Car Pool, and Grand Prize Estate.
+3. **Trading Analytics (`/dashboard/trading`)**: Lot volume history, open trade positions, floating P/L, broker sync timestamps.
 
-6. **KYC & Broker Account Link (`/dashboard/kyc`)**:
-   - KYC verification timeline, document upload workflow, and broker account link management.
+4. **Commission Ledger (`/dashboard/commissions`)**: Full transaction history across all 5 bonuses (Referral Profit, Lot Bonus, Strong Leg Bonus, Ladder Tier Bonus, Leadership Pools) and wallet payout withdrawals.
 
-7. **Trader Settings (`/dashboard/settings`)**:
-   - Profile summary, password change, and security settings.
+5. **Leadership Pools & Rewards (`/dashboard/rewards`)**: Milestone streak progress bars for Travel Benefit, Vacation Pool, Car Pool, and Grand Prize Estate.
+
+6. **KYC & Broker Account Link (`/dashboard/kyc`)**: KYC verification timeline, document upload workflow, and broker account link management.
+
+7. **Trader Settings (`/dashboard/settings`)**: Profile summary, password change, and security settings.
 
 8. **Trader Profile (`/dashboard/profile`)**:
-   - **Personal Information Card**: Dynamic profile avatar, full name, account badges (Partner, Referral ID, StockTrader ID, Joined date, Referrer status), contact & identity grid (Birthday, Email, Phone, Telegram, Country, Living Address), and interactive privacy & notification switches.
+   - **Personal Information Card**: Dynamic profile avatar, full name, account badges (Partner, Referral ID, RoboForex ID, Joined date, Referrer status), contact & identity grid (Birthday, Email, Phone, Telegram, Country, Living Address), and interactive privacy & notification switches.
    - **Partner Referral QR Card**: Live QR code generator with avatar inlay, custom link copy, and native share.
-   - **Platform Integration Cards**: StockTrader, FOXAi, and BIX Wallets integration cards.
+   - **Platform Integration Cards**: RoboForex, FOXAi, and BIX Wallets integration cards.
 
-9. **Notifications (`/dashboard/notifications`)**:
-   - Centralized notifications center for commissions, network events, security milestones, and system notices with category filtering and mark-as-read workflows.
+9. **Notifications (`/dashboard/notifications`)**: Centralized notifications center for commissions, network events, security milestones, and system notices with category filtering and mark-as-read workflows.
+
+10. **Events & Competitions (`/dashboard/events`)**:
+    - **Interactive Month Calendar**: Visual calendar widget with month navigation, day selector, category indicator dots, and legend (`Trading Contest`, `Webinar`, `Summit`, `Leadership Pool`).
+    - **Live Events Feed**: Database-backed event cards with category badge styling, dynamic countdown timers (`🔥 X Days, Y Hours`), `.ics` iCal download, Google Calendar integration, and accordion detail views.
 
 ---
 

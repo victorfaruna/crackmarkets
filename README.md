@@ -1,3 +1,2 @@
-# dashboard
-Frontend repo containing chainroll dashboard
-# crackmarkets
+# trackmarkets
+Frontend repo containing Track Markets dashboard

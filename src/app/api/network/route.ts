@@ -11,12 +11,20 @@ export interface NetworkMemberDTO {
   country: string;
   level: number;
   status: string;
+  referralCode?: string;
+  referredById?: string | null;
+  roboforexId?: string | null;
+  roboforexLinked?: boolean;
+  directsCount?: number;
+  indirectsCount?: number;
   createdAt: string;
 }
 
 export interface NetworkSummaryResponse {
   totalMembers: number;
   activeCount: number;
+  totalDirects: number;
+  totalIndirects: number;
   members: NetworkMemberDTO[];
 }
 
@@ -43,6 +51,10 @@ export async function GET(request: NextRequest) {
         email: users.email,
         country: users.country,
         status: users.status,
+        referralCode: users.referralCode,
+        referredById: users.referredById,
+        roboforexId: users.roboforexId,
+        roboforexLinked: users.roboforexLinked,
         createdAt: users.createdAt,
         depth: referralNodes.depth,
       })
@@ -50,19 +62,34 @@ export async function GET(request: NextRequest) {
       .innerJoin(users, eq(referralNodes.descendantId, users.id))
       .where(eq(referralNodes.ancestorId, session.userId))
       .orderBy(desc(referralNodes.createdAt))
-      .limit(50);
+      .limit(100);
 
-    const members: NetworkMemberDTO[] = rows.map((r) => ({
-      id: r.id,
-      name: `${r.firstName} ${r.lastName}`.trim(),
-      email: r.email,
-      country: r.country,
-      level: r.depth,
-      status: r.status,
-      createdAt: r.createdAt ? new Date(r.createdAt).toISOString() : new Date().toISOString(),
-    }));
+    // Map rows into members
+    const members: NetworkMemberDTO[] = rows.map((r) => {
+      // Calculate directs under this member within the fetched lineage
+      const memberDirects = rows.filter((other) => other.referredById === r.id);
+      return {
+        id: r.id,
+        name: `${r.firstName} ${r.lastName}`.trim(),
+        email: r.email,
+        country: r.country,
+        level: r.depth,
+        status: r.status,
+        referralCode: r.referralCode,
+        referredById: r.referredById,
+        roboforexId: r.roboforexId,
+        roboforexLinked: r.roboforexLinked,
+        directsCount: memberDirects.length,
+        indirectsCount: 0,
+        createdAt: r.createdAt
+          ? new Date(r.createdAt).toISOString()
+          : new Date().toISOString(),
+      };
+    });
 
     const totalMembers = members.length;
+    const totalDirects = members.filter((m) => m.level === 1).length;
+    const totalIndirects = members.filter((m) => m.level > 1).length;
     const activeCount = members.filter((m) => m.status === "ACTIVE").length;
 
     return NextResponse.json(
@@ -71,6 +98,8 @@ export async function GET(request: NextRequest) {
         data: {
           totalMembers,
           activeCount,
+          totalDirects,
+          totalIndirects,
           members,
         },
       },

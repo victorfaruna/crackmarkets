@@ -17,9 +17,16 @@ interface AppState {
   isLoading: boolean;
   setLoading: (loading: boolean) => void;
 
-  // Stock Trader connection state
+  // RoboForex connection state
+  isConnectedToRoboForex: boolean;
+  setIsConnectedToRoboForex: (connected: boolean) => void;
+  // Backward-compatible alias
   isConnectedToStockTrader: boolean;
   setIsConnectedToStockTrader: (connected: boolean) => void;
+
+  // Wallet / Withdrawal Drawer state
+  isWalletDrawerOpen: boolean;
+  setWalletDrawerOpen: (open: boolean) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -39,18 +46,26 @@ export const useAppStore = create<AppState>()(
       isLoading: false,
       setLoading: (loading) => set({ isLoading: loading }),
 
-      // Stock Trader connection state
+      // RoboForex connection state
+      isConnectedToRoboForex: false,
+      setIsConnectedToRoboForex: (connected) =>
+        set({ isConnectedToRoboForex: connected, isConnectedToStockTrader: connected }),
       isConnectedToStockTrader: false,
       setIsConnectedToStockTrader: (connected) =>
-        set({ isConnectedToStockTrader: connected }),
+        set({ isConnectedToRoboForex: connected, isConnectedToStockTrader: connected }),
+
+      // Wallet drawer
+      isWalletDrawerOpen: false,
+      setWalletDrawerOpen: (open) => set({ isWalletDrawerOpen: open }),
     }),
     {
-      name: "crackmarkets-app-state",
-      // Persist sidebar, theme, and broker/stock trader connection status
+      name: "trackmarkets-app-state",
+      // Persist sidebar, theme, and broker/RoboForex connection status
       partialize: (state) => ({
         isSidebarOpen: state.isSidebarOpen,
         theme: state.theme,
-        isConnectedToStockTrader: state.isConnectedToStockTrader,
+        isConnectedToRoboForex: state.isConnectedToRoboForex,
+        isConnectedToStockTrader: state.isConnectedToRoboForex,
       }),
     },
   ),

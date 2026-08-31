@@ -76,7 +76,7 @@ export async function GET(request: NextRequest) {
         {
           userId: session.userId,
           category: "SYSTEM" as const,
-          title: "Welcome to Crack Markets",
+          title: "Welcome to Track Markets",
           message:
             "Welcome to the advanced service provider platform. Explore your financial overview and integration cards.",
           actionUrl: "/dashboard",

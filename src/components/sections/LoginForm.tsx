@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { loginWithCredentials } from "@/src/lib/services/auth";
 import { useUserStore } from "@/src/lib/stores/userStore";
+import { useAppStore } from "@/src/lib/stores/appStore";
 
 interface LoginFormProps {
   onSwitchToRegister?: () => void;
@@ -49,7 +50,13 @@ export const LoginForm: React.FC<LoginFormProps> = ({
       });
 
       if (res.success && res.data) {
-        setSuccess("Login successful! Redirecting to your dashboard...");
+        const isConnectedToRoboForex =
+          useAppStore.getState().isConnectedToRoboForex;
+        const targetRoute = isConnectedToRoboForex
+          ? "/dashboard"
+          : "/dashboard/profile";
+
+        setSuccess("Login successful! Redirecting...");
         
         // Sync user state with store
         setUser({
@@ -60,7 +67,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
         });
 
         setTimeout(() => {
-          router.push("/dashboard");
+          router.push(targetRoute);
         }, 1000);
       } else {
         setError(res.message || "Failed to log in. Please check your credentials.");

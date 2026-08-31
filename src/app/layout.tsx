@@ -182,16 +182,16 @@ const rubik = Rubik({
 
 export const metadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_APP_URL || "https://crackmarkets.com",
+    process.env.NEXT_PUBLIC_APP_URL || "https://trackmarkets.vercel.app",
   ),
   title: {
-    default: "Crack Markets — Next-Gen Trading & 10-Level Referral Platform",
-    template: "%s | Crack Markets",
+    default: "Track Markets | Next-Gen Trading & Referral Platform",
+    template: "%s | Track Markets",
   },
   description:
     "Advanced service provider and 10-level referral management system integrated with RoboForex. Track team volumes, lot distributions, automated commission tiers, and instant wallet payouts.",
   keywords: [
-    "Crack Markets",
+    "Track Markets",
     "RoboForex",
     "10-Level Referral",
     "Forex Trading",
@@ -200,14 +200,14 @@ export const metadata: Metadata = {
     "Broker Integration",
     "Fintech",
   ],
-  authors: [{ name: "Crack Markets" }],
-  creator: "Crack Markets",
+  authors: [{ name: "Track Markets" }],
+  creator: "Track Markets",
   openGraph: {
     type: "website",
     locale: "en_US",
     url: "/",
-    siteName: "Crack Markets",
-    title: "Crack Markets — Next-Gen Trading & 10-Level Referral Platform",
+    siteName: "Track Markets",
+    title: "Track Markets | Next-Gen Trading & Referral Platform",
     description:
       "Advanced service provider and 10-level referral management system integrated with RoboForex. Track team volumes, lot distributions, automated commission tiers, and instant wallet payouts.",
     images: [
@@ -215,13 +215,13 @@ export const metadata: Metadata = {
         url: "/images/card-mesh.webp",
         width: 1200,
         height: 630,
-        alt: "Crack Markets — Next-Gen Trading & Referral Infrastructure",
+        alt: "Track Markets — Next-Gen Trading & Referral Infrastructure",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Crack Markets — Next-Gen Trading & 10-Level Referral Platform",
+    title: "Track Markets | Next-Gen Trading & Referral Platform",
     description:
       "Advanced service provider and 10-level referral management system integrated with RoboForex. Track team volumes, lot distributions, automated commission tiers, and instant wallet payouts.",
     images: ["/images/card-mesh.webp"],
@@ -234,7 +234,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" data-theme="dark">
+    <html lang="en" data-theme="light">
       <head>
         <script
           dangerouslySetInnerHTML={{

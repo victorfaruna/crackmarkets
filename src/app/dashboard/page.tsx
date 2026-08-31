@@ -1,16 +1,32 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAppStore } from "@/src/lib/stores/appStore";
 import TotalBalanceCard from "@/src/components/sections/TotalBalanceCard";
 import NetworkCard from "@/src/components/sections/NetworkCard";
 import PayrollHealthCard from "@/src/components/sections/PayrollHealth";
 import PartnerReferralCard from "@/src/components/sections/PartnerReferralCard";
 import OrgVerificationCard from "@/src/components/sections/OrgVerificationCard";
 import MonthlyBudgetCard from "@/src/components/sections/MonthlyBudgetCard";
-import RecentActivityCard from "@/src/components/sections/RecentActivity";
 import PlatformIntegrationCards from "@/src/components/sections/PlatformIntegrationCards";
 
 export default function DashboardPage() {
+  const router = useRouter();
+  const isConnectedToRoboForex = useAppStore(
+    (s) => s.isConnectedToRoboForex,
+  );
+
+  useEffect(() => {
+    if (!isConnectedToRoboForex) {
+      router.replace("/dashboard/profile");
+    }
+  }, [isConnectedToRoboForex, router]);
+
+  if (!isConnectedToRoboForex) {
+    return null;
+  }
+
   const defaultInitialData = {
     currency: {
       name: "USDT",
@@ -33,8 +49,6 @@ export default function DashboardPage() {
         {/* Activity Card */}
         <div className="col-span-1 md:col-span-2">
           <PartnerReferralCard />
-
-          {/* <RecentActivityCard /> */}
         </div>
 
         <div className="flex flex-col gap-4">

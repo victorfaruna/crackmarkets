@@ -45,8 +45,8 @@ export const PartnerReferralCard: React.FC = () => {
     if (typeof navigator !== "undefined" && navigator.share) {
       try {
         await navigator.share({
-          title: "Crack Markets Partner Referral",
-          text: `Join my trading network on Crack Markets: ${referralLink}`,
+          title: "Track Markets Partner Referral",
+          text: `Join my trading network on Track Markets: ${referralLink}`,
           url: referralLink,
         });
       } catch {
