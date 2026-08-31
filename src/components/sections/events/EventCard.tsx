@@ -82,14 +82,14 @@ export default function EventCard({ event }: EventCardProps) {
   };
 
   return (
-    <div className="rounded-2xl border border-secondary/10 bg-primary/40 p-4 sm:p-5 flex flex-col gap-4 shadow-xs hover:border-secondary/20 transition-all">
+    <div className="rounded-lg border border-secondary/6 bg-primary/40 p-4 sm:p-5 flex flex-col gap-4 shadow-2xs hover:border-secondary/12 transition-all">
       {/* ─── Main Row ─────────────────────────────────────────────────── */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         {/* Left Section: Thumbnail + Info */}
         <div className="flex items-start sm:items-center gap-3.5 flex-1 min-w-0">
           {/* Date Badge / Thumbnail Pill */}
           <div
-            className={`relative size-16 sm:size-20 rounded-xl shrink-0 overflow-hidden border border-secondary/15 flex flex-col items-center justify-center bg-gradient-to-br ${catStyle.bg} bg-primary/80`}
+            className={`relative size-16 sm:size-20 rounded-lg shrink-0 overflow-hidden border border-secondary/8 flex flex-col items-center justify-center bg-gradient-to-br ${catStyle.bg} bg-primary/80`}
           >
             <span className="px-2 py-0.5 rounded-full text-[10px] font-bold font-mono tracking-wider text-background bg-secondary shadow-xs uppercase">
               {monthShort} {dayNumber}

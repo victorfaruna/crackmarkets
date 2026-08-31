@@ -144,7 +144,9 @@ export const Drawer = () => {
 
   // Active state helpers
   const isNetworkActive = pathname.startsWith("/dashboard/network");
-  const isTradingActive = pathname.startsWith("/dashboard/trading");
+  const isAnalyticsActive =
+    pathname.startsWith("/dashboard/analytics") ||
+    pathname.startsWith("/dashboard/trading");
   const isRewardsActive = pathname.startsWith("/dashboard/rewards");
   const isCommissionsActive = pathname.startsWith("/dashboard/commissions");
 
@@ -203,18 +205,13 @@ export const Drawer = () => {
               }
             />
 
-            {/* ─── Wallet (triggers withdrawal drawer) ─────────────── */}
-            <li className="w-full">
-              <button
-                type="button"
-                onClick={() => setWalletDrawerOpen(true)}
-                className={`p-2 gap-2.5 w-full flex items-center rounded-md transition-colors duration-150 cursor-pointer ${
-                  isWalletDrawerOpen
-                    ? "text-secondary bg-secondary/4 font-semibold"
-                    : "hover:bg-secondary/4 text-secondary/60 hover:text-secondary font-medium"
-                }`}
-              >
-                <span className="shrink-0 flex items-center justify-center">
+            {/* ─── Wallet (conditional to RoboForex integration) ── */}
+            {isConnectedToRoboForex && (
+              <NavItem
+                name="Wallet"
+                href="/dashboard/wallet"
+                isActive={pathname.startsWith("/dashboard/wallet")}
+                icon={
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
@@ -229,35 +226,34 @@ export const Drawer = () => {
                       d="M21 12a2.25 2.25 0 0 0-2.25-2.25H15a3 3 0 1 1-6 0H5.25A2.25 2.25 0 0 0 3 12m18 0v6a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 9m18 0V6a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 6v3"
                     />
                   </svg>
-                </span>
-                <span className="font-medium text-[0.83rem] whitespace-nowrap overflow-hidden leading-none">
-                  Wallet
-                </span>
-              </button>
-            </li>
+                }
+              />
+            )}
 
-            {/* ─── Events ─────────────────────────────────────────── */}
-            <NavItem
-              name="Events"
-              href="/dashboard/events"
-              isActive={pathname.startsWith("/dashboard/events")}
-              icon={
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={STROKE_WIDTH}
-                  stroke="currentColor"
-                  className={`size-${ICON_SIZE}`}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"
-                  />
-                </svg>
-              }
-            />
+            {/* ─── Events (conditional to RoboForex integration) ─── */}
+            {isConnectedToRoboForex && (
+              <NavItem
+                name="Events"
+                href="/dashboard/events"
+                isActive={pathname.startsWith("/dashboard/events")}
+                icon={
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={STROKE_WIDTH}
+                    stroke="currentColor"
+                    className={`size-${ICON_SIZE}`}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"
+                    />
+                  </svg>
+                }
+              />
+            )}
 
             {/* ─── My Network (collapsible, always visible) ─────────── */}
             <CollapsibleGroup
@@ -334,11 +330,11 @@ export const Drawer = () => {
               </CollapsibleGroup>
             )}
 
-            {/* ─── Trading (collapsible, gated) ────────────────────── */}
+            {/* ─── Analytics (collapsible, gated) ────────────────── */}
             {isConnectedToRoboForex && (
               <CollapsibleGroup
-                name="Trading"
-                isAnyChildActive={isTradingActive}
+                name="Analytics"
+                isAnyChildActive={isAnalyticsActive}
                 icon={
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -358,8 +354,8 @@ export const Drawer = () => {
               >
                 <SubNavItem
                   name="Trading Analytics"
-                  href="/dashboard/trading"
-                  isActive={isTradingActive}
+                  href="/dashboard/analytics"
+                  isActive={isAnalyticsActive}
                 />
               </CollapsibleGroup>
             )}

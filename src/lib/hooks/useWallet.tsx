@@ -5,7 +5,6 @@ import {
   type TransactionsFilterParams,
   type WithdrawPayload,
 } from "../services/wallet";
-import { USER_QUERY_KEY } from "./useUser";
 
 export const WALLET_TRANSACTIONS_KEY = ["wallet-transactions"];
 
@@ -25,7 +24,7 @@ export const useWithdrawFunds = () => {
     onSuccess: () => {
       // Invalidate both user summary (balance) and transactions ledger
       queryClient.invalidateQueries({ queryKey: WALLET_TRANSACTIONS_KEY });
-      queryClient.invalidateQueries({ queryKey: [USER_QUERY_KEY] });
+      queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
     },
   });
 };

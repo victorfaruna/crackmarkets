@@ -272,10 +272,6 @@ export const getMockDashboardSummary = (userReferralCode: string = "CRK-84920"):
 };
 
 export const getDashboardSummary = async (): Promise<DashboardSummary> => {
-  try {
-    const response = await api.get("/dashboard/summary");
-    return response.data?.data || getMockDashboardSummary();
-  } catch {
-    return getMockDashboardSummary();
-  }
+  const response = await api.get<{ success: boolean; data: DashboardSummary }>("/dashboard/summary");
+  return response.data.data;
 };

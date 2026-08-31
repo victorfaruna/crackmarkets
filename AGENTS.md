@@ -167,7 +167,9 @@ Calculated per traded lot generated across the organization:
   - `POST /api/auth/forgot-password`: Generates reset token & sends recovery instructions.
   - `POST /api/auth/reset-password`: Validates token, updates password, revokes active sessions.
   - `GET /api/events`: Query events with category, status, date, and month calendar filters.
-  - `GET /api/events/:id`: Retrieve single event details.
+  - `GET /api/wallet/transactions`: Query user transactions with category, status, and search filters.
+  - `POST /api/wallet/withdraw`: Process crypto withdrawal request and atomically update wallet balances.
+  - `GET /api/commissions`: Query commissions summary, monthly previews, and 8 income streams breakdown.
 
 ---
 
@@ -179,8 +181,8 @@ The Track Markets Dashboard uses a collapsible drawer with grouped navigation se
 ```
 Overview                   /dashboard                 (flat, gated by RoboForex)
 Profile                    /dashboard/profile          (flat, always visible)
-Wallet                     [triggers withdrawal sheet] (flat, always visible)
-Events                     /dashboard/events           (flat, always visible)
+Wallet                     /dashboard/wallet           (flat, gated by RoboForex)
+Events                     /dashboard/events           (flat, gated by RoboForex)
 ─────────
 ▸ My Network              [collapsible, always visible]
     Network                /dashboard/network
@@ -189,15 +191,20 @@ Events                     /dashboard/events           (flat, always visible)
 ▸ My Commissions          [collapsible, gated by RoboForex]
     Commissions            /dashboard/commissions
     Rewards & Incentives   /dashboard/rewards
-▸ Trading                 [collapsible, gated by RoboForex]
-    Trading Analytics      /dashboard/trading
+▸ Analytics               [collapsible, gated by RoboForex]
+    Trading Analytics      /dashboard/analytics
 ```
 
 **Dashboard Views:**
 
 1. **Overview (`/dashboard`)**: Financial balances, broker & trading card, 10-level referral overview, qualification progress, leadership rewards tracker, recent commission ledger.
 
-2. **10-Level Network Lineage System (`/dashboard/network`)**:
+2. **Wallet & Transaction History (`/dashboard/wallet`)**:
+   - **Wallet Balance Card**: Available commission balance ($XX,XXX.XX USDT), lifetime earnings, total withdrawn, instant settlement badge, and direct withdrawal modal launcher.
+   - **Payout Metrics**: Supported crypto networks (TRC20, BEP20, ERC20), instant processing timelines, and withdrawal status indicators.
+   - **Live Transaction Ledger**: Searchable & filterable table of all 5 commission bonus distributions, crypto withdrawals, and deposit syncs with reference IDs, status pills, timestamps, and quick-copy action buttons.
+
+3. **10-Level Network Lineage System (`/dashboard/network`)**:
    - **Overview Metrics**: Real-time counter cards for Direct Affiliates (Level 1: 5%), Indirect Affiliates (Levels 2–10), and Total Organization.
    - **System View Tabs**:
      - **Lineage Tree**: Clean visual hierarchy connecting root user to direct referrals and downlines with expandable child nodes.
@@ -205,24 +212,27 @@ Events                     /dashboard/events           (flat, always visible)
      - **Total Network**: Full 10-level searchable member directory with multi-tier filter pills (`All`, `Level 1` through `Level 10`).
      - **Tier Breakdown**: Summary grid of all 10 commission tiers (percentages, lot bonuses, and member counts).
 
-3. **Trading Analytics (`/dashboard/trading`)**: Lot volume history, open trade positions, floating P/L, broker sync timestamps.
+4. **Trading Analytics (`/dashboard/analytics`)**: Live RoboForex account equity and floating P/L cards, open positions table with symbol, execution type, volume, and floating profit/loss, margin utilization, and broker connection status.
 
-4. **Commission Ledger (`/dashboard/commissions`)**: Full transaction history across all 5 bonuses (Referral Profit, Lot Bonus, Strong Leg Bonus, Ladder Tier Bonus, Leadership Pools) and wallet payout withdrawals.
+5. **My Commissions Overview (`/dashboard/commissions`)**:
+   - **Monthly Preview Cards**: 3 top metric cards: Profit Share (Weekly Preview, Bonus 1: 5%–1%), LOT Commission (Weekly Preview, Bonus 2: $2.00–$0.50/lot), and Volume & Pools (Monthly Preview, Bonus 3, 4 & 5).
+   - **My Different Income Streams**: Distribution grid across all 8 revenue streams (Lot Commissions, Profit Share, Strong Leg Volume, Percentage Ladder, Leader Pool 1, Leader Pool 2, Grand Estate Prize, Travel Benefit) with counts, amounts, percentages, and CSV download report export.
+   - **Recent Commission Distributions**: Live searchable table of all recent commission credits from downline trades.
 
-5. **Leadership Pools & Rewards (`/dashboard/rewards`)**: Milestone streak progress bars for Travel Benefit, Vacation Pool, Car Pool, and Grand Prize Estate.
+6. **Leadership Pools & Rewards (`/dashboard/rewards`)**: Milestone streak progress bars for Travel Benefit ($2,000 / Trip), Leader Pool 1 ($15,000 Family Luxury Trip), Leader Pool 2 ($25,000 Luxury Car), and Grand Prize Estate ($1,200,000), Strong Leg bonus rule cards (Bonus 3), and 9-tier volume percentage ladder grid (Bonus 4).
 
-6. **KYC & Broker Account Link (`/dashboard/kyc`)**: KYC verification timeline, document upload workflow, and broker account link management.
+7. **KYC & Broker Account Link (`/dashboard/kyc`)**: KYC verification timeline, document upload workflow, and broker account link management.
 
-7. **Trader Settings (`/dashboard/settings`)**: Profile summary, password change, and security settings.
+8. **Trader Settings (`/dashboard/settings`)**: Profile summary, password change, and security settings.
 
-8. **Trader Profile (`/dashboard/profile`)**:
+9. **Trader Profile (`/dashboard/profile`)**:
    - **Personal Information Card**: Dynamic profile avatar, full name, account badges (Partner, Referral ID, RoboForex ID, Joined date, Referrer status), contact & identity grid (Birthday, Email, Phone, Telegram, Country, Living Address), and interactive privacy & notification switches.
    - **Partner Referral QR Card**: Live QR code generator with avatar inlay, custom link copy, and native share.
    - **Platform Integration Cards**: RoboForex, FOXAi, and BIX Wallets integration cards.
 
-9. **Notifications (`/dashboard/notifications`)**: Centralized notifications center for commissions, network events, security milestones, and system notices with category filtering and mark-as-read workflows.
+10. **Notifications (`/dashboard/notifications`)**: Centralized notifications center for commissions, network events, security milestones, and system notices with category filtering and mark-as-read workflows.
 
-10. **Events & Competitions (`/dashboard/events`)**:
+11. **Events & Competitions (`/dashboard/events`)**:
     - **Interactive Month Calendar**: Visual calendar widget with month navigation, day selector, category indicator dots, and legend (`Trading Contest`, `Webinar`, `Summit`, `Leadership Pool`).
     - **Live Events Feed**: Database-backed event cards with category badge styling, dynamic countdown timers (`🔥 X Days, Y Hours`), `.ics` iCal download, Google Calendar integration, and accordion detail views.
 

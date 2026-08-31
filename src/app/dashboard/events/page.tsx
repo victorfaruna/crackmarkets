@@ -74,7 +74,7 @@ export default function EventsPage() {
           />
 
           {/* Quick Notice Card */}
-          <div className="rounded-2xl border border-secondary/10 bg-primary/30 p-4 flex flex-col gap-2">
+          <div className="rounded-lg border border-secondary/6 bg-primary/30 p-4 flex flex-col gap-2">
             <div className="flex items-center gap-2">
               <span className="text-sm">🔔</span>
               <span className="text-xs font-semibold text-secondary font-clash-display">
@@ -90,14 +90,14 @@ export default function EventsPage() {
         {/* ─── Right Column: Filters & Event Cards ────────────────────── */}
         <div className="flex-1 flex flex-col gap-4 min-w-0 w-full">
           {/* Top Filter Bar */}
-          <div className="rounded-2xl border border-secondary/10 bg-primary/40 p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+          <div className="rounded-lg border border-secondary/6 bg-primary/40 p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
             {/* Left Controls: Category Dropdown & Date Tag */}
             <div className="flex items-center gap-2 flex-wrap">
               {/* Category Select */}
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="select select-sm bg-primary border border-secondary/15 text-secondary text-xs rounded-xl focus:outline-none focus:border-accent"
+                className="select select-sm bg-primary border border-secondary/8 text-secondary text-xs rounded-md focus:outline-none focus:border-accent"
               >
                 {CATEGORIES.map((cat) => (
                   <option key={cat.key} value={cat.key} className="bg-primary text-secondary">

@@ -168,13 +168,13 @@ export default function EventCalendarWidget({
   }, [year, month, selectedDate, eventsByDate]);
 
   return (
-    <div className="w-full rounded-2xl border border-secondary/10 bg-primary/40 p-5 sm:p-6 flex flex-col gap-4 shadow-xs">
+    <div className="w-full rounded-lg border border-secondary/6 bg-primary/40 p-5 sm:p-6 flex flex-col gap-4 shadow-2xs">
       {/* ─── Top Month Header ────────────────────────────────────────────── */}
       <div className="flex items-center justify-between gap-2">
         <button
           type="button"
           onClick={handleToday}
-          className="px-3 py-1 text-xs font-medium rounded-lg border border-secondary/15 bg-primary/60 text-secondary hover:bg-secondary/10 transition-colors cursor-pointer"
+          className="px-3 py-1 text-xs font-medium rounded-md border border-secondary/8 bg-primary/60 text-secondary hover:bg-secondary/10 transition-colors cursor-pointer"
         >
           Today
         </button>
@@ -183,7 +183,7 @@ export default function EventCalendarWidget({
           <button
             type="button"
             onClick={handlePrevMonth}
-            className="size-7 rounded-lg border border-secondary/15 bg-primary/60 flex items-center justify-center text-secondary/70 hover:text-secondary hover:bg-secondary/10 transition-colors cursor-pointer"
+            className="size-7 rounded-md border border-secondary/8 bg-primary/60 flex items-center justify-center text-secondary/70 hover:text-secondary hover:bg-secondary/10 transition-colors cursor-pointer"
             aria-label="Previous Month"
           >
             <svg
@@ -209,7 +209,7 @@ export default function EventCalendarWidget({
           <button
             type="button"
             onClick={handleNextMonth}
-            className="size-7 rounded-lg border border-secondary/15 bg-primary/60 flex items-center justify-center text-secondary/70 hover:text-secondary hover:bg-secondary/10 transition-colors cursor-pointer"
+            className="size-7 rounded-md border border-secondary/8 bg-primary/60 flex items-center justify-center text-secondary/70 hover:text-secondary hover:bg-secondary/10 transition-colors cursor-pointer"
             aria-label="Next Month"
           >
             <svg
@@ -231,7 +231,7 @@ export default function EventCalendarWidget({
       </div>
 
       {/* ─── Weekdays Header ────────────────────────────────────────────── */}
-      <div className="grid grid-cols-7 gap-1 text-center font-medium text-xs text-secondary/50 select-none pb-1 border-b border-secondary/10">
+      <div className="grid grid-cols-7 gap-1 text-center font-medium text-xs text-secondary/50 select-none pb-1 border-b border-secondary/6">
         {WEEKDAYS.map((w) => (
           <div key={w} className="py-1">
             {w}
@@ -255,7 +255,7 @@ export default function EventCalendarWidget({
                   onSelectDate(cell.dateStr);
                 }
               }}
-              className={`relative h-9 sm:h-10 rounded-xl flex flex-col items-center justify-center gap-0.5 transition-all text-xs cursor-pointer ${
+              className={`relative h-9 sm:h-10 rounded-md flex flex-col items-center justify-center gap-0.5 transition-all text-xs cursor-pointer ${
                 cell.isSelected
                   ? "bg-secondary text-background font-bold shadow-xs scale-105"
                   : cell.isCurrentMonth
