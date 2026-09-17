@@ -29,7 +29,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
     COUNTRIES[0], // Defaults to Albania
   );
   const [phoneNumber, setPhoneNumber] = useState("");
-  const initialReferralCode = searchParams.get("ref") || searchParams.get("e") || "";
+  const initialReferralCode =
+    searchParams.get("ref") || searchParams.get("e") || "";
   const [referralCode, setReferralCode] = useState(initialReferralCode);
   const impressionTracked = useRef(false);
   const [turnstileToken, setTurnstileToken] = useState("");
@@ -119,8 +120,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
 
       if (res.success) {
         setSuccess(
-          res.message ||
-            "Registration successful! Redirecting to login...",
+          res.message || "Registration successful! Redirecting to login...",
         );
         setTimeout(() => {
           if (onSwitchToLogin) {
@@ -133,8 +133,16 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
         setError(res.message || "Failed to complete registration.");
       }
     } catch (err: unknown) {
-      const anyErr = err as { response?: { data?: { message?: string; errors?: Record<string, string[]> } }; message?: string };
-      const serverMsg = anyErr.response?.data?.message || anyErr.message || "An unexpected error occurred.";
+      const anyErr = err as {
+        response?: {
+          data?: { message?: string; errors?: Record<string, string[]> };
+        };
+        message?: string;
+      };
+      const serverMsg =
+        anyErr.response?.data?.message ||
+        anyErr.message ||
+        "An unexpected error occurred.";
       setError(serverMsg);
     } finally {
       setIsLoading(false);
@@ -304,7 +312,9 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
                       <span className="text-base">{c.flag}</span>
                       <span className="truncate max-w-[140px]">{c.name}</span>
                     </span>
-                    <span className="text-secondary/60 font-mono text-[11px]">{c.dialCode}</span>
+                    <span className="text-secondary/60 font-mono text-[11px]">
+                      {c.dialCode}
+                    </span>
                   </button>
                 ))}
               </div>
@@ -377,7 +387,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
       {/* Referral Code (Optional) */}
       <div className="flex flex-col gap-1.5">
         <label className="text-sm font-medium text-secondary/70">
-          Referral Code <span className="text-secondary/40 font-normal">(Optional)</span>
+          Referral Code{" "}
+          <span className="text-secondary/40 font-normal">(Optional)</span>
         </label>
         <input
           type="text"
@@ -422,12 +433,11 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
 
       <TurnstileWidget onToken={setTurnstileToken} />
 
-
       {/* Register Now Action Button */}
       <button
         type="submit"
         disabled={isLoading}
-        className="w-full h-12 mt-1 rounded-lg bg-accent hover:bg-accent/90 active:scale-[0.99] text-primary font-medium text-base transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
+        className="w-full h-12 mt-1 rounded-lg bg-accent hover:bg-accent/90 active:scale-[0.99] text-white font-medium text-base transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
       >
         {isLoading ? (
           <span className="loading loading-spinner loading-sm"></span>

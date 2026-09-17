@@ -18,7 +18,7 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
   return (
     <section className="w-screen bg-background h-screen flex flex-row">
       {/* Left Hero Mesh Panel */}
-      <div className="w-125 md:w-150 xl:w-175 hidden xl:block h-full relative rounded-r-2xl overflow-hidden bg-primary/60 shrink-0">
+      <div className="w-125 md:w-150 xl:w-175 hidden xl:block h-full relative overflow-hidden bg-primary/60 shrink-0">
         {/* underlay */}
         <div className="absolute z-1 inset-0 bg-[url(/images/bg-2.webp)] bg-cover bg-no-repeat"></div>
 
@@ -47,7 +47,9 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
       >
         <div className="inner max-w-87 sm:max-w-96 w-full flex flex-col gap-1 my-auto">
           <p className="text-[22px] tracking-tighter text-secondary">{title}</p>
-          <p className="text-secondary/50 font-medium mb-3">{subtitle}</p>
+          <p className="text-secondary/50 font-mediumb text-sm mb-3">
+            {subtitle}
+          </p>
 
           {children}
         </div>

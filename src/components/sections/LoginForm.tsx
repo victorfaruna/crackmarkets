@@ -239,7 +239,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
       <button
         type="submit"
         disabled={isLoading}
-        className="w-full h-12 mt-1 rounded-lg bg-accent hover:bg-accent/90 active:scale-[0.99] text-primary font-medium text-base transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
+        className="w-full h-12 mt-1 rounded-lg bg-accent hover:bg-accent/90 active:scale-[0.99] text-white font-medium text-base transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
       >
         {isLoading ? (
           <span className="loading loading-spinner loading-sm"></span>

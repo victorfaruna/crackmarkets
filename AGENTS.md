@@ -9,7 +9,7 @@ Welcome to **Trackmarkets**. This document is the single source of truth for the
 - **Domain**: Trackmarkets — Advanced Service Provider & 10-Level Referral Management System integrated with RoboForex trading APIs.
 - **Frontend Stack**: Next.js (App Router), React 19, TypeScript, Tailwind CSS v4, DaisyUI.
 - **State & Data Layer**: Zustand stores (`src/lib/stores/`), Axios (`src/lib/services/api.ts`), TanStack React Query.
-- **Theme State**: `useAppStore` is the source of truth for `light`/`dark`. Its persisted Zustand value is applied to `<html data-theme>` by a pre-hydration bootstrap in the root layout, then kept synchronized by the store setter and `ThemeHydrator`.
+- **Theme State**: `useAppStore` is the source of truth for `light`/`dark`, with `light` as the default. Its persisted Zustand value is applied to `<html data-theme>` by a pre-hydration bootstrap in the root layout, then kept synchronized by the store setter and `ThemeHydrator`.
 - **Font Stack**: Inter (`font-inter`) is the sole application font for body copy, headings, labels, metrics, and interface text.
 - **Core Principle**: Broker data is the source of truth for deposits, trades, lots, and trading volume. The platform database is the source of truth for referral relationships, commission calculations, qualifications, wallets, withdrawals, and rewards.
 
@@ -27,6 +27,7 @@ Welcome to **Trackmarkets**. This document is the single source of truth for the
 | **App Background** | `--background` | `bg-background`, `text-background` | Root canvas & page background |
 | **Card / Primary Layer** | `--primary` | `bg-primary`, `text-primary`, `bg-primary/20`, `bg-primary/50` | Input fields, cards, modal sheets |
 | **Main Text / Contrast** | `--secondary` | `text-secondary`, `bg-secondary`, `border-secondary/15` | Headings, body copy, standard borders |
+| **Text on Fixed Dark Surfaces** | `--on-dark` | `text-on-dark`, `text-on-dark/80` | Light text that remains readable on intentionally dark cards in either theme |
 | **Muted Text / Subtext** | `--subtext` | `text-subtext`, `border-subtext/30` | Placeholders, captions, disabled states |
 | **Primary Accent / CTA** | `--accent` | `bg-accent`, `text-accent`, `hover:bg-accent/90`, `focus:border-accent`, `accent-accent` | Primary action buttons, active tabs, focus rings |
 | **Error / Destructive** | `--error` | `text-error`, `bg-error/10`, `border-error/20` | Form validation errors, danger alerts |
@@ -230,7 +231,7 @@ Events                     /dashboard/events           (flat, gated by RoboForex
 9. **Trader Profile (`/dashboard/profile`)**:
    - **Personal Information Card**: Dynamic profile avatar, full name, account badges (Partner, Referral ID, RoboForex ID, Joined date, Referrer status), contact & identity grid (Birthday, Email, Phone, Telegram, Country, Living Address), and interactive privacy & notification switches.
    - **Partner Referral QR Card**: Live QR code generator with avatar inlay, custom link copy, and native share.
-   - **Platform Integration Cards**: RoboForex, FOXAi, and BIX Wallets integration cards.
+   - **Platform Integration Cards**: RoboForex, FOXAi, and BIX Wallets integration cards. RoboForex actions use the `lazwx` master referral URL; FOXAi actions use the copy-trading profile for account `77055739`.
 
 10. **Notifications (`/dashboard/notifications`)**: Centralized notifications center for commissions, network events, security milestones, and system notices with category filtering and mark-as-read workflows.
 

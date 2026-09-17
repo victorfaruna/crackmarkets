@@ -3,7 +3,7 @@ export const APP_STORE_STORAGE_KEY = "trackmarkets-app-state";
 export const APP_THEMES = ["light", "dark"] as const;
 export type AppTheme = (typeof APP_THEMES)[number];
 
-export const DEFAULT_APP_THEME: AppTheme = "dark";
+export const DEFAULT_APP_THEME: AppTheme = "light";
 
 export function isAppTheme(value: unknown): value is AppTheme {
   return APP_THEMES.includes(value as AppTheme);

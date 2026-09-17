@@ -7,8 +7,9 @@
   --background: #ffffff;
   --primary: #f4f4f4;
   --secondary: #010312;
+  --on-dark: #f5f5f5;
   --subtext: #a2a2a2;
-  --accent: #d07d53;
+  --accent: #ca8a4a;
   --neo: oklch(64.735% 0.12579 124.323);
   --error: rgb(255, 0, 0);
   --success: #67cd5b;
@@ -21,10 +22,11 @@
   /* --background: #000000;
   --primary: rgb(9, 9, 9); */
   --background: oklch(0% 0 0);
-  --primary: rgb(17, 17, 17);
+  --primary: rgb(40, 40, 40);
   --secondary: #dbdbdb;
+  --on-dark: #f5f5f5;
   --subtext: #787878;
-  --accent: #7289ff;
+  --accent: #ca8a4a;
   --neo: oklch(64.735% 0.12579 124.323);
 
   --error: rgb(255, 107, 144);
@@ -51,6 +53,7 @@
   --color-background: var(--background);
   --color-primary: var(--primary);
   --color-secondary: var(--secondary);
+  --color-on-dark: var(--on-dark);
   --color-accent: var(--accent);
   --color-neo: var(--neo);
   --color-subtext: var(--subtext);
