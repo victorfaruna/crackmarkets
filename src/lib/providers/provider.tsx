@@ -6,10 +6,8 @@ import TopLoader from "@/src/components/shared/TopLoader";
 
 const Providers = ({
   children,
-  session,
 }: {
   children: React.ReactNode;
-  session?: any;
 }) => {
   const [queryClient] = useState(
     () =>

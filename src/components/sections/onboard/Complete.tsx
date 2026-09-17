@@ -1,7 +1,6 @@
 "use client";
 
 import Logo from "@/src/components/shared/Logo";
-import { useOnboardStore } from "@/src/lib/stores/onboardStore";
 import {
   useOnboardSetup,
   ONBOARD_STAGES,
@@ -12,7 +11,6 @@ import { useAppStore } from "@/src/lib/stores/appStore";
 
 const Complete = () => {
   const router = useRouter();
-  const { formData } = useOnboardStore();
   const { stage, currentStageInfo, isRunning, error, run } = useOnboardSetup();
   const hasStarted = useRef(false);
 
@@ -118,8 +116,8 @@ const Complete = () => {
 
           <div className="flex items-center gap-2 opacity-60">
             <Logo size={18} />
-            <span className="text-xs text-secondary font-roobert">
-              Powered by Chainroll
+            <span className="text-sm text-secondary font-inter">
+              Powered by Trackmarkets
             </span>
           </div>
 
@@ -136,8 +134,8 @@ const Complete = () => {
       {stage === "error" && (
         <>
           <div className="relative">
-            <div className="absolute inset-0 blur-3xl bg-red-500/15 rounded-full scale-150" />
-            <div className="size-12 rounded-full bg-red-500/10 flex items-center justify-center relative">
+            <div className="absolute inset-0 blur-3xl bg-error/15 rounded-full scale-150" />
+            <div className="size-12 rounded-full bg-error/10 flex items-center justify-center relative">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
@@ -146,7 +144,7 @@ const Complete = () => {
                 strokeWidth={2}
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="size-10 text-red-400"
+                className="size-10 text-error"
               >
                 <line x1="18" y1="6" x2="6" y2="18" />
                 <line x1="6" y1="6" x2="18" y2="18" />
@@ -155,17 +153,17 @@ const Complete = () => {
           </div>
 
           <div className="flex flex-col items-center gap-2">
-            <p className="font-medium text-xl text-red-400 text-center leading-none">
+            <p className="font-medium text-xl text-error text-center leading-none">
               Setup Failed
             </p>
-            <p className="text-red-400/70 text-center text-sm max-w-sm">
+            <p className="text-error/70 text-center text-sm max-w-sm">
               {error}
             </p>
           </div>
 
           <button
             onClick={run}
-            className="rounded-full border border-red-400/60 font-semibold text-red-400 px-8 py-3 whitespace-nowrap transition-all duration-300 hover:scale-105 active:scale-95"
+            className="rounded-full border border-error/60 font-semibold text-error px-8 py-3 whitespace-nowrap transition-all duration-300 hover:scale-105 active:scale-95"
           >
             Retry
           </button>

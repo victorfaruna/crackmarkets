@@ -45,8 +45,8 @@ export const PartnerReferralCard: React.FC = () => {
     if (typeof navigator !== "undefined" && navigator.share) {
       try {
         await navigator.share({
-          title: "Track Markets Partner Referral",
-          text: `Join my trading network on Track Markets: ${referralLink}`,
+          title: "Trackmarkets Partner Referral",
+          text: `Join my trading network on Trackmarkets: ${referralLink}`,
           url: referralLink,
         });
       } catch {
@@ -76,7 +76,7 @@ export const PartnerReferralCard: React.FC = () => {
     <div className="w-full rounded-2xl bg-primary/50 border-[0.5px] border-secondary/7 p-5 flex flex-col justify-between gap-4 relative">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-secondary font-clash-display tracking-tighter text-lg font-medium tracking-tight">
+        <h2 className="text-secondary font-inter tracking-tighter text-lg font-medium tracking-tight">
           Partner
         </h2>
 
@@ -123,7 +123,7 @@ export const PartnerReferralCard: React.FC = () => {
 
       {/* Referral Link Bar */}
       <div className="w-full rounded-xl bg-background border-[0.5px] border-secondary/15 px-3 py-2 flex items-center justify-between gap-2 shadow-2xs">
-        <span className="text-xs font-mono text-secondary/80 truncate select-all">
+        <span className="text-sm font-mono text-secondary/80 truncate select-all">
           {referralLink}
         </span>
         <button
@@ -165,9 +165,9 @@ export const PartnerReferralCard: React.FC = () => {
       </div>
 
       {/* Dark Partner Identity Sub-card */}
-      <div className="w-full rounded-2xl p-2 flex items-start gap-4 text-white ">
+      <div className="w-full rounded-2xl p-2 flex items-start gap-4 text-secondary ">
         {/* QR Code with custom logo center */}
-        <div className="relative shrink-0 p-4 bg-white rounded-xl shadow-sm flex items-center justify-center">
+        <div className="relative shrink-0 p-4 bg-background rounded-xl shadow-sm flex items-center justify-center">
           <QRCodeSVG
             value={referralLink}
             size={200}
@@ -190,7 +190,7 @@ export const PartnerReferralCard: React.FC = () => {
           </h3>
 
           {email && (
-            <div className="flex items-center gap-2 text-secondary/70 text-xs truncate">
+            <div className="flex items-center gap-2 text-secondary/70 text-sm truncate">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 20 20"
@@ -205,7 +205,7 @@ export const PartnerReferralCard: React.FC = () => {
           )}
 
           {phone && (
-            <div className="flex items-center gap-2 text-secondary/70 text-xs truncate">
+            <div className="flex items-center gap-2 text-secondary/70 text-sm truncate">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 20 20"

@@ -1,8 +1,6 @@
 import { db } from "./index";
 import { events } from "./schema/events";
 
-const NOW = new Date();
-
 const seedData = [
   {
     title: "Global Partner Trading Championship (Q3 2026)",
@@ -16,7 +14,7 @@ const seedData = [
     status: "UPCOMING",
   },
   {
-    title: "Track Markets Leadership Incentive Summit",
+    title: "Trackmarkets Leadership Incentive Summit",
     category: "PARTNER_SUMMIT",
     description:
       "Exclusive summit for Tier 4+ qualified leaders. Includes strategic workshops on 10-level network optimization, luxury networking, and grand estate qualification previews.",

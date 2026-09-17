@@ -3,7 +3,6 @@ import {
   getEvents,
   getEventById,
   type EventsFilterParams,
-  type EventItem,
 } from "../services/events";
 
 export const EVENTS_QUERY_KEY = ["events"];

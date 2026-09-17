@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/src/lib/db";
 import { events } from "@/src/lib/db/schema/events";
 import { eq } from "drizzle-orm";
+import { z } from "zod";
 
 export async function GET(
   _request: NextRequest,
@@ -9,6 +10,13 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+    const parsedId = z.string().uuid().safeParse(id);
+    if (!parsedId.success) {
+      return NextResponse.json(
+        { success: false, message: "Invalid event ID" },
+        { status: 400 },
+      );
+    }
 
     const [event] = await db
       .select({
@@ -25,7 +33,7 @@ export async function GET(
         updated_at: events.updatedAt,
       })
       .from(events)
-      .where(eq(events.id, id))
+      .where(eq(events.id, parsedId.data))
       .limit(1);
 
     if (!event) {

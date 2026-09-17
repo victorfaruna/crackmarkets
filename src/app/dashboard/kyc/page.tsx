@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { useUser } from "@/src/lib/hooks/useUser";
+import { useLinkRoboForex, useUser } from "@/src/lib/hooks/useUser";
 import { useUserStore } from "@/src/lib/stores/userStore";
 
 export default function KycBrokerPage() {
@@ -12,6 +12,8 @@ export default function KycBrokerPage() {
   const kycStatus = user?.kyc_status || "NOT_SUBMITTED";
   const fundingStatus = user?.funding_status || "LOCKED";
   const userCountry = user?.country || "United States";
+  const brokerLinked = user?.roboforex_linked === true;
+  const kycPending = kycStatus === "PENDING";
 
   // Modal States
   const [isKycModalOpen, setIsKycModalOpen] = useState(false);
@@ -21,52 +23,40 @@ export default function KycBrokerPage() {
   const [docType, setDocType] = useState<"PASSPORT" | "NATIONAL_ID" | "DRIVERS_LICENSE">("PASSPORT");
   const [docNumber, setDocNumber] = useState("");
   const [frontFile, setFrontFile] = useState<string | null>(null);
-  const [isSubmittingKyc, setIsSubmittingKyc] = useState(false);
-  const [kycSubmitted, setKycSubmitted] = useState(false);
+  const [kycError, setKycError] = useState("");
 
   // Broker Link State
-  const [brokerServer, setBrokerServer] = useState("RoboForex-ECN-Pro");
   const [brokerAccountId, setBrokerAccountId] = useState("");
-  const [brokerPassword, setBrokerPassword] = useState("");
-  const [isLinkingBroker, setIsLinkingBroker] = useState(false);
-  const [brokerLinked, setBrokerLinked] = useState(false);
+  const [brokerMessage, setBrokerMessage] = useState("");
+  const { mutateAsync: linkRoboForex, isPending: isLinkingBroker } = useLinkRoboForex();
 
   const handleKycSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!docNumber) return;
-
-    setIsSubmittingKyc(true);
-    setTimeout(() => {
-      setIsSubmittingKyc(false);
-      setKycSubmitted(true);
-      setTimeout(() => {
-        setIsKycModalOpen(false);
-      }, 1000);
-    }, 800);
+    setKycError(
+      "KYC document submission is unavailable until a verified KYC provider is configured.",
+    );
   };
 
-  const handleBrokerSubmit = (e: React.FormEvent) => {
+  const handleBrokerSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!brokerAccountId || !brokerPassword) return;
-
-    setIsLinkingBroker(true);
-    setTimeout(() => {
-      setIsLinkingBroker(false);
-      setBrokerLinked(true);
-      setTimeout(() => {
-        setIsBrokerModalOpen(false);
-      }, 1000);
-    }, 800);
+    if (!brokerAccountId) return;
+    setBrokerMessage("");
+    try {
+      const response = await linkRoboForex(brokerAccountId.trim());
+      setBrokerMessage(response.message || "RoboForex account verified and linked.");
+    } catch {
+      setBrokerMessage("The broker account could not be verified.");
+    }
   };
 
   return (
     <section className="w-full max-w-330 min-h-full pt-5 px-5 pb-16 flex flex-col gap-6">
       {/* ─── Header ──────────────────────────────────────────────────────────── */}
       <div className="flex flex-col gap-0.5">
-        <h1 className="text-secondary text-lg font-medium font-clash-display">
+        <h1 className="text-secondary text-lg font-medium font-inter">
           KYC & Broker Verification
         </h1>
-        <p className="text-secondary/60 text-xs">
+        <p className="text-secondary/60 text-sm">
           Identity verification and broker account connection status.
         </p>
       </div>
@@ -95,12 +85,12 @@ export default function KycBrokerPage() {
 
             <div className="flex flex-col gap-0.5">
               <div className="flex items-center gap-2">
-                <h3 className="text-xs font-semibold text-secondary">
+                <h3 className="text-sm font-semibold text-secondary">
                   Identity Verification (KYC)
                 </h3>
                 <span
                   className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border-[0.5px] ${
-                    kycSubmitted || kycStatus === "APPROVED"
+                    kycStatus === "APPROVED"
                       ? "bg-success/10 text-success border-success/20"
                       : kycStatus === "PENDING"
                       ? "bg-accent/10 text-accent border-accent/20"
@@ -109,16 +99,14 @@ export default function KycBrokerPage() {
                 >
                   <span
                     className={`size-1.5 rounded-full ${
-                      kycSubmitted || kycStatus === "APPROVED"
+                      kycStatus === "APPROVED"
                         ? "bg-success"
                         : kycStatus === "PENDING"
                         ? "bg-accent animate-pulse"
                         : "bg-secondary/40"
                     }`}
                   />
-                  {kycSubmitted
-                    ? "In Review"
-                    : kycStatus === "NOT_SUBMITTED"
+                  {kycStatus === "NOT_SUBMITTED"
                     ? "Required"
                     : kycStatus}
                 </span>
@@ -132,10 +120,10 @@ export default function KycBrokerPage() {
           <button
             type="button"
             onClick={() => setIsKycModalOpen(true)}
-            disabled={kycSubmitted || kycStatus === "APPROVED"}
-            className="self-start sm:self-auto px-3.5 py-1.5 rounded-lg bg-secondary/4 hover:bg-secondary/8 border-[0.5px] border-secondary/10 text-secondary text-xs font-medium transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+            disabled={kycPending || kycStatus === "APPROVED"}
+            className="self-start sm:self-auto px-3.5 py-1.5 rounded-lg bg-secondary/4 hover:bg-secondary/8 border-[0.5px] border-secondary/10 text-secondary text-sm font-medium transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
           >
-            {kycSubmitted
+            {kycPending
               ? "Pending Review"
               : kycStatus === "APPROVED"
               ? "Verified"
@@ -167,7 +155,7 @@ export default function KycBrokerPage() {
 
             <div className="flex flex-col gap-0.5">
               <div className="flex items-center gap-2">
-                <h3 className="text-xs font-semibold text-secondary">
+                <h3 className="text-sm font-semibold text-secondary">
                   RoboForex Broker Account
                 </h3>
                 <span
@@ -186,7 +174,7 @@ export default function KycBrokerPage() {
                 </span>
               </div>
               <p className="text-[11px] text-secondary/50">
-                Link your MetaTrader credentials for automatic lot volume and bonus synchronization.
+                Verify your RoboForex account ID before broker synchronization can be enabled.
               </p>
             </div>
           </div>
@@ -195,7 +183,7 @@ export default function KycBrokerPage() {
             type="button"
             onClick={() => setIsBrokerModalOpen(true)}
             disabled={brokerLinked}
-            className="self-start sm:self-auto px-3.5 py-1.5 rounded-lg bg-secondary/4 hover:bg-secondary/8 border-[0.5px] border-secondary/10 text-secondary text-xs font-medium transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+            className="self-start sm:self-auto px-3.5 py-1.5 rounded-lg bg-secondary/4 hover:bg-secondary/8 border-[0.5px] border-secondary/10 text-secondary text-sm font-medium transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
           >
             {brokerLinked ? "Connected" : "Link Broker"}
           </button>
@@ -230,22 +218,22 @@ export default function KycBrokerPage() {
 
       {/* ─── Modal 1: KYC Verification Trigger Modal ─────────────────────────── */}
       {isKycModalOpen && (
-        <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
+        <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-secondary/40 backdrop-blur-xs animate-fade-in">
           <div className="w-full max-w-md bg-background border-[0.5px] border-secondary/15 rounded-xl p-5 shadow-xl flex flex-col gap-4 relative">
             <div className="flex items-center justify-between pb-3 border-b-[0.5px] border-secondary/8">
-              <h3 className="font-medium text-xs font-clash-display text-secondary">
+              <h3 className="font-medium text-sm font-inter text-secondary">
                 Submit KYC Document
               </h3>
               <button
                 type="button"
                 onClick={() => setIsKycModalOpen(false)}
-                className="size-6 rounded-md flex items-center justify-center text-secondary/50 hover:text-secondary hover:bg-secondary/5 cursor-pointer text-xs"
+                className="size-6 rounded-md flex items-center justify-center text-secondary/50 hover:text-secondary hover:bg-secondary/5 cursor-pointer text-sm"
               >
                 ✕
               </button>
             </div>
 
-            <form onSubmit={handleKycSubmit} className="flex flex-col gap-3.5 text-xs text-secondary">
+            <form onSubmit={handleKycSubmit} className="flex flex-col gap-3.5 text-sm text-secondary">
               <div className="flex flex-col gap-1">
                 <label className="font-medium text-secondary/70 text-[11px]">
                   Document Type
@@ -260,7 +248,7 @@ export default function KycBrokerPage() {
                       key={t.id}
                       type="button"
                       onClick={() => setDocType(t.id)}
-                      className={`py-1.5 px-2 rounded-lg text-xs font-medium border-[0.5px] transition-colors cursor-pointer ${
+                      className={`py-1.5 px-2 rounded-lg text-sm font-medium border-[0.5px] transition-colors cursor-pointer ${
                         docType === t.id
                           ? "bg-secondary text-background border-secondary font-semibold"
                           : "bg-secondary/3 border-secondary/8 text-secondary/70 hover:text-secondary"
@@ -282,7 +270,7 @@ export default function KycBrokerPage() {
                   onChange={(e) => setDocNumber(e.target.value)}
                   placeholder="e.g. A12345678"
                   required
-                  className="w-full h-9 px-3 rounded-lg border-[0.5px] border-secondary/10 bg-secondary/3 text-secondary text-xs placeholder:text-secondary/30 outline-hidden focus:border-secondary/25"
+                  className="w-full h-9 px-3 rounded-lg border-[0.5px] border-secondary/10 bg-secondary/3 text-secondary text-sm placeholder:text-secondary/30 outline-hidden focus:border-secondary/25"
                 />
               </div>
 
@@ -290,7 +278,7 @@ export default function KycBrokerPage() {
                 <label className="font-medium text-secondary/70 text-[11px]">
                   Document Photo
                 </label>
-                <label className="h-12 rounded-lg border-[0.5px] border-secondary/10 bg-secondary/3 hover:bg-secondary/6 flex items-center justify-between px-3 cursor-pointer transition-colors text-xs">
+                <label className="h-12 rounded-lg border-[0.5px] border-secondary/10 bg-secondary/3 hover:bg-secondary/6 flex items-center justify-between px-3 cursor-pointer transition-colors text-sm">
                   <input
                     type="file"
                     accept="image/*,.pdf"
@@ -299,7 +287,7 @@ export default function KycBrokerPage() {
                       if (e.target.files?.[0]) setFrontFile(e.target.files[0].name);
                     }}
                   />
-                  <span className="text-secondary/70 truncate max-w-[200px] text-xs">
+                  <span className="text-secondary/70 truncate max-w-[200px] text-sm">
                     {frontFile || "Choose photo file"}
                   </span>
                   <span className="text-[11px] text-accent font-medium shrink-0">
@@ -308,18 +296,18 @@ export default function KycBrokerPage() {
                 </label>
               </div>
 
-              {kycSubmitted && (
-                <div className="p-2.5 rounded-lg bg-success/10 border-[0.5px] border-success/20 text-success text-xs font-medium text-center">
-                  Verification submitted for review.
+              {kycError && (
+                <div className="p-2.5 rounded-lg bg-error/10 border-[0.5px] border-error/20 text-error text-sm font-medium text-center">
+                  {kycError}
                 </div>
               )}
 
               <button
                 type="submit"
-                disabled={isSubmittingKyc || kycSubmitted}
-                className="w-full h-9 rounded-full bg-secondary text-background font-medium text-xs hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-40 mt-1"
+                disabled
+                className="w-full h-9 rounded-full bg-secondary text-background font-medium text-sm hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-40 mt-1"
               >
-                {isSubmittingKyc ? "Submitting..." : "Submit Verification"}
+                Submission Unavailable
               </button>
             </form>
           </div>
@@ -328,37 +316,22 @@ export default function KycBrokerPage() {
 
       {/* ─── Modal 2: Broker Connection Modal ───────────────────────────────── */}
       {isBrokerModalOpen && (
-        <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
+        <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-secondary/40 backdrop-blur-xs animate-fade-in">
           <div className="w-full max-w-md bg-background border-[0.5px] border-secondary/15 rounded-xl p-5 shadow-xl flex flex-col gap-4 relative">
             <div className="flex items-center justify-between pb-3 border-b-[0.5px] border-secondary/8">
-              <h3 className="font-medium text-xs font-clash-display text-secondary">
+              <h3 className="font-medium text-sm font-inter text-secondary">
                 Link RoboForex Account
               </h3>
               <button
                 type="button"
                 onClick={() => setIsBrokerModalOpen(false)}
-                className="size-6 rounded-md flex items-center justify-center text-secondary/50 hover:text-secondary hover:bg-secondary/5 cursor-pointer text-xs"
+                className="size-6 rounded-md flex items-center justify-center text-secondary/50 hover:text-secondary hover:bg-secondary/5 cursor-pointer text-sm"
               >
                 ✕
               </button>
             </div>
 
-            <form onSubmit={handleBrokerSubmit} className="flex flex-col gap-3.5 text-xs text-secondary">
-              <div className="flex flex-col gap-1">
-                <label className="font-medium text-secondary/70 text-[11px]">
-                  Trading Server
-                </label>
-                <select
-                  value={brokerServer}
-                  onChange={(e) => setBrokerServer(e.target.value)}
-                  className="w-full h-9 px-2.5 rounded-lg border-[0.5px] border-secondary/10 bg-secondary/3 text-secondary text-xs outline-hidden focus:border-secondary/25 cursor-pointer"
-                >
-                  <option value="RoboForex-ECN-Pro">RoboForex-ECN-Pro</option>
-                  <option value="RoboForex-ProStandard">RoboForex-ProStandard</option>
-                  <option value="RoboForex-ECN-Prime">RoboForex-ECN-Prime</option>
-                </select>
-              </div>
-
+            <form onSubmit={handleBrokerSubmit} className="flex flex-col gap-3.5 text-sm text-secondary">
               <div className="flex flex-col gap-1">
                 <label className="font-medium text-secondary/70 text-[11px]">
                   Account Login ID
@@ -369,37 +342,20 @@ export default function KycBrokerPage() {
                   onChange={(e) => setBrokerAccountId(e.target.value)}
                   placeholder="e.g. 68294012"
                   required
-                  className="w-full h-9 px-3 rounded-lg border-[0.5px] border-secondary/10 bg-secondary/3 text-secondary text-xs font-mono placeholder:font-sans placeholder:text-secondary/30 outline-hidden focus:border-secondary/25"
+                  className="w-full h-9 px-3 rounded-lg border-[0.5px] border-secondary/10 bg-secondary/3 text-secondary text-sm font-mono placeholder:font-sans placeholder:text-secondary/30 outline-hidden focus:border-secondary/25"
                 />
               </div>
 
-              <div className="flex flex-col gap-1">
-                <div className="flex items-center justify-between">
-                  <label className="font-medium text-secondary/70 text-[11px]">
-                    Investor / Read-Only Password
-                  </label>
-                  <span className="text-[10px] text-secondary/40">Read-only sync</span>
-                </div>
-                <input
-                  type="password"
-                  value={brokerPassword}
-                  onChange={(e) => setBrokerPassword(e.target.value)}
-                  placeholder="••••••••••••"
-                  required
-                  className="w-full h-9 px-3 rounded-lg border-[0.5px] border-secondary/10 bg-secondary/3 text-secondary text-xs placeholder:text-secondary/30 outline-hidden focus:border-secondary/25"
-                />
-              </div>
-
-              {brokerLinked && (
-                <div className="p-2.5 rounded-lg bg-success/10 border-[0.5px] border-success/20 text-success text-xs font-medium text-center">
-                  RoboForex account connected successfully.
+              {brokerMessage && (
+                <div className="p-2.5 rounded-lg bg-primary border-[0.5px] border-secondary/20 text-secondary text-sm font-medium text-center">
+                  {brokerMessage}
                 </div>
               )}
 
               <button
                 type="submit"
-                disabled={isLinkingBroker || brokerLinked}
-                className="w-full h-9 rounded-full bg-secondary text-background font-medium text-xs hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-40 mt-1"
+                disabled={isLinkingBroker}
+                className="w-full h-9 rounded-full bg-secondary text-background font-medium text-sm hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-40 mt-1"
               >
                 {isLinkingBroker ? "Connecting..." : "Connect Broker"}
               </button>

@@ -3,6 +3,15 @@ import { getSessionFromRequest } from "@/src/lib/auth/session";
 import { db } from "@/src/lib/db";
 import { transactions, wallets } from "@/src/lib/db/schema";
 import { eq, and, desc, SQL, ilike, or } from "drizzle-orm";
+import { z } from "zod";
+
+const transactionQuerySchema = z
+  .object({
+    type: z.enum(["ALL", "COMMISSION", "WITHDRAWAL", "DEPOSIT"]).optional(),
+    status: z.enum(["ALL", "COMPLETED", "PENDING", "FAILED", "REVERSED"]).optional(),
+    search: z.string().trim().max(255).optional(),
+  })
+  .strict();
 
 export async function GET(request: NextRequest) {
   try {
@@ -15,31 +24,23 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { searchParams } = new URL(request.url);
-    const type = searchParams.get("type"); // "ALL" | "COMMISSION" | "WITHDRAWAL" | "DEPOSIT"
-    const status = searchParams.get("status"); // "ALL" | "COMPLETED" | "PENDING" | "FAILED"
-    const search = searchParams.get("search");
+    const parsed = transactionQuerySchema.safeParse(
+      Object.fromEntries(request.nextUrl.searchParams.entries()),
+    );
+    if (!parsed.success) {
+      return NextResponse.json(
+        { success: false, message: "Invalid transaction filters." },
+        { status: 400 },
+      );
+    }
+    const { type, status, search } = parsed.data;
 
     // Fetch user's real wallet from database
-    let [wallet] = await db
+    const [wallet] = await db
       .select()
       .from(wallets)
       .where(eq(wallets.userId, session.userId))
       .limit(1);
-
-    if (!wallet) {
-      const [newWallet] = await db
-        .insert(wallets)
-        .values({
-          userId: session.userId,
-          balance: "0.0000",
-          availableBalance: "0.0000",
-          totalWithdrawn: "0.0000",
-          lifetimeEarnings: "0.0000",
-        })
-        .returning();
-      wallet = newWallet;
-    }
 
     const conditions: SQL[] = [eq(transactions.userId, session.userId)];
 
@@ -91,10 +92,10 @@ export async function GET(request: NextRequest) {
       success: true,
       data: {
         wallet: {
-          balance: wallet.balance,
-          available_balance: wallet.availableBalance,
-          total_withdrawn: wallet.totalWithdrawn,
-          lifetime_earnings: wallet.lifetimeEarnings,
+          balance: wallet?.balance || "0.0000",
+          available_balance: wallet?.availableBalance || "0.0000",
+          total_withdrawn: wallet?.totalWithdrawn || "0.0000",
+          lifetime_earnings: wallet?.lifetimeEarnings || "0.0000",
         },
         transactions: txList,
         total: txList.length,

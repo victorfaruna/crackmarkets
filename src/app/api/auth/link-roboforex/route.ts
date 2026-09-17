@@ -1,8 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getSessionFromRequest } from "@/src/lib/auth/session";
 import { db } from "@/src/lib/db";
-import { users } from "@/src/lib/db/schema";
+import { auditLogs, users } from "@/src/lib/db/schema";
 import { eq } from "drizzle-orm";
+import { linkRoboForexSchema } from "@/src/lib/auth/validation";
+import { verifyRoboForexAccount } from "@/src/lib/services/roboforex.server";
+import { getRequestMetadata } from "@/src/lib/security/request";
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,19 +18,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json().catch(() => ({}));
-    const roboforexId = String(body.roboforex_id || "").trim();
-
-    if (!roboforexId) {
+    const parsed = linkRoboForexSchema.safeParse(
+      await request.json().catch(() => ({})),
+    );
+    if (!parsed.success) {
       return NextResponse.json(
-        { success: false, message: "RoboForex ID is required." },
+        { success: false, message: "A valid RoboForex ID is required." },
         { status: 400 },
       );
     }
+    const roboforexId = parsed.data.roboforex_id;
 
     // Check current state first
     const [user] = await db
-      .select({ roboforexLinked: users.roboforexLinked })
+      .select({
+        roboforexLinked: users.roboforexLinked,
+        status: users.status,
+        kycStatus: users.kycStatus,
+      })
       .from(users)
       .where(eq(users.id, session.userId))
       .limit(1);
@@ -46,15 +54,39 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (user.status !== "ACTIVE" || user.kycStatus !== "APPROVED") {
+      return NextResponse.json(
+        { success: false, message: "Email verification and approved KYC are required." },
+        { status: 403 },
+      );
+    }
+
+    if (!(await verifyRoboForexAccount(roboforexId))) {
+      return NextResponse.json(
+        { success: false, message: "Unable to verify that RoboForex account." },
+        { status: 422 },
+      );
+    }
+
     // Mark as linked with their broker ID
-    await db
-      .update(users)
-      .set({
-        roboforexLinked: true,
-        roboforexId: roboforexId,
-        updatedAt: new Date(),
-      })
-      .where(eq(users.id, session.userId));
+    const { ipAddress, userAgent } = getRequestMetadata(request);
+    await db.transaction(async (tx) => {
+      await tx
+        .update(users)
+        .set({
+          roboforexLinked: true,
+          roboforexId,
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, session.userId));
+      await tx.insert(auditLogs).values({
+        userId: session.userId,
+        action: "ROBOFOREX_LINK",
+        ipAddress,
+        userAgent,
+        details: { roboforexId },
+      });
+    });
 
     return NextResponse.json(
       {

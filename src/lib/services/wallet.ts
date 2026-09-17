@@ -79,7 +79,9 @@ export interface WithdrawPayload {
 
 export const withdrawFunds = async (payload: WithdrawPayload) => {
   try {
-    const response = await api.post("/wallet/withdraw", payload);
+    const response = await api.post("/wallet/withdraw", payload, {
+      headers: { "Idempotency-Key": crypto.randomUUID() },
+    });
     return response.data;
   } catch (error) {
     console.error("Error withdrawing funds:", error);

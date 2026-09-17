@@ -1,8 +1,6 @@
 import Link from "next/link";
-import { useUserStore } from "@/src/lib/stores/userStore";
 
 const NotFound = () => {
-  const user = useUserStore.getState().user;
   return (
     <div className="flex items-center justify-center w-full h-screen text-center">
       <div className="flex flex-col gap-4">

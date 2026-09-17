@@ -4,28 +4,36 @@ import {
   users,
   wallets,
   referralNodes,
-  refreshTokens,
-  emailVerificationTokens,
   auditLogs,
 } from "@/src/lib/db/schema";
 import { registerSchema } from "@/src/lib/auth/validation";
 import { hashPassword } from "@/src/lib/auth/password";
-import {
-  signAccessToken,
-  generateRandomToken,
-  hashToken,
-  REFRESH_TOKEN_MAX_AGE_SECONDS,
-} from "@/src/lib/auth/jwt";
-import { setAuthCookies } from "@/src/lib/auth/cookies";
 import { eq } from "drizzle-orm";
 import crypto from "crypto";
+import { checkRateLimit } from "@/src/lib/security/rateLimit";
+import { getRequestMetadata } from "@/src/lib/security/request";
+import { verifyTurnstile } from "@/src/lib/security/turnstile";
 
 function generateReferralCode(): string {
-  return "CRK" + crypto.randomBytes(4).toString("hex").toUpperCase();
+  return "TM" + crypto.randomBytes(4).toString("hex").toUpperCase();
 }
 
 export async function POST(request: NextRequest) {
   try {
+    const { ipAddress, userAgent } = getRequestMetadata(request);
+    const rateLimit = await checkRateLimit({
+      namespace: "auth:register",
+      identifier: ipAddress,
+      limit: 5,
+      windowSeconds: 15 * 60,
+    });
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { success: false, message: "Too many registration attempts. Please try again later." },
+        { status: 429 },
+      );
+    }
+
     const body = await request.json();
     const validationResult = registerSchema.safeParse(body);
 
@@ -48,7 +56,15 @@ export async function POST(request: NextRequest) {
       country,
       password,
       referral_code,
+      turnstile_token,
     } = validationResult.data;
+
+    if (!(await verifyTurnstile(turnstile_token, ipAddress))) {
+      return NextResponse.json(
+        { success: false, message: "Bot verification failed. Please try again." },
+        { status: 400 },
+      );
+    }
 
     const normalizedEmail = email.toLowerCase().trim();
 
@@ -107,28 +123,10 @@ export async function POST(request: NextRequest) {
       attempts++;
     }
 
-    // 4. Create raw tokens
-    const rawRefreshToken = generateRandomToken();
-    const hashedRefreshToken = hashToken(rawRefreshToken);
-    const refreshTokenExpiresAt = new Date(
-      Date.now() + REFRESH_TOKEN_MAX_AGE_SECONDS * 1000,
-    );
-
-    const rawVerificationToken = generateRandomToken(32);
-    const hashedVerificationToken = hashToken(rawVerificationToken);
-    const verificationExpiresAt = new Date(
-      Date.now() + 24 * 60 * 60 * 1000, // 24 hours
-    );
-
-    const ipAddress =
-      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-      request.headers.get("x-real-ip") ||
-      "unknown";
-    const userAgent = request.headers.get("user-agent") || "unknown";
-
-    // 5. Execute creation within database transaction
+    // 4. Execute creation within database transaction. Email verification is
+    // temporarily disabled, so new accounts are activated immediately.
     const newUser = await db.transaction(async (tx) => {
-      // 5a. Insert user
+      // 4a. Insert user
       const [insertedUser] = await tx
         .insert(users)
         .values({
@@ -140,14 +138,14 @@ export async function POST(request: NextRequest) {
           passwordHash,
           referralCode: userReferralCode,
           referredById: referrerId,
-          status: "EMAIL_VERIFICATION_PENDING",
+          status: "ACTIVE",
           kycStatus: "NOT_SUBMITTED",
           fundingStatus: "LOCKED",
           role: "USER",
         })
         .returning();
 
-      // 5b. Create user wallet
+      // 4b. Create user wallet
       await tx.insert(wallets).values({
         userId: insertedUser.id,
         balance: "0.0000",
@@ -156,7 +154,7 @@ export async function POST(request: NextRequest) {
         lifetimeEarnings: "0.0000",
       });
 
-      // 5c. Build 10-level referral tree
+      // 4c. Build 10-level referral tree
       if (referrerId) {
         // Direct Level 1 link
         await tx.insert(referralNodes).values({
@@ -185,23 +183,7 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // 5d. Store email verification token
-      await tx.insert(emailVerificationTokens).values({
-        userId: insertedUser.id,
-        tokenHash: hashedVerificationToken,
-        expiresAt: verificationExpiresAt,
-      });
-
-      // 5e. Store initial refresh token
-      await tx.insert(refreshTokens).values({
-        userId: insertedUser.id,
-        tokenHash: hashedRefreshToken,
-        userAgent,
-        ipAddress,
-        expiresAt: refreshTokenExpiresAt,
-      });
-
-      // 5f. Audit log
+      // 4d. Audit log
       await tx.insert(auditLogs).values({
         userId: insertedUser.id,
         action: "USER_REGISTER",
@@ -210,27 +192,17 @@ export async function POST(request: NextRequest) {
         details: {
           email: normalizedEmail,
           referredBy: referrerId,
+          emailVerificationRequired: false,
         },
       });
 
       return insertedUser;
     });
 
-    // 6. Sign JWT Access Token
-    const accessToken = await signAccessToken({
-      userId: newUser.id,
-      email: newUser.email,
-      role: newUser.role,
-      status: newUser.status,
-      kycStatus: newUser.kycStatus,
-      fundingStatus: newUser.fundingStatus,
-    });
-
     const response = NextResponse.json(
       {
         success: true,
-        message:
-          "Registration successful. Please verify your email to activate full platform features.",
+        message: "Registration successful. You can now sign in.",
         data: {
           user: {
             id: newUser.id,
@@ -246,15 +218,12 @@ export async function POST(request: NextRequest) {
             role: newUser.role,
             created_at: newUser.createdAt,
           },
-          accessToken,
-          verificationToken: rawVerificationToken, // Provided for direct verification / dev email test
         },
       },
       { status: 201 },
     );
 
-    // 7. Set HTTP-only Cookies
-    return setAuthCookies(response, accessToken, rawRefreshToken);
+    return response;
   } catch (error) {
     console.error("Registration error:", error);
     return NextResponse.json(

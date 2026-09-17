@@ -47,7 +47,7 @@ const RightSideDrawer = ({
       <div
         className={`fixed inset-0 z-100 transition-opacity duration-200 ease-out ${
           isOpen
-            ? "bg-black/40 backdrop-blur-xs opacity-100 pointer-events-auto"
+            ? "bg-secondary/40 backdrop-blur-xs opacity-100 pointer-events-auto"
             : "bg-transparent opacity-0 pointer-events-none"
         }`}
         onClick={handleOverlayClick}

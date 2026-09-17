@@ -11,9 +11,26 @@ import {
 } from "@/src/lib/auth/jwt";
 import { setAuthCookies } from "@/src/lib/auth/cookies";
 import { eq } from "drizzle-orm";
+import { checkRateLimit } from "@/src/lib/security/rateLimit";
+import { getRequestMetadata } from "@/src/lib/security/request";
+import { verifyTurnstile } from "@/src/lib/security/turnstile";
 
 export async function POST(request: NextRequest) {
   try {
+    const { ipAddress, userAgent } = getRequestMetadata(request);
+    const rateLimit = await checkRateLimit({
+      namespace: "auth:login",
+      identifier: ipAddress,
+      limit: 10,
+      windowSeconds: 15 * 60,
+    });
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { success: false, message: "Too many login attempts. Please try again later." },
+        { status: 429 },
+      );
+    }
+
     const body = await request.json();
     const validationResult = loginSchema.safeParse(body);
 
@@ -28,7 +45,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { email, password } = validationResult.data;
+    const { email, password, turnstile_token } = validationResult.data;
+    if (!(await verifyTurnstile(turnstile_token, ipAddress))) {
+      return NextResponse.json(
+        { success: false, message: "Bot verification failed. Please try again." },
+        { status: 400 },
+      );
+    }
     const normalizedEmail = email.toLowerCase().trim();
 
     // 1. Fetch user by email
@@ -71,18 +94,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    let accountStatus = user.status;
+    if (accountStatus === "EMAIL_VERIFICATION_PENDING") {
+      await db
+        .update(users)
+        .set({
+          status: "ACTIVE",
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, user.id));
+      accountStatus = "ACTIVE";
+    }
+
+    if (accountStatus !== "ACTIVE") {
+      return NextResponse.json(
+        { success: false, message: "This account cannot sign in." },
+        { status: 403 },
+      );
+    }
+
     // 4. Generate new refresh token
     const rawRefreshToken = generateRandomToken();
     const hashedRefreshToken = hashToken(rawRefreshToken);
     const refreshTokenExpiresAt = new Date(
       Date.now() + REFRESH_TOKEN_MAX_AGE_SECONDS * 1000,
     );
-
-    const ipAddress =
-      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-      request.headers.get("x-real-ip") ||
-      "unknown";
-    const userAgent = request.headers.get("user-agent") || "unknown";
 
     await db.insert(refreshTokens).values({
       userId: user.id,
@@ -106,7 +142,7 @@ export async function POST(request: NextRequest) {
       userId: user.id,
       email: user.email,
       role: user.role,
-      status: user.status,
+      status: accountStatus,
       kycStatus: user.kycStatus,
       fundingStatus: user.fundingStatus,
     });
@@ -123,14 +159,15 @@ export async function POST(request: NextRequest) {
             email: user.email,
             phone_number: user.phoneNumber,
             country: user.country,
+            roboforex_linked: user.roboforexLinked,
+            roboforex_id: user.roboforexId,
             referral_code: user.referralCode,
-            status: user.status,
+            status: accountStatus,
             kyc_status: user.kycStatus,
             funding_status: user.fundingStatus,
             role: user.role,
             created_at: user.createdAt,
           },
-          accessToken,
         },
       },
       { status: 200 },

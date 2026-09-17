@@ -8,11 +8,13 @@ export interface RegisterPayload {
   country: string;
   password: string;
   referral_code?: string;
+  turnstile_token?: string;
 }
 
 export interface LoginPayload {
   email: string;
   password: string;
+  turnstile_token?: string;
 }
 
 export interface AuthResponse<T = unknown> {
@@ -26,6 +28,8 @@ export interface UserProfile {
   id: string;
   first_name: string;
   last_name: string;
+  firstName?: string;
+  lastName?: string;
   email: string;
   phone_number: string;
   country: string;
@@ -41,7 +45,7 @@ export interface UserProfile {
   created_at: string;
 }
 
-export const register = async (data: RegisterPayload): Promise<AuthResponse<{ user: UserProfile; accessToken: string; verificationToken?: string }>> => {
+export const register = async (data: RegisterPayload): Promise<AuthResponse<{ user: UserProfile }>> => {
   try {
     const response = await api.post("/auth/register", data);
     return response.data;
@@ -53,7 +57,7 @@ export const register = async (data: RegisterPayload): Promise<AuthResponse<{ us
 
 export const loginWithCredentials = async (
   data: LoginPayload,
-): Promise<AuthResponse<{ user: UserProfile; accessToken: string }>> => {
+): Promise<AuthResponse<{ user: UserProfile }>> => {
   try {
     const response = await api.post("/auth/login", data);
     return response.data;
@@ -83,7 +87,7 @@ export const getMe = async (): Promise<AuthResponse<{ user: UserProfile; wallet:
   }
 };
 
-export const refreshToken = async (): Promise<AuthResponse<{ accessToken: string }>> => {
+export const refreshToken = async (): Promise<AuthResponse<void>> => {
   try {
     const response = await api.post("/auth/refresh");
     return response.data;
@@ -103,9 +107,15 @@ export const verifyEmail = async (token: string): Promise<AuthResponse<void>> =>
   }
 };
 
-export const forgotPassword = async (email: string): Promise<AuthResponse<void>> => {
+export const forgotPassword = async (
+  email: string,
+  turnstileToken?: string,
+): Promise<AuthResponse<void>> => {
   try {
-    const response = await api.post("/auth/forgot-password", { email });
+    const response = await api.post("/auth/forgot-password", {
+      email,
+      turnstile_token: turnstileToken,
+    });
     return response.data;
   } catch (error) {
     console.error("Error requesting forgot password:", error);

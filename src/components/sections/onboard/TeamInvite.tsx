@@ -5,7 +5,7 @@ import { useState } from "react";
 import InputWithIcon from "../../ui/InputWithIcon";
 
 const TeamInvite = () => {
-  const { next, back, formData, setFormData } = useOnboardStore();
+  const { next, formData, setFormData } = useOnboardStore();
   const emails = formData.emails;
   const [currentEmail, setCurrentEmail] = useState("");
 
@@ -31,7 +31,7 @@ const TeamInvite = () => {
   return (
     <div className="flex flex-col gap-5 items-center w-full max-w-md animate-fade-in">
       <div className="flex flex-col items-center gap-1">
-        <p className="font-medium font-clash-displayy text-xl text-secondary text-center leading-none">
+        <p className="font-medium font-inter text-xl text-secondary text-center leading-none">
           Invite Your Team
         </p>
         <p className="text-subtext font-medium text-center">
@@ -77,12 +77,12 @@ const TeamInvite = () => {
             {emails.map((email) => (
               <span
                 key={email}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent/10 text-accent text-xs font-semibold"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent/10 text-accent text-sm font-semibold"
               >
                 {email}
                 <button
                   onClick={() => removeEmail(email)}
-                  className="hover:text-white transition-colors"
+                  className="hover:text-background transition-colors"
                 >
                   ×
                 </button>

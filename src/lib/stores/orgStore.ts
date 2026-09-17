@@ -47,7 +47,7 @@ export const useOrgStore = create<OrgState>()(
         }),
     }),
     {
-      name: "chainroll-org",
+      name: "trackmarkets-org",
     },
   ),
 );

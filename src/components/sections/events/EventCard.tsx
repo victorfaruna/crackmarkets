@@ -108,7 +108,7 @@ export default function EventCard({ event }: EventCardProps) {
             </div>
 
             {/* Meta Row */}
-            <div className="flex items-center gap-3 text-xs text-secondary/60 flex-wrap">
+            <div className="flex items-center gap-3 text-sm text-secondary/60 flex-wrap">
               <div className="flex items-center gap-1">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -159,7 +159,7 @@ export default function EventCard({ event }: EventCardProps) {
               <button
                 type="button"
                 onClick={() => downloadIcsFile(event)}
-                className="px-3 py-1 text-xs font-medium rounded-lg border border-secondary/15 bg-primary hover:bg-secondary/10 text-secondary transition-colors cursor-pointer flex items-center gap-1.5"
+                className="px-3 py-1 text-sm font-medium rounded-lg border border-secondary/15 bg-primary hover:bg-secondary/10 text-secondary transition-colors cursor-pointer flex items-center gap-1.5"
                 title="Download iCal (.ics) file"
               >
                 <svg
@@ -184,7 +184,7 @@ export default function EventCard({ event }: EventCardProps) {
                 href={getGoogleCalendarUrl(event)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-3 py-1 text-xs font-medium rounded-lg bg-accent text-background font-semibold hover:bg-accent/90 transition-colors flex items-center gap-1 cursor-pointer"
+                className="px-3 py-1 text-sm font-medium rounded-lg bg-accent text-background font-semibold hover:bg-accent/90 transition-colors flex items-center gap-1 cursor-pointer"
               >
                 Join / RSVP
               </a>
@@ -265,7 +265,7 @@ export default function EventCard({ event }: EventCardProps) {
 
       {/* ─── Expandable Description & Details ──────────────────────────── */}
       {isExpanded && (
-        <div className="pt-3 border-t border-secondary/10 flex flex-col gap-3 text-xs animate-fadeIn">
+        <div className="pt-3 border-t border-secondary/10 flex flex-col gap-3 text-sm animate-fadeIn">
           <div>
             <span className="font-semibold text-secondary">Description: </span>
             <p className="text-secondary/70 mt-1 leading-relaxed">

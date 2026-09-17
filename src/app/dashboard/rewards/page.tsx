@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import Breadcrum from "@/src/components/shared/Breadcrum";
 import { formatCurrency } from "@/src/lib/utils/formatCurrency";
 
@@ -26,7 +26,7 @@ const REWARD_POOLS: RewardPoolItem[] = [
     description: "All-inclusive vacation package or instant cash payout to your commission wallet.",
     criteria: "Maintain $50,000 monthly team deposits for 3 consecutive months",
     requiredMonths: 3,
-    currentStreak: 2,
+    currentStreak: 0,
     isQualified: false,
     tagColor: "bg-accent/15 text-accent border-accent/20",
   },
@@ -38,8 +38,8 @@ const REWARD_POOLS: RewardPoolItem[] = [
     description: "Ultra-luxury international family getaway with premium flight and resort accommodations.",
     criteria: "Achieve and maintain Leader Tier for 2 consecutive qualification months",
     requiredMonths: 2,
-    currentStreak: 2,
-    isQualified: true,
+    currentStreak: 0,
+    isQualified: false,
     tagColor: "bg-success/15 text-success border-success/20",
   },
   {
@@ -50,7 +50,7 @@ const REWARD_POOLS: RewardPoolItem[] = [
     description: "Brand new vehicle delivery or equivalent USDT settlement to executive partners.",
     criteria: "Achieve Leader Tier 2 for 2 consecutive qualification months",
     requiredMonths: 2,
-    currentStreak: 1,
+    currentStreak: 0,
     isQualified: false,
     tagColor: "bg-secondary/10 text-secondary border-secondary/15",
   },
@@ -62,28 +62,27 @@ const REWARD_POOLS: RewardPoolItem[] = [
     description: "Crown jewel leadership achievement: Luxury villa or penthouse estate ownership.",
     criteria: "Sustain executive tier qualification for 6 consecutive months",
     requiredMonths: 6,
-    currentStreak: 2,
+    currentStreak: 0,
     isQualified: false,
     tagColor: "bg-accent/15 text-accent border-accent/20",
   },
 ];
 
 const LADDER_TIERS = [
-  { level: 1, volume: 10000, rate: "1.0%", isUnlocked: true, currentVolume: 125000 },
-  { level: 2, volume: 50000, rate: "2.0%", isUnlocked: true, currentVolume: 125000 },
-  { level: 3, volume: 200000, rate: "3.5%", isUnlocked: false, currentVolume: 125000 },
-  { level: 4, volume: 1000000, rate: "5.0%", isUnlocked: false, currentVolume: 125000 },
-  { level: 5, volume: 3500000, rate: "5.5%", isUnlocked: false, currentVolume: 125000 },
-  { level: 6, volume: 8000000, rate: "6.0%", isUnlocked: false, currentVolume: 125000 },
-  { level: 7, volume: 15000000, rate: "6.5%", isUnlocked: false, currentVolume: 125000 },
-  { level: 8, volume: 30000000, rate: "7.0%", isUnlocked: false, currentVolume: 125000 },
-  { level: 9, volume: 50000000, rate: "8.0%", isUnlocked: false, currentVolume: 125000 },
+  { level: 1, volume: 10000, rate: "1.0%", isUnlocked: false, currentVolume: 0 },
+  { level: 2, volume: 50000, rate: "2.0%", isUnlocked: false, currentVolume: 0 },
+  { level: 3, volume: 200000, rate: "3.5%", isUnlocked: false, currentVolume: 0 },
+  { level: 4, volume: 1000000, rate: "5.0%", isUnlocked: false, currentVolume: 0 },
+  { level: 5, volume: 3500000, rate: "5.5%", isUnlocked: false, currentVolume: 0 },
+  { level: 6, volume: 8000000, rate: "6.0%", isUnlocked: false, currentVolume: 0 },
+  { level: 7, volume: 15000000, rate: "6.5%", isUnlocked: false, currentVolume: 0 },
+  { level: 8, volume: 30000000, rate: "7.0%", isUnlocked: false, currentVolume: 0 },
+  { level: 9, volume: 50000000, rate: "8.0%", isUnlocked: false, currentVolume: 0 },
 ];
 
 export default function RewardsPage() {
-  const currentTotalVolume = 125000;
-  const strongLegVolume = 68750;
-  const weakLegVolume = 56250;
+  const currentTotalVolume = 0;
+  const strongLegVolume = 0;
 
   return (
     <section className="w-full max-w-330 min-h-full pt-5 px-5 pb-16 flex flex-col gap-5">
@@ -91,10 +90,10 @@ export default function RewardsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex flex-col gap-0.5">
           <Breadcrum />
-          <h1 className="text-secondary text-lg font-medium font-clash-display mt-1">
+          <h1 className="text-secondary text-lg font-medium font-inter mt-1">
             Leadership Rewards & Incentives
           </h1>
-          <p className="text-secondary/60 text-xs">
+          <p className="text-secondary/60 text-sm">
             Track milestone streaks, qualification progress, leader pools, and volume ladders across your organization.
           </p>
         </div>
@@ -103,7 +102,7 @@ export default function RewardsPage() {
       {/* ─── 4 Leadership Pools Grid (Bonus 5) ─────────────────────────── */}
       <div>
         <div className="flex flex-col gap-0.5 mb-2.5">
-          <h2 className="text-sm font-semibold text-secondary font-clash-display">
+          <h2 className="text-sm font-semibold text-secondary font-inter">
             Active Leadership Pools (Bonus 5)
           </h2>
           <p className="text-[11px] text-secondary/50">
@@ -129,7 +128,7 @@ export default function RewardsPage() {
                     <span className="text-[10px] font-mono text-secondary/50 uppercase tracking-wider">
                       {pool.category}
                     </span>
-                    <h3 className="text-base font-semibold text-secondary font-clash-display truncate">
+                    <h3 className="text-base font-semibold text-secondary font-inter truncate">
                       {pool.title}
                     </h3>
                   </div>
@@ -143,10 +142,10 @@ export default function RewardsPage() {
 
                 {/* Reward Value & Description */}
                 <div className="flex flex-col gap-1">
-                  <div className="text-xl sm:text-2xl font-bold font-clash-display text-secondary">
+                  <div className="text-xl sm:text-2xl font-bold font-inter text-secondary">
                     {pool.rewardValue}
                   </div>
-                  <p className="text-xs text-secondary/60 leading-relaxed">
+                  <p className="text-sm text-secondary/60 leading-relaxed">
                     {pool.description}
                   </p>
                 </div>
@@ -183,16 +182,16 @@ export default function RewardsPage() {
       <div className="rounded-[4px] border border-secondary/6 bg-primary/40 p-5 sm:p-6 flex flex-col gap-4 shadow-2xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-secondary/6 pb-4">
           <div className="flex flex-col gap-0.5">
-            <h2 className="text-base font-semibold font-clash-display text-secondary">
+            <h2 className="text-base font-semibold font-inter text-secondary">
               Team Trading Volume Bonus (Bonus 3 — Strong Leg Rule)
             </h2>
-            <p className="text-xs text-secondary/60">
+            <p className="text-sm text-secondary/60">
               When your total team volume reaches $500,000 with a strong leg of $250,000, earn $1 per traded lot.
             </p>
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="px-2.5 py-1 rounded-[2px] text-xs font-mono font-semibold bg-accent/15 text-accent border border-accent/20">
+            <span className="px-2.5 py-1 rounded-[2px] text-sm font-mono font-semibold bg-accent/15 text-accent border border-accent/20">
               Current Volume: ${formatCurrency(currentTotalVolume, 0)}
             </span>
           </div>
@@ -203,7 +202,7 @@ export default function RewardsPage() {
           {/* Tier 1 Box */}
           <div className="rounded-[3px] border border-secondary/6 bg-primary/60 p-4 flex flex-col gap-3">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-secondary">
+              <span className="text-sm font-semibold text-secondary">
                 Tier 1 Qualification
               </span>
               <span className="text-[10px] font-mono px-2 py-0.5 rounded-[2px] bg-secondary/10 text-secondary/60">
@@ -232,7 +231,7 @@ export default function RewardsPage() {
           {/* Tier 2 Box */}
           <div className="rounded-[3px] border border-secondary/6 bg-primary/60 p-4 flex flex-col gap-3">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-secondary">
+              <span className="text-sm font-semibold text-secondary">
                 Tier 2 Qualification
               </span>
               <span className="text-[10px] font-mono px-2 py-0.5 rounded-[2px] bg-secondary/10 text-secondary/60">
@@ -264,15 +263,15 @@ export default function RewardsPage() {
       <div className="rounded-[4px] border border-secondary/6 bg-primary/40 p-5 sm:p-6 flex flex-col gap-4 shadow-2xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-secondary/6 pb-4">
           <div className="flex flex-col gap-0.5">
-            <h2 className="text-base font-semibold font-clash-display text-secondary">
+            <h2 className="text-base font-semibold font-inter text-secondary">
               Percentage Level Bonus Ladder (Bonus 4)
             </h2>
-            <p className="text-xs text-secondary/60">
+            <p className="text-sm text-secondary/60">
               Cumulative team volume threshold percentages from Level 1 (1.0%) up to Level 9 (8.0%).
             </p>
           </div>
 
-          <span className="px-2.5 py-1 rounded-[2px] text-xs font-mono font-semibold bg-success/15 text-success border border-success/20">
+          <span className="px-2.5 py-1 rounded-[2px] text-sm font-mono font-semibold bg-success/15 text-success border border-success/20">
             Active Tier: Level 2 (2.0%)
           </span>
         </div>
@@ -293,7 +292,7 @@ export default function RewardsPage() {
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-secondary">
+                  <span className="text-sm font-semibold text-secondary">
                     Level {tier.level}
                   </span>
                   <span
@@ -308,10 +307,10 @@ export default function RewardsPage() {
                 </div>
 
                 <div className="flex items-baseline justify-between">
-                  <span className="font-clash-display text-xl font-bold text-secondary">
+                  <span className="font-inter text-xl font-bold text-secondary">
                     {tier.rate}
                   </span>
-                  <span className="font-mono text-xs text-secondary/60">
+                  <span className="font-mono text-sm text-secondary/60">
                     ${formatCurrency(tier.volume, 0)} Vol
                   </span>
                 </div>

@@ -2,7 +2,15 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getSessionFromRequest } from "@/src/lib/auth/session";
 import { db } from "@/src/lib/db";
 import { transactions } from "@/src/lib/db/schema";
-import { eq, and, desc, SQL, or, gte, lte } from "drizzle-orm";
+import { eq, and, desc, or } from "drizzle-orm";
+import { z } from "zod";
+
+const commissionsQuerySchema = z
+  .object({
+    timeframe: z.enum(["weekly", "monthly", "all time"]).optional(),
+    month: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/).optional(),
+  })
+  .strict();
 
 export async function GET(request: NextRequest) {
   try {
@@ -15,9 +23,17 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { searchParams } = new URL(request.url);
-    const timeframe = searchParams.get("timeframe")?.toLowerCase() || "monthly";
-    const month = searchParams.get("month"); // e.g. "2026-08"
+    const parsed = commissionsQuerySchema.safeParse(
+      Object.fromEntries(request.nextUrl.searchParams.entries()),
+    );
+    if (!parsed.success) {
+      return NextResponse.json(
+        { success: false, message: "Invalid commission filters." },
+        { status: 400 },
+      );
+    }
+    const timeframe = parsed.data.timeframe || "monthly";
+    const month = parsed.data.month;
 
     const now = new Date();
 
@@ -38,6 +54,7 @@ export async function GET(request: NextRequest) {
       .where(
         and(
           eq(transactions.userId, session.userId),
+          eq(transactions.status, "COMPLETED"),
           or(
             eq(transactions.transactionType, "COMMISSION_BONUS_1"),
             eq(transactions.transactionType, "LOT_BONUS_2"),
@@ -51,8 +68,6 @@ export async function GET(request: NextRequest) {
 
     // Calculate Weekly Previews (last 7 days) and Monthly Previews (current month or selected month)
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const curMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-
     let weeklyProfitShare = 0;
     let weeklyLotCommission = 0;
     let monthlyVolumePools = 0;
@@ -67,14 +82,6 @@ export async function GET(request: NextRequest) {
           weeklyProfitShare += amt;
         }
         if (tx.transaction_type === "LOT_BONUS_2") {
-          weeklyLotCommission += amt;
-        }
-      } else {
-        // If no transactions in the last 7 days, tally all recent
-        if (weeklyProfitShare === 0 && tx.transaction_type === "COMMISSION_BONUS_1") {
-          weeklyProfitShare += amt;
-        }
-        if (weeklyLotCommission === 0 && tx.transaction_type === "LOT_BONUS_2") {
           weeklyLotCommission += amt;
         }
       }
@@ -110,8 +117,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // If filtered set is empty, fall back to all records for smooth UX
-    const activeSet = filteredTxs.length > 0 ? filteredTxs : allCommissionTxs;
+    const activeSet = filteredTxs;
 
     // Calculate streams from activeSet
     let profitShareTotal = 0;
@@ -129,14 +135,14 @@ export async function GET(request: NextRequest) {
     let leaderPool1Total = 0;
     let leaderPool1Count = 0;
 
-    let leaderPool2Total = 0;
-    let leaderPool2Count = 0;
+    const leaderPool2Total = 0;
+    const leaderPool2Count = 0;
 
-    let grandEstateTotal = 0;
-    let grandEstateCount = 0;
+    const grandEstateTotal = 0;
+    const grandEstateCount = 0;
 
-    let travelBenefitTotal = 0;
-    let travelBenefitCount = 0;
+    const travelBenefitTotal = 0;
+    const travelBenefitCount = 0;
 
     activeSet.forEach((tx) => {
       const amt = parseFloat(tx.amount) || 0;
@@ -269,9 +275,9 @@ export async function GET(request: NextRequest) {
     ];
 
     const preview = {
-      profitShareWeekly: (weeklyProfitShare || profitShareTotal).toFixed(2),
-      lotCommissionWeekly: (weeklyLotCommission || lotCommissionTotal).toFixed(2),
-      cpaMonthly: (monthlyVolumePools || strongLegTotal + volumeLadderTotal + leaderPool1Total).toFixed(2),
+      profitShareWeekly: weeklyProfitShare.toFixed(2),
+      lotCommissionWeekly: weeklyLotCommission.toFixed(2),
+      cpaMonthly: monthlyVolumePools.toFixed(2),
       totalCommissions: totalCommissions.toFixed(2),
     };
 

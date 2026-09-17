@@ -37,7 +37,7 @@ export default function NotificationsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex flex-col gap-0.5">
           <div className="flex items-center gap-2">
-            <h1 className="text-secondary text-lg font-medium font-clash-display">
+            <h1 className="text-secondary text-lg font-medium font-inter">
               Notifications
             </h1>
             {unreadCount > 0 && (
@@ -46,7 +46,7 @@ export default function NotificationsPage() {
               </span>
             )}
           </div>
-          <p className="text-secondary/60 text-xs">
+          <p className="text-secondary/60 text-sm">
             Stay updated on your referral lineage, commissions, and system alerts.
           </p>
         </div>
@@ -56,7 +56,7 @@ export default function NotificationsPage() {
             type="button"
             disabled={isMarkingAllRead}
             onClick={() => markAllAsRead()}
-            className="self-start sm:self-auto text-xs font-medium text-secondary/70 hover:text-secondary hover:underline cursor-pointer disabled:opacity-50"
+            className="self-start sm:self-auto text-sm font-medium text-secondary/70 hover:text-secondary hover:underline cursor-pointer disabled:opacity-50"
           >
             {isMarkingAllRead ? "Marking as read..." : "Mark all as read"}
           </button>
@@ -91,10 +91,10 @@ export default function NotificationsPage() {
           {isLoading ? (
             <div className="py-16 flex flex-col items-center justify-center gap-3">
               <div className="skeleton size-8 rounded-full" />
-              <p className="text-secondary/40 text-xs">Loading notifications...</p>
+              <p className="text-secondary/40 text-sm">Loading notifications...</p>
             </div>
           ) : filtered.length === 0 ? (
-            <div className="py-16 flex flex-col items-center justify-center text-secondary/50 text-xs gap-1.5 text-center">
+            <div className="py-16 flex flex-col items-center justify-center text-secondary/50 text-sm gap-1.5 text-center">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
@@ -204,14 +204,14 @@ export default function NotificationsPage() {
 
                   <div className="flex flex-col gap-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <p className="font-semibold text-xs text-secondary leading-snug">
+                      <p className="font-semibold text-sm text-secondary leading-snug">
                         {item.title}
                       </p>
                       {!item.isRead && (
                         <span className="size-1.5 rounded-full bg-accent" />
                       )}
                     </div>
-                    <p className="text-xs text-secondary/70 leading-relaxed">
+                    <p className="text-sm text-secondary/70 leading-relaxed">
                       {item.message}
                     </p>
 
@@ -246,7 +246,7 @@ export default function NotificationsPage() {
                     e.stopPropagation();
                     deleteNotification(item.id);
                   }}
-                  className="text-secondary/30 hover:text-secondary/80 text-xs p-1 transition-colors cursor-pointer"
+                  className="text-secondary/30 hover:text-secondary/80 text-sm p-1 transition-colors cursor-pointer"
                   title="Dismiss notification"
                 >
                   ✕

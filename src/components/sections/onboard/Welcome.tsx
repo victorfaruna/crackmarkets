@@ -4,7 +4,7 @@ import Logo from "@/src/components/shared/Logo";
 import { useOnboardStore } from "@/src/lib/stores/onboardStore";
 
 const Welcome = () => {
-  const { next, formData } = useOnboardStore();
+  const { next } = useOnboardStore();
   return (
     <div className="flex flex-col gap-6 items-center animate-fade-in pt-10">
       <div className="relative">
@@ -13,7 +13,7 @@ const Welcome = () => {
       </div>
 
       <div className="flex flex-col items-center gap-1">
-        <p className="font-medium font-clash-displayy text-2xl text-secondary text-center leading-none">
+        <p className="font-medium font-inter text-2xl text-secondary text-center leading-none">
           Welcome
         </p>
         <p className="text-secondary/50 font-medium text-center max-w-sm leading-relaxed">

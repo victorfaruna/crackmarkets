@@ -1,7 +1,12 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-
-type Theme = "light" | "dark";
+import {
+  APP_STORE_STORAGE_KEY,
+  applyAppTheme,
+  DEFAULT_APP_THEME,
+  isAppTheme,
+  type AppTheme,
+} from "../theme";
 
 interface AppState {
   // Sidebar
@@ -10,8 +15,8 @@ interface AppState {
   toggleSidebar: () => void;
 
   // Theme
-  theme: Theme;
-  setTheme: (theme: Theme) => void;
+  theme: AppTheme;
+  setTheme: (theme: AppTheme) => void;
 
   // Global loading
   isLoading: boolean;
@@ -39,8 +44,11 @@ export const useAppStore = create<AppState>()(
         set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
 
       // Theme
-      theme: "dark",
-      setTheme: (theme) => set({ theme }),
+      theme: DEFAULT_APP_THEME,
+      setTheme: (theme) => {
+        applyAppTheme(theme);
+        set({ theme });
+      },
 
       // Global loading
       isLoading: false,
@@ -59,14 +67,25 @@ export const useAppStore = create<AppState>()(
       setWalletDrawerOpen: (open) => set({ isWalletDrawerOpen: open }),
     }),
     {
-      name: "trackmarkets-app-state",
-      // Persist sidebar, theme, and broker/RoboForex connection status
+      name: APP_STORE_STORAGE_KEY,
+      // Persist UI preferences only. Broker state is hydrated from the server.
       partialize: (state) => ({
         isSidebarOpen: state.isSidebarOpen,
         theme: state.theme,
-        isConnectedToRoboForex: state.isConnectedToRoboForex,
-        isConnectedToStockTrader: state.isConnectedToRoboForex,
       }),
+      merge: (persistedState, currentState) => {
+        const persisted = persistedState as Partial<AppState>;
+        return {
+          ...currentState,
+          ...persisted,
+          theme: isAppTheme(persisted.theme)
+            ? persisted.theme
+            : DEFAULT_APP_THEME,
+        };
+      },
+      onRehydrateStorage: () => (state) => {
+        if (state) applyAppTheme(state.theme);
+      },
     },
   ),
 );

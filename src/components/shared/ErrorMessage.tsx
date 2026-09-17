@@ -1,6 +1,6 @@
 const ErrorMessage = ({ error }: { error: string }) => {
   return (
-    <span className="text-xs flex items-center gap-1 animate-slide-up text-error text-start">
+    <span className="text-sm flex items-center gap-1 animate-slide-up text-error text-start">
       <svg
         xmlns="http://www.w3.org/2000/svg"
         fill="none"

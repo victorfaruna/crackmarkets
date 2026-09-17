@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useNetwork } from "@/src/lib/hooks/useNetwork";
 import { getUserPlaceholderImage } from "@/src/lib/utils/profileHandler";
@@ -18,7 +19,7 @@ export const NetworkCard = () => {
       <div className="absolute left-0 bottom-0 w-full h-20 bg-linear-to-t from-primary via-primary/90 to-transparent z-10 pointer-events-none flex flex-col justify-end items-start p-4">
         <Link
           href="/dashboard/network"
-          className="flex items-center gap-1 font-medium leading-none text-secondary hover:text-accent transition-colors pointer-events-auto text-xs"
+          className="flex items-center gap-1 font-medium leading-none text-secondary hover:text-accent transition-colors pointer-events-auto text-sm"
         >
           View all
           <svg
@@ -38,7 +39,7 @@ export const NetworkCard = () => {
           <p className="text-secondary text-sm leading-none font-medium">
             Network
           </p>
-          <p className="text-secondary/60 font-normal text-xs">
+          <p className="text-secondary/60 font-normal text-sm">
             {isLoading ? (
               <span className="text-secondary/40">Loading network...</span>
             ) : totalCount > 0 ? (
@@ -90,7 +91,7 @@ export const NetworkCard = () => {
               />
             </svg>
           </div>
-          <p className="text-secondary text-xs font-medium">No network members yet</p>
+          <p className="text-secondary text-sm font-medium">No network members yet</p>
           <p className="text-secondary/50 text-[11px] max-w-[200px] leading-relaxed">
             Share your partner link to start growing your 10-level trading tree.
           </p>
@@ -107,21 +108,22 @@ export const NetworkCard = () => {
             >
               {/* Left: Avatar & Name */}
               <div className="flex items-center gap-2.5 min-w-0">
-                <img
+                <Image
+                  unoptimized
                   className="size-7 rounded-md bg-accent/20 object-cover shrink-0"
                   src={getUserPlaceholderImage(member.id + member.name)}
                   alt={member.name}
                   width={28}
                   height={28}
                 />
-                <p className="text-secondary leading-none font-medium capitalize truncate text-xs">
+                <p className="text-secondary leading-none font-medium capitalize truncate text-sm">
                   {member.name}
                 </p>
               </div>
 
               {/* Right: Level Only */}
               <div className="flex items-center shrink-0">
-                <span className="text-xs font-semibold text-accent font-clash-display">
+                <span className="text-sm font-semibold text-accent font-inter">
                   Level {member.level}
                 </span>
               </div>

@@ -65,13 +65,13 @@ const TotalBalanceCard = ({ initialData }: TotalBalanceCardProps) => {
                   currencyUrl={currencyUrl}
                 />
               </div>
-              <p className="text-secondary/50 font-medium text-xs">
+              <p className="text-secondary/50 font-medium text-sm">
                 Commission Balance
               </p>
               {isLoading && !userData ? (
                 <p className="skeleton w-42 h-8 rounded-lg" />
               ) : (
-                <div className="font-clash-display flex items-end text-[2rem] font-semibold text-secondary">
+                <div className="font-inter flex items-end text-[2rem] font-semibold text-secondary">
                   <span className="text-[1.5rem] mr-0.5 text-secondary/60 leading-none">
                     {fiatSign}
                   </span>
@@ -81,7 +81,7 @@ const TotalBalanceCard = ({ initialData }: TotalBalanceCardProps) => {
                   </span>
                 </div>
               )}
-              <p className="text-secondary/70 flex items-center text-xs gap-1 mt-1">
+              <p className="text-secondary/70 flex items-center text-sm gap-1 mt-1">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24"
@@ -177,7 +177,7 @@ const ActionButton = ({
     <button
       type="button"
       onClick={onClick}
-      className={`w-fit px-8 h-11 border-secondary/3 flex items-center justify-center gap-1.5 rounded-full bg-secondary/5 text-secondary text-xs font-medium cursor-pointer hover:bg-secondary/12 transition-colors ${className || ""}`}
+      className={`w-fit px-8 h-11 border-secondary/3 flex items-center justify-center gap-1.5 rounded-full bg-secondary/5 text-secondary text-sm font-medium cursor-pointer hover:bg-secondary/12 transition-colors ${className || ""}`}
     >
       {label}
       {icon}

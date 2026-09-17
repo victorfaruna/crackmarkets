@@ -13,12 +13,6 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "cdn.chainroll.org",
-        port: "",
-        pathname: "/**",
-      },
-      {
-        protocol: "https",
         hostname: "api.dicebear.com",
         port: "",
         pathname: "/**",

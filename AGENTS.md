@@ -1,15 +1,16 @@
-# AGENTS.md — Track Markets Engineering Guidelines & System Specification
+# AGENTS.md — Trackmarkets Engineering Guidelines & System Specification
 
-Welcome to **Track Markets**. This document is the single source of truth for the domain specifications, technical architecture, theme standards, and agent behavior in this codebase.
+Welcome to **Trackmarkets**. This document is the single source of truth for the domain specifications, technical architecture, theme standards, and agent behavior in this codebase.
 
 ---
 
 ## 1. Project Overview & Architecture
 
-- **Domain**: Track Markets — Advanced Service Provider & 10-Level Referral Management System integrated with RoboForex trading APIs.
+- **Domain**: Trackmarkets — Advanced Service Provider & 10-Level Referral Management System integrated with RoboForex trading APIs.
 - **Frontend Stack**: Next.js (App Router), React 19, TypeScript, Tailwind CSS v4, DaisyUI.
 - **State & Data Layer**: Zustand stores (`src/lib/stores/`), Axios (`src/lib/services/api.ts`), TanStack React Query.
-- **Font Stack**: Clash Display (`font-clash-display`), Satoshi (`font-satoshi`), Roobert (`font-roobert`), Rubik (`font-rubik`), Montserrat (`font-montserrat`), Geist Sans (`font-geist`).
+- **Theme State**: `useAppStore` is the source of truth for `light`/`dark`. Its persisted Zustand value is applied to `<html data-theme>` by a pre-hydration bootstrap in the root layout, then kept synchronized by the store setter and `ThemeHydrator`.
+- **Font Stack**: Inter (`font-inter`) is the sole application font for body copy, headings, labels, metrics, and interface text.
 - **Core Principle**: Broker data is the source of truth for deposits, trades, lots, and trading volume. The platform database is the source of truth for referral relationships, commission calculations, qualifications, wallets, withdrawals, and rewards.
 
 ---
@@ -55,7 +56,7 @@ Welcome to **Track Markets**. This document is the single source of truth for th
 ```
 USER REGISTERS (first_name, last_name, email, phone, country, password, referral_code)
        ↓
-EMAIL VERIFICATION
+ACCOUNT ACTIVATED (email verification temporarily disabled)
        ↓
 REFERRAL LINK GENERATED (10-Level Tree)
        ↓
@@ -92,9 +93,9 @@ BONUS 2: LOT DISTRIBUTION ($2.00 L1–L3 down to $0.50 L10)
 ## 5. User Registration & KYC Specifications
 
 - **Registration Fields**: `first_name`, `last_name`, `email`, `phone_number`, `country`, `password`, `referral_code` (optional).
-- **Initial User State**: `status = "EMAIL_VERIFICATION_PENDING"`, `kyc_status = "NOT_VERIFIED"`, `funding_status = "LOCKED"`.
+- **Initial User State**: `status = "ACTIVE"`, `kyc_status = "NOT_SUBMITTED"`, `funding_status = "LOCKED"`. Email verification is temporarily disabled; existing `EMAIL_VERIFICATION_PENDING` accounts are activated after a valid password login.
 - **KYC Statuses**: `NOT_SUBMITTED`, `PENDING`, `APPROVED`, `REJECTED`.
-- **Trading & Funding Gate**: A user may obtain their referral code upon email verification, but trading and funding remain locked until KYC status is `APPROVED`.
+- **Trading & Funding Gate**: A user receives their referral code at registration, but trading and funding remain locked until KYC status is `APPROVED`.
 
 ---
 
@@ -148,7 +149,8 @@ Calculated per traded lot generated across the organization:
   - `audit_logs`: `id`, `user_id`, `action`, `ip_address`, `user_agent`, `details` (jsonb), `created_at`.
   - `referral_nodes`: Lineage closure table (`ancestor_id`, `descendant_id`, `depth` 1–10) created atomically upon registration.
   - `wallets`: `id`, `user_id` (unique), `balance`, `available_balance`, `total_withdrawn`, `lifetime_earnings`.
-  - `transactions`: `id`, `user_id`, `source_user_id`, `amount`, `transaction_type`, `reference_id`, `level`, `status`, `created_at`.
+  - `transactions`: `id`, `user_id`, `source_user_id`, `amount`, `transaction_type`, `reference_id`, `level`, `status`, `idempotency_key`, `metadata`, `created_at`.
+  - `api_rate_limits`: database-backed fixed-window counters for public authentication and referral-impression endpoints.
   - `events`: `id`, `title`, `category`, `description`, `reward_pool`, `location`, `starts_at`, `ends_at`, `status`, `created_by`, `created_at`, `updated_at`.
 
 ---
@@ -158,24 +160,24 @@ Calculated per traded lot generated across the organization:
 - **Session Strategy**: Dual-token architecture with HTTP-only cookies (`access_token` 15m JWT + `refresh_token` 7d rotated hash).
 - **Proactive Middleware**: `src/middleware.ts` seamlessly refreshes tokens when expired using `/api/auth/refresh`.
 - **API Route Endpoints (`src/app/api/auth/`)**:
-  - `POST /api/auth/register`: Account creation, wallet initialization, 10-level tree attribution, token issuance.
+  - `POST /api/auth/register`: Immediate account activation, wallet initialization, and 10-level tree attribution while email verification is disabled.
   - `POST /api/auth/login`: Credential validation, refresh token storage, HTTP-only cookie attachment.
   - `POST /api/auth/refresh`: Token rotation (revokes old token, issues new pair).
   - `POST /api/auth/logout`: Revokes active refresh token and clears cookies.
   - `GET /api/auth/me`: Authenticated profile and wallet summary query.
-  - `POST /api/auth/verify-email`: Token validation, activates user (`status = "ACTIVE"`).
+  - `POST /api/auth/verify-email`: Retained for restoring email verification later; registration does not currently issue verification tokens.
   - `POST /api/auth/forgot-password`: Generates reset token & sends recovery instructions.
   - `POST /api/auth/reset-password`: Validates token, updates password, revokes active sessions.
   - `GET /api/events`: Query events with category, status, date, and month calendar filters.
   - `GET /api/wallet/transactions`: Query user transactions with category, status, and search filters.
-  - `POST /api/wallet/withdraw`: Process crypto withdrawal request and atomically update wallet balances.
+  - `POST /api/wallet/withdraw`: Validate account/KYC/funding/broker state, atomically reserve available balance, and create an idempotent `PENDING` withdrawal request. Completion requires a separately verified payout integration.
   - `GET /api/commissions`: Query commissions summary, monthly previews, and 8 income streams breakdown.
 
 ---
 
 ## 9. Dashboard Views & Architecture
 
-The Track Markets Dashboard uses a collapsible drawer with grouped navigation sections:
+The Trackmarkets Dashboard uses a collapsible drawer with grouped navigation sections:
 
 **Drawer Structure:**
 ```
@@ -221,7 +223,7 @@ Events                     /dashboard/events           (flat, gated by RoboForex
 
 6. **Leadership Pools & Rewards (`/dashboard/rewards`)**: Milestone streak progress bars for Travel Benefit ($2,000 / Trip), Leader Pool 1 ($15,000 Family Luxury Trip), Leader Pool 2 ($25,000 Luxury Car), and Grand Prize Estate ($1,200,000), Strong Leg bonus rule cards (Bonus 3), and 9-tier volume percentage ladder grid (Bonus 4).
 
-7. **KYC & Broker Account Link (`/dashboard/kyc`)**: KYC verification timeline, document upload workflow, and broker account link management.
+7. **KYC & Broker Account Link (`/dashboard/kyc`)**: KYC status and broker account link management. Document submission remains disabled until a verified KYC provider is configured; the UI must not simulate approval or submission.
 
 8. **Trader Settings (`/dashboard/settings`)**: Profile summary, password change, and security settings.
 
@@ -261,16 +263,20 @@ yarn db:studio
 
 ## 11. Environment Variables Specification
 
-Configured in `.env.local` (local development) and `.env.example` (template):
+Configured in the git-ignored `.env` file (with optional `.env.local` overrides):
 
 | Variable | Description | Example / Default | Required |
 | :--- | :--- | :--- | :--- |
-| `DATABASE_URL` | PostgreSQL connection string | `postgresql://postgres:postgres@localhost:5432/crackmarkets` | Yes |
-| `JWT_SECRET` | 32+ char secret for JWT HS256 tokens | `crackmarkets-super-secure-jwt-secret-key-32chars!` | Yes |
-| `NEXTAUTH_SECRET` | NextAuth secret fallback | `crackmarkets-super-secure-nextauth-secret-key-32chars!` | No |
-| `NEXTAUTH_URL` | Application root URL for NextAuth | `http://localhost:3000` | No |
+| `DATABASE_URL` | PostgreSQL connection string | `postgresql://postgres:postgres@localhost:5432/trackmarkets` | Yes |
+| `JWT_SECRET` | Unique 32+ character secret for JWT HS256 tokens; application startup fails when absent | generated secret | Yes |
 | `NEXT_PUBLIC_APP_URL`| Application public URL | `http://localhost:3000` | No |
 | `NEXT_PUBLIC_API_URL`| Custom backend API URL prefix | `/api` | No |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Cloudflare Turnstile public site key | Cloudflare-issued key | Production |
+| `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile server verification secret | Cloudflare-issued secret | Production |
+| `RESEND_API_KEY` | Private API key used for verification and password-reset email delivery | Provider-issued secret | Production |
+| `EMAIL_FROM` | Verified sender identity for transactional security email | `Trackmarkets <security@example.com>` | Production |
+| `ROBOFOREX_ACCOUNT_VERIFY_URL` | Server endpoint used to verify account ownership | Provider endpoint | Broker linking |
+| `ROBOFOREX_API_KEY` | Private credential for broker-account verification | Provider-issued secret | Broker linking |
 | `NODE_ENV` | Environment mode | `development` / `production` | Yes |
 
 ---
@@ -295,4 +301,7 @@ All development MUST adhere to the security rules specified in `.agents/rules/se
 4. **Client Validation is UX Only**: Always treat client-side validation as untrusted and enforce authoritative validation on the server.
 5. **Bot Protection**: Enforce Cloudflare Turnstile on public and authentication forms.
 
-
+### Financial Data Integrity
+1. Broker-derived balances, equity, positions, deposits, lots, and trading volume must never be synthesized or inferred from referral-member counts.
+2. When no authoritative broker sync exists, APIs and screens must return an explicit unavailable state and zero persisted values rather than demonstration figures.
+3. Withdrawal creation reserves funds atomically, uses a client idempotency key, records destination metadata and an audit event, and remains `PENDING` until externally confirmed.

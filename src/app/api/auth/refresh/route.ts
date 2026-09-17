@@ -12,17 +12,8 @@ import { eq, and, isNull, gt } from "drizzle-orm";
 
 export async function POST(request: NextRequest) {
   try {
-    // 1. Extract refresh token from cookie or authorization header/body
-    let rawRefreshToken = request.cookies.get(REFRESH_COOKIE_NAME)?.value;
-
-    if (!rawRefreshToken) {
-      try {
-        const body = await request.json();
-        rawRefreshToken = body?.refreshToken || body?.refresh_token;
-      } catch {
-        // Body may be empty
-      }
-    }
+    // Refresh tokens are accepted only from the HTTP-only cookie.
+    const rawRefreshToken = request.cookies.get(REFRESH_COOKIE_NAME)?.value;
 
     if (!rawRefreshToken) {
       return NextResponse.json(
@@ -77,12 +68,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 4. Token Rotation: Revoke old token & generate new token pair
-    await db
-      .update(refreshTokens)
-      .set({ revokedAt: now })
-      .where(eq(refreshTokens.id, storedToken.id));
-
+    // 4. Token Rotation: revoke and replace atomically.
     const newRawRefreshToken = generateRandomToken();
     const newHashedRefreshToken = hashToken(newRawRefreshToken);
     const newExpiresAt = new Date(
@@ -95,20 +81,32 @@ export async function POST(request: NextRequest) {
       "unknown";
     const userAgent = request.headers.get("user-agent") || "unknown";
 
-    await db.insert(refreshTokens).values({
-      userId: user.id,
-      tokenHash: newHashedRefreshToken,
-      userAgent,
-      ipAddress,
-      expiresAt: newExpiresAt,
-    });
+    await db.transaction(async (tx) => {
+      const [revoked] = await tx
+        .update(refreshTokens)
+        .set({ revokedAt: now })
+        .where(
+          and(
+            eq(refreshTokens.id, storedToken.id),
+            isNull(refreshTokens.revokedAt),
+          ),
+        )
+        .returning({ id: refreshTokens.id });
+      if (!revoked) throw new Error("Refresh token was already rotated");
 
-    // 5. Audit log
-    await db.insert(auditLogs).values({
-      userId: user.id,
-      action: "TOKEN_REFRESH",
-      ipAddress,
-      userAgent,
+      await tx.insert(refreshTokens).values({
+        userId: user.id,
+        tokenHash: newHashedRefreshToken,
+        userAgent,
+        ipAddress,
+        expiresAt: newExpiresAt,
+      });
+      await tx.insert(auditLogs).values({
+        userId: user.id,
+        action: "TOKEN_REFRESH",
+        ipAddress,
+        userAgent,
+      });
     });
 
     // 6. Sign new access token
@@ -125,9 +123,6 @@ export async function POST(request: NextRequest) {
       {
         success: true,
         message: "Tokens refreshed successfully.",
-        data: {
-          accessToken: newAccessToken,
-        },
       },
       { status: 200 },
     );

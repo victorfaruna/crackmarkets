@@ -6,6 +6,7 @@ import { COUNTRIES, Country } from "@/src/lib/constants/countries";
 import { register } from "@/src/lib/services/auth";
 import { useRouter, useSearchParams } from "next/navigation";
 import { trackReferralImpression } from "@/src/lib/services/impressions";
+import TurnstileWidget from "@/src/components/shared/TurnstileWidget";
 
 interface RegisterFormProps {
   onSwitchToLogin?: () => void;
@@ -28,16 +29,18 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
     COUNTRIES[0], // Defaults to Albania
   );
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [referralCode, setReferralCode] = useState("");
+  const initialReferralCode = searchParams.get("ref") || searchParams.get("e") || "";
+  const [referralCode, setReferralCode] = useState(initialReferralCode);
+  const impressionTracked = useRef(false);
+  const [turnstileToken, setTurnstileToken] = useState("");
 
   // Auto-detect referral code from query parameters and log impression
   useEffect(() => {
-    const refParam = searchParams.get("ref") || searchParams.get("e");
-    if (refParam) {
-      setReferralCode(refParam);
-      trackReferralImpression(refParam, selectedCountry.name);
+    if (initialReferralCode && !impressionTracked.current) {
+      impressionTracked.current = true;
+      trackReferralImpression(initialReferralCode, selectedCountry.name);
     }
-  }, [searchParams]);
+  }, [initialReferralCode, selectedCountry.name]);
 
   // Checkboxes
   const [riskAck, setRiskAck] = useState(false);
@@ -88,8 +91,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
       setError("Please enter your phone number.");
       return;
     }
-    if (!password || password.length < 6) {
-      setError("Password must be at least 6 characters long.");
+    if (!password || password.length < 12) {
+      setError("Password must be at least 12 characters long.");
       return;
     }
     if (!riskAck || !leverageAck) {
@@ -109,6 +112,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
         country: selectedCountry.name,
         password,
         referral_code: referralCode.trim() ? referralCode.trim() : undefined,
+        turnstile_token: turnstileToken || undefined,
       };
 
       const res = await register(payload);
@@ -141,7 +145,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
     <form onSubmit={handleSubmit} className="flex flex-col gap-3 w-full">
       {/* Alert Error / Success */}
       {error && (
-        <div className="p-3 rounded-xl bg-error/10 border border-error/20 text-error text-xs font-medium flex items-center gap-2">
+        <div className="p-3 rounded-xl bg-error/10 border border-error/20 text-error text-sm font-medium flex items-center gap-2">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className="size-4 shrink-0"
@@ -159,7 +163,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
       )}
 
       {success && (
-        <div className="p-3 rounded-xl bg-success/10 border border-success/20 text-success text-xs font-medium flex items-center gap-2">
+        <div className="p-3 rounded-xl bg-success/10 border border-success/20 text-success text-sm font-medium flex items-center gap-2">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className="size-4 shrink-0"
@@ -179,7 +183,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
       {/* First & Last Name */}
       <div className="grid grid-cols-2 gap-3">
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-medium text-secondary/70">
+          <label className="text-sm font-medium text-secondary/70">
             First Name
           </label>
           <input
@@ -189,11 +193,11 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
             onChange={(e) => setFirstName(e.target.value)}
             required
             autoComplete="given-name"
-            className="w-full h-12 px-4 rounded-xl border border-secondary/15 bg-primary/20 text-secondary placeholder:text-secondary/40 outline-none focus:border-accent focus:ring-1 focus:ring-accent/40 transition-all text-sm font-medium"
+            className="w-full h-12 px-4 rounded-xl border border-secondary/15 bg-primary/20 text-secondary placeholder:text-secondary/40 outline-none focus:border-accent focus:ring-1 focus:ring-accent/5 transition-all text-sm font-medium"
           />
         </div>
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-medium text-secondary/70">
+          <label className="text-sm font-medium text-secondary/70">
             Last Name
           </label>
           <input
@@ -203,14 +207,14 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
             onChange={(e) => setLastName(e.target.value)}
             required
             autoComplete="family-name"
-            className="w-full h-12 px-4 rounded-xl border border-secondary/15 bg-primary/20 text-secondary placeholder:text-secondary/40 outline-none focus:border-accent focus:ring-1 focus:ring-accent/40 transition-all text-sm font-medium"
+            className="w-full h-12 px-4 rounded-xl border border-secondary/15 bg-primary/20 text-secondary placeholder:text-secondary/40 outline-none focus:border-accent focus:ring-1 focus:ring-accent/5 transition-all text-sm font-medium"
           />
         </div>
       </div>
 
       {/* Email Address */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-medium text-secondary/70">
+        <label className="text-sm font-medium text-secondary/70">
           Email Address
         </label>
         <input
@@ -220,17 +224,17 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
           onChange={(e) => setEmail(e.target.value)}
           required
           autoComplete="email"
-          className="w-full h-12 px-4 rounded-xl border border-secondary/15 bg-primary/20 text-secondary placeholder:text-secondary/40 outline-none focus:border-accent focus:ring-1 focus:ring-accent/40 transition-all text-sm font-medium"
+          className="w-full h-12 px-4 rounded-xl border border-secondary/15 bg-primary/20 text-secondary placeholder:text-secondary/40 outline-none focus:border-accent focus:ring-1 focus:ring-accent/5 transition-all text-sm font-medium"
         />
       </div>
 
       {/* Phone Number Field with Code Selector */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-medium text-secondary/70">
+        <label className="text-sm font-medium text-secondary/70">
           Phone Number
         </label>
         <div
-          className="relative w-full flex items-center rounded-xl border border-secondary/15 bg-primary/20 focus-within:border-accent focus-within:ring-1 focus-within:ring-accent/40 transition-all h-12"
+          className="relative w-full flex items-center rounded-xl border border-secondary/15 bg-primary/20 focus-within:border-accent focus-within:ring-1 focus-within:ring-accent/5 transition-all h-12"
           ref={phoneRef}
         >
           <button
@@ -277,7 +281,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
                 placeholder="Search country or code..."
                 value={phoneSearch}
                 onChange={(e) => setPhoneSearch(e.target.value)}
-                className="w-full px-3 py-2 text-xs rounded-lg border border-secondary/15 bg-primary/30 outline-none text-secondary placeholder:text-secondary/40"
+                className="w-full px-3 py-2 text-sm rounded-lg border border-secondary/15 bg-primary/30 outline-none text-secondary placeholder:text-secondary/40"
                 autoFocus
               />
               <div className="overflow-y-auto flex-1 flex flex-col">
@@ -290,7 +294,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
                       setIsPhoneCodeOpen(false);
                       setPhoneSearch("");
                     }}
-                    className={`w-full px-3 py-2 flex items-center justify-between rounded-lg text-left text-xs font-medium hover:bg-primary/50 transition-colors cursor-pointer ${
+                    className={`w-full px-3 py-2 flex items-center justify-between rounded-lg text-left text-sm font-medium hover:bg-primary/50 transition-colors cursor-pointer ${
                       selectedCountry.code === c.code
                         ? "bg-primary text-accent font-semibold"
                         : "text-secondary"
@@ -311,18 +315,18 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
 
       {/* Password with eye toggle */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-medium text-secondary/70">
+        <label className="text-sm font-medium text-secondary/70">
           Password
         </label>
         <div className="relative w-full">
           <input
             type={showPassword ? "text" : "password"}
-            placeholder="Create a strong password (min. 6 chars)"
+            placeholder="Create a strong password (min. 12 chars)"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
             autoComplete="new-password"
-            className="w-full h-12 pl-4 pr-11 rounded-xl border border-secondary/15 bg-primary/20 text-secondary placeholder:text-secondary/40 outline-none focus:border-accent focus:ring-1 focus:ring-accent/40 transition-all text-sm font-medium"
+            className="w-full h-12 pl-4 pr-11 rounded-xl border border-secondary/15 bg-primary/20 text-secondary placeholder:text-secondary/40 outline-none focus:border-accent focus:ring-1 focus:ring-accent/5 transition-all text-sm font-medium"
           />
           <button
             type="button"
@@ -372,21 +376,21 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
 
       {/* Referral Code (Optional) */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-medium text-secondary/70">
+        <label className="text-sm font-medium text-secondary/70">
           Referral Code <span className="text-secondary/40 font-normal">(Optional)</span>
         </label>
         <input
           type="text"
-          placeholder="e.g. CRK-82910"
+          placeholder="e.g. TM82910"
           value={referralCode}
           onChange={(e) => setReferralCode(e.target.value)}
-          className="w-full h-12 px-4 rounded-xl border border-secondary/15 bg-primary/20 text-secondary placeholder:text-secondary/40 outline-none focus:border-accent focus:ring-1 focus:ring-accent/40 transition-all text-sm font-medium"
+          className="w-full h-12 px-4 rounded-xl border border-secondary/15 bg-primary/20 text-secondary placeholder:text-secondary/40 outline-none focus:border-accent focus:ring-1 focus:ring-accent/5 transition-all text-sm font-medium"
         />
       </div>
 
       {/* Disclaimer Checkboxes */}
       <div className="flex flex-col gap-2.5 pt-1">
-        <label className="flex items-start gap-2.5 cursor-pointer text-xs text-secondary/80 select-none leading-snug">
+        <label className="flex items-start gap-2.5 cursor-pointer text-sm text-secondary/80 select-none leading-snug">
           <input
             type="checkbox"
             checked={riskAck}
@@ -400,7 +404,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
           </span>
         </label>
 
-        <label className="flex items-start gap-2.5 cursor-pointer text-xs text-secondary/80 select-none leading-snug">
+        <label className="flex items-start gap-2.5 cursor-pointer text-sm text-secondary/80 select-none leading-snug">
           <input
             type="checkbox"
             checked={leverageAck}
@@ -415,6 +419,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
           </span>
         </label>
       </div>
+
+      <TurnstileWidget onToken={setTurnstileToken} />
 
 
       {/* Register Now Action Button */}
@@ -431,7 +437,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
       </button>
 
       {/* Sign in switch */}
-      <p className="text-center text-xs text-secondary/60 mt-1">
+      <p className="text-center text-sm text-secondary/60 mt-1">
         Already have an account?{" "}
         {onSwitchToLogin ? (
           <button

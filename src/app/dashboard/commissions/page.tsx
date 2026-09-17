@@ -26,7 +26,10 @@ export default function CommissionsPage() {
   };
 
   const streams = commResponse?.data?.streams || [];
-  const transactions = commResponse?.data?.transactions || [];
+  const transactions = useMemo(
+    () => commResponse?.data?.transactions || [],
+    [commResponse?.data?.transactions],
+  );
 
   const filteredTransactions = useMemo(() => {
     if (selectedFilter === "ALL") return transactions;
@@ -70,10 +73,10 @@ export default function CommissionsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex flex-col gap-0.5">
           <Breadcrum />
-          <h1 className="text-secondary text-lg font-medium font-clash-display mt-1">
+          <h1 className="text-secondary text-lg font-medium font-inter mt-1">
             My Commissions Overview
           </h1>
-          <p className="text-secondary/60 text-xs">
+          <p className="text-secondary/60 text-sm">
             Real-time breakdown of all 5 commission bonuses, income streams, and downline distributions.
           </p>
         </div>
@@ -84,7 +87,7 @@ export default function CommissionsPage() {
             type="button"
             onClick={handleExportCSV}
             disabled={transactions.length === 0}
-            className="px-4 py-2 rounded-[4px] border border-secondary/8 bg-primary/60 hover:bg-secondary/10 text-secondary text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-2xs"
+            className="px-4 py-2 rounded-[4px] border border-secondary/8 bg-primary/60 hover:bg-secondary/10 text-secondary text-sm font-medium transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-2xs"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -108,7 +111,7 @@ export default function CommissionsPage() {
       {/* ─── Monthly Preview Top Cards (Taller Boxy Cards) ────────────── */}
       <div>
         <div className="flex flex-col gap-0.5 mb-2.5">
-          <h2 className="text-sm font-semibold text-secondary font-clash-display">
+          <h2 className="text-sm font-semibold text-secondary font-inter">
             Monthly Preview
           </h2>
           <p className="text-[11px] text-secondary/50">
@@ -120,7 +123,7 @@ export default function CommissionsPage() {
           {/* Card 1: Profit Share (Weekly Preview) */}
           <div className="rounded-[4px] border border-secondary/6 bg-primary/40 p-6 flex flex-col justify-between gap-6 min-h-[175px] shadow-2xs relative overflow-hidden">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-secondary/70">
+              <span className="text-sm font-medium text-secondary/70">
                 Profit Share (Weekly Preview)
               </span>
               <div className="size-7 rounded-[3px] bg-success/15 text-success flex items-center justify-center">
@@ -145,7 +148,7 @@ export default function CommissionsPage() {
               {isLoading ? (
                 <div className="skeleton w-36 h-9 rounded-[3px]" />
               ) : (
-                <div className="font-clash-display text-3xl sm:text-4xl font-semibold text-secondary">
+                <div className="font-inter text-3xl sm:text-4xl font-semibold text-secondary">
                   ${formatCurrency(parseFloat(preview.profitShareWeekly) || 0, 2)}
                 </div>
               )}
@@ -158,7 +161,7 @@ export default function CommissionsPage() {
           {/* Card 2: LOT Commission (Weekly Preview) */}
           <div className="rounded-[4px] border border-secondary/6 bg-primary/40 p-6 flex flex-col justify-between gap-6 min-h-[175px] shadow-2xs relative overflow-hidden">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-secondary/70">
+              <span className="text-sm font-medium text-secondary/70">
                 LOT Commission (Weekly Preview)
               </span>
               <div className="size-7 rounded-[3px] bg-accent/15 text-accent flex items-center justify-center">
@@ -183,7 +186,7 @@ export default function CommissionsPage() {
               {isLoading ? (
                 <div className="skeleton w-36 h-9 rounded-[3px]" />
               ) : (
-                <div className="font-clash-display text-3xl sm:text-4xl font-semibold text-secondary">
+                <div className="font-inter text-3xl sm:text-4xl font-semibold text-secondary">
                   ${formatCurrency(parseFloat(preview.lotCommissionWeekly) || 0, 2)}
                 </div>
               )}
@@ -196,7 +199,7 @@ export default function CommissionsPage() {
           {/* Card 3: CPA / Volume & Pools (Monthly Preview) */}
           <div className="rounded-[4px] border border-secondary/6 bg-primary/40 p-6 flex flex-col justify-between gap-6 min-h-[175px] shadow-2xs relative overflow-hidden">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-secondary/70">
+              <span className="text-sm font-medium text-secondary/70">
                 Volume & Pools (Monthly Preview)
               </span>
               <div className="size-7 rounded-[3px] bg-secondary/15 text-secondary flex items-center justify-center">
@@ -221,7 +224,7 @@ export default function CommissionsPage() {
               {isLoading ? (
                 <div className="skeleton w-36 h-9 rounded-[3px]" />
               ) : (
-                <div className="font-clash-display text-3xl sm:text-4xl font-semibold text-secondary">
+                <div className="font-inter text-3xl sm:text-4xl font-semibold text-secondary">
                   ${formatCurrency(parseFloat(preview.cpaMonthly) || 0, 2)}
                 </div>
               )}
@@ -238,10 +241,10 @@ export default function CommissionsPage() {
         {/* Header with timeframe controls */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-secondary/6 pb-4">
           <div className="flex flex-col gap-0.5">
-            <h2 className="text-base font-semibold font-clash-display text-secondary">
+            <h2 className="text-base font-semibold font-inter text-secondary">
               My Different Income Streams
             </h2>
-            <p className="text-xs text-secondary/60">
+            <p className="text-sm text-secondary/60">
               Distribution in the selected timeframe across all bonus categories
             </p>
           </div>
@@ -254,7 +257,7 @@ export default function CommissionsPage() {
                   key={t}
                   type="button"
                   onClick={() => setTimeframe(t)}
-                  className={`px-3 py-1 text-xs font-medium rounded-[2px] transition-colors cursor-pointer ${
+                  className={`px-3 py-1 text-sm font-medium rounded-[2px] transition-colors cursor-pointer ${
                     timeframe === t
                       ? "bg-secondary text-background font-semibold"
                       : "text-secondary/60 hover:text-secondary"
@@ -270,7 +273,7 @@ export default function CommissionsPage() {
               type="month"
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
-              className="px-3 py-1 text-xs font-mono font-medium rounded-[3px] border border-secondary/8 bg-primary text-secondary focus:outline-none focus:border-accent cursor-pointer"
+              className="px-3 py-1 text-sm font-mono font-medium rounded-[3px] border border-secondary/8 bg-primary text-secondary focus:outline-none focus:border-accent cursor-pointer"
             />
           </div>
         </div>
@@ -286,7 +289,7 @@ export default function CommissionsPage() {
               <div className="flex items-center gap-3 min-w-0">
                 <span className={`size-2.5 rounded-[2px] shrink-0 ${stream.dotColor}`} />
                 <div className="flex flex-col min-w-0">
-                  <span className="text-xs font-semibold text-secondary truncate">
+                  <span className="text-sm font-semibold text-secondary truncate">
                     {stream.name}
                   </span>
                   <span className="text-[10px] text-secondary/50 font-mono">
@@ -302,7 +305,7 @@ export default function CommissionsPage() {
                 </span>
 
                 <div className="flex items-baseline gap-1">
-                  <span className="text-xs font-semibold text-secondary font-mono">
+                  <span className="text-sm font-semibold text-secondary font-mono">
                     ${formatCurrency(parseFloat(stream.amount) || 0, 2)}
                   </span>
                   <span className="text-[10px] text-secondary/50 font-mono">
@@ -322,10 +325,10 @@ export default function CommissionsPage() {
       <div className="rounded-[4px] border border-secondary/6 bg-primary/40 p-5 sm:p-6 flex flex-col gap-4 shadow-2xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex flex-col gap-0.5">
-            <h2 className="text-base font-semibold font-clash-display text-secondary">
+            <h2 className="text-base font-semibold font-inter text-secondary">
               Recent Commission Distributions
             </h2>
-            <p className="text-xs text-secondary/60">
+            <p className="text-sm text-secondary/60">
               Live payouts credited to your commission wallet
             </p>
           </div>
@@ -369,7 +372,7 @@ export default function CommissionsPage() {
         ) : filteredTransactions.length === 0 ? (
           <div className="rounded-[3px] border border-secondary/6 bg-primary/20 p-8 flex flex-col items-center justify-center gap-2 text-center">
             <span className="text-2xl">📊</span>
-            <span className="text-xs font-semibold text-secondary">
+            <span className="text-sm font-semibold text-secondary">
               No commission records found
             </span>
             <p className="text-[11px] text-secondary/60 max-w-xs">
@@ -378,7 +381,7 @@ export default function CommissionsPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+            <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-secondary/6 text-secondary/50 font-medium pb-2">
                   <th className="py-2.5 px-3">Bonus Type</th>

@@ -5,6 +5,7 @@ import {
   createBeneficiary,
   updateBeneficiary,
   deleteBeneficiary,
+  type BeneficiaryPayload,
 } from "../services/beneficiary";
 import { beneficiaryKeys } from "../keys/beneficiary.keys";
 
@@ -27,7 +28,7 @@ export const useGetBeneficiary = (orgId: string, beneficiaryId: string) => {
 export const useCreateBeneficiary = (orgId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: any) => createBeneficiary(orgId, data),
+    mutationFn: (data: BeneficiaryPayload) => createBeneficiary(orgId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: beneficiaryKeys.lists(orgId),
@@ -44,7 +45,7 @@ export const useUpdateBeneficiary = (orgId: string) => {
       data,
     }: {
       beneficiaryId: string;
-      data: any;
+      data: BeneficiaryPayload;
     }) => updateBeneficiary(orgId, beneficiaryId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({

@@ -6,14 +6,13 @@ import { useRouter } from "next/navigation";
 import { loginWithCredentials } from "@/src/lib/services/auth";
 import { useUserStore } from "@/src/lib/stores/userStore";
 import { useAppStore } from "@/src/lib/stores/appStore";
+import TurnstileWidget from "@/src/components/shared/TurnstileWidget";
 
 interface LoginFormProps {
   onSwitchToRegister?: () => void;
 }
 
-export const LoginForm: React.FC<LoginFormProps> = ({
-  onSwitchToRegister,
-}) => {
+export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
   const router = useRouter();
   const setUser = useUserStore((state) => state.setUser);
 
@@ -21,6 +20,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState("");
 
   // State feedback
   const [isLoading, setIsLoading] = useState(false);
@@ -47,17 +47,20 @@ export const LoginForm: React.FC<LoginFormProps> = ({
       const res = await loginWithCredentials({
         email: email.trim().toLowerCase(),
         password,
+        turnstile_token: turnstileToken || undefined,
       });
 
       if (res.success && res.data) {
-        const isConnectedToRoboForex =
-          useAppStore.getState().isConnectedToRoboForex;
+        const isConnectedToRoboForex = res.data.user.roboforex_linked === true;
+        useAppStore
+          .getState()
+          .setIsConnectedToRoboForex(isConnectedToRoboForex);
         const targetRoute = isConnectedToRoboForex
           ? "/dashboard"
           : "/dashboard/profile";
 
         setSuccess("Login successful! Redirecting...");
-        
+
         // Sync user state with store
         setUser({
           id: res.data.user.id,
@@ -70,11 +73,21 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           router.push(targetRoute);
         }, 1000);
       } else {
-        setError(res.message || "Failed to log in. Please check your credentials.");
+        setError(
+          res.message || "Failed to log in. Please check your credentials.",
+        );
       }
     } catch (err: unknown) {
-      const anyErr = err as { response?: { data?: { message?: string; errors?: Record<string, string[]> } }; message?: string };
-      const serverMsg = anyErr.response?.data?.message || anyErr.message || "An unexpected error occurred during login.";
+      const anyErr = err as {
+        response?: {
+          data?: { message?: string; errors?: Record<string, string[]> };
+        };
+        message?: string;
+      };
+      const serverMsg =
+        anyErr.response?.data?.message ||
+        anyErr.message ||
+        "An unexpected error occurred during login.";
       setError(serverMsg);
     } finally {
       setIsLoading(false);
@@ -85,7 +98,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
     <form onSubmit={handleSubmit} className="flex flex-col gap-3 w-full">
       {/* Alert Error / Success */}
       {error && (
-        <div className="p-3 rounded-xl bg-error/10 border border-error/20 text-error text-xs font-medium flex items-center gap-2">
+        <div className="p-3 rounded-xl bg-error/10 border border-error/20 text-error text-sm font-medium flex items-center gap-2">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className="size-4 shrink-0"
@@ -103,7 +116,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
       )}
 
       {success && (
-        <div className="p-3 rounded-xl bg-success/10 border border-success/20 text-success text-xs font-medium flex items-center gap-2">
+        <div className="p-3 rounded-xl bg-success/10 border border-success/20 text-success text-sm font-medium flex items-center gap-2">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className="size-4 shrink-0"
@@ -122,7 +135,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
 
       {/* Email Address */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-medium text-secondary/70">
+        <label className="text-sm font-medium text-secondary/70">
           Email Address
         </label>
         <input
@@ -132,19 +145,19 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           onChange={(e) => setEmail(e.target.value)}
           required
           autoComplete="email"
-          className="w-full h-12 px-4 rounded-xl border border-secondary/15 bg-primary/20 text-secondary placeholder:text-secondary/40 outline-none focus:border-accent focus:ring-1 focus:ring-accent/40 transition-all text-sm font-medium"
+          className="w-full h-12 px-4 rounded-xl border border-secondary/15 bg-primary/20 text-secondary placeholder:text-secondary/40 outline-none focus:border-accent focus:ring-1 focus:ring-accent/5 transition-all text-sm font-medium"
         />
       </div>
 
       {/* Password with eye toggle */}
       <div className="flex flex-col gap-1.5">
         <div className="flex items-center justify-between">
-          <label className="text-xs font-medium text-secondary/70">
+          <label className="text-sm font-medium text-secondary/70">
             Password
           </label>
           <Link
             href="/forgot-password"
-            className="text-xs text-accent hover:underline font-medium"
+            className="text-sm text-accent hover:underline font-medium"
           >
             Forgot password?
           </Link>
@@ -157,7 +170,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
             onChange={(e) => setPassword(e.target.value)}
             required
             autoComplete="current-password"
-            className="w-full h-12 pl-4 pr-11 rounded-xl border border-secondary/15 bg-primary/20 text-secondary placeholder:text-secondary/40 outline-none focus:border-accent focus:ring-1 focus:ring-accent/40 transition-all text-sm font-medium"
+            className="w-full h-12 pl-4 pr-11 rounded-xl border border-secondary/15 bg-primary/20 text-secondary placeholder:text-secondary/40 outline-none focus:border-accent focus:ring-1 focus:ring-accent/5 transition-all text-sm font-medium"
           />
           <button
             type="button"
@@ -214,12 +227,13 @@ export const LoginForm: React.FC<LoginFormProps> = ({
             onChange={(e) => setRememberMe(e.target.checked)}
             className="checkbox checkbox-xs rounded border-secondary/20 bg-primary/30 checked:bg-accent checked:border-accent"
           />
-          <span className="text-xs text-secondary/70 font-medium">
+          <span className="text-sm text-secondary/70 font-medium">
             Remember this device
           </span>
         </label>
       </div>
 
+      <TurnstileWidget onToken={setTurnstileToken} />
 
       {/* Sign In Button */}
       <button
@@ -235,7 +249,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
       </button>
 
       {/* Switch to Register link */}
-      <p className="text-center text-xs text-secondary/60 mt-1">
+      <p className="text-center text-sm text-secondary/60 mt-1">
         Don&apos;t have an account?{" "}
         {onSwitchToRegister ? (
           <button

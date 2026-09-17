@@ -33,7 +33,7 @@ export const PayrollHealthCard = () => {
             Impressions
           </p>
 
-          <span className="inline-flex items-center gap-1.5 font-medium text-subtext text-xs mt-0.5">
+          <span className="inline-flex items-center gap-1.5 font-medium text-subtext text-sm mt-0.5">
             <span className={`size-1.5 rounded-full ${hasActivity ? "bg-success" : "bg-secondary/40"}`} />
             {isLoading ? "Syncing..." : growthLabel}
           </span>
@@ -86,7 +86,7 @@ export const PayrollHealthCard = () => {
       </div>
 
       {/* Footer note */}
-      <div className="flex items-center justify-between text-xs">
+      <div className="flex items-center justify-between text-sm">
         <p className="text-secondary/60 leading-relaxed">
           <span className="text-secondary font-medium">
             {totalClicks.toLocaleString()} {totalClicks === 1 ? "click" : "clicks"}

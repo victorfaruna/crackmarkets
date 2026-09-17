@@ -1,6 +1,7 @@
 "use client";
 
 import { useOnboardStore } from "@/src/lib/stores/onboardStore";
+import Image from "next/image";
 
 const frequencies = [
   { label: "Weekly", value: "weekly" },
@@ -36,14 +37,14 @@ const currencies = [
 ];
 
 const PayrollConfig = () => {
-  const { next, back, formData, setFormData } = useOnboardStore();
+  const { next, formData, setFormData } = useOnboardStore();
   const selectedFrequency = formData.payFrequency;
   const selectedCurrency = formData.primaryCurrencyId;
 
   return (
     <div className="flex flex-col gap-6 items-center w-full max-w-md animate-fade-in">
       <div className="flex flex-col items-center gap-1">
-        <p className="font-medium font-clash-displayy text-xl text-secondary text-center leading-none">
+        <p className="font-medium font-inter text-xl text-secondary text-center leading-none">
           Payroll Preferences
         </p>
         <p className="text-subtext text-center font-medium">
@@ -54,7 +55,7 @@ const PayrollConfig = () => {
       <div className="w-full flex flex-col gap-5">
         {/* Frequency */}
         <div className="flex flex-col gap-2.5">
-          <label className="text-xs font-medium text-secondary/70">
+          <label className="text-sm font-medium text-secondary/70">
             Pay Frequency
           </label>
           <div className="grid grid-cols-3 gap-2">
@@ -90,7 +91,7 @@ const PayrollConfig = () => {
 
         {/* Currency */}
         <div className="flex flex-col gap-2.5">
-          <label className="text-xs font-medium text-secondary/70">
+          <label className="text-sm font-medium text-secondary/70">
             Primary Currency
           </label>
           <div className="grid grid-cols-4 gap-2">
@@ -119,7 +120,7 @@ const PayrollConfig = () => {
                   </svg>
                 )}
                 {cur.logo && (
-                  <img src={cur.logo} alt={cur.label} width={20} height={20} />
+                  <Image src={cur.logo} alt={cur.label} width={20} height={20} />
                 )}
                 <span className="text-[10px] opacity-70">{cur.label}</span>
               </button>

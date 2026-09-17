@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useUser, useUpdateUser } from "@/src/lib/hooks/useUser";
 import { useUserStore } from "@/src/lib/stores/userStore";
 import { useAppStore } from "@/src/lib/stores/appStore";
 import { getUserPlaceholderImage } from "@/src/lib/utils/profileHandler";
 import { COUNTRIES } from "@/src/lib/constants/countries";
+import Image from "next/image";
 
 export const PersonalInformationCard: React.FC = () => {
   const { data: serverUserData, isLoading } = useUser();
@@ -19,8 +20,8 @@ export const PersonalInformationCard: React.FC = () => {
   // Authenticated live user data from /api/auth/me, fallback to store
   const user = serverUserData?.data?.user || storeUser;
 
-  const firstName = user?.first_name || (user as any)?.firstName || "";
-  const lastName = user?.last_name || (user as any)?.lastName || "";
+  const firstName = user?.first_name || ("firstName" in (user || {}) ? user?.firstName : "") || "";
+  const lastName = user?.last_name || ("lastName" in (user || {}) ? user?.lastName : "") || "";
   const fullName =
     [firstName, lastName].filter(Boolean).join(" ") ||
     (user?.email ? user.email.split("@")[0] : "");
@@ -99,11 +100,8 @@ export const PersonalInformationCard: React.FC = () => {
       } else {
         setEditError(res.message || "Failed to update profile.");
       }
-    } catch (err: any) {
-      const msg =
-        err?.response?.data?.message ||
-        err?.message ||
-        "An unexpected error occurred.";
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "An unexpected error occurred.";
       setEditError(msg);
     }
   };
@@ -114,10 +112,10 @@ export const PersonalInformationCard: React.FC = () => {
         {/* ─── Card Header ──────────────────────────────────────────────────────── */}
         <div className="flex flex-row items-center justify-between gap-4 pb-4 border-b border-secondary/10">
           <div>
-            <h2 className="text-lg sm:text-xl font-medium font-clash-display text-secondary tracking-tight">
+            <h2 className="text-lg sm:text-xl font-medium font-inter text-secondary tracking-tight">
               Personal Information
             </h2>
-            <p className="text-xs text-secondary/60 mt-0.5">
+            <p className="text-sm text-secondary/60 mt-0.5">
               Review your profile details.
             </p>
           </div>
@@ -125,7 +123,7 @@ export const PersonalInformationCard: React.FC = () => {
           <button
             type="button"
             onClick={handleOpenEditModal}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-secondary/15 bg-secondary/5 hover:bg-secondary/10 text-secondary text-xs font-medium transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-secondary/15 bg-secondary/5 hover:bg-secondary/10 text-secondary text-sm font-medium transition-colors cursor-pointer"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -153,7 +151,10 @@ export const PersonalInformationCard: React.FC = () => {
               {isLoading && !user ? (
                 <div className="skeleton size-full rounded-full" />
               ) : avatarUrl ? (
-                <img
+                <Image
+                  unoptimized
+                  width={88}
+                  height={88}
                   src={avatarUrl}
                   alt={fullName || "User Avatar"}
                   className="w-full h-full object-cover"
@@ -196,7 +197,7 @@ export const PersonalInformationCard: React.FC = () => {
             {/* Inline Badges Row */}
             <div className="flex flex-wrap items-center gap-2">
               {/* Account Type */}
-              <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs bg-secondary/5 border border-secondary/10 text-secondary/80">
+              <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-sm bg-secondary/5 border border-secondary/10 text-secondary/80">
                 <span className="text-secondary/50">Account Type:</span>
                 <span className="inline-flex items-center gap-1 font-semibold text-accent">
                   <svg
@@ -216,7 +217,7 @@ export const PersonalInformationCard: React.FC = () => {
               </div>
 
               {/* ID */}
-              <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs bg-secondary/5 border border-secondary/10 text-secondary/80">
+              <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-sm bg-secondary/5 border border-secondary/10 text-secondary/80">
                 <span className="text-secondary/50">ID:</span>
                 <span className="font-semibold text-secondary font-mono">
                   {referralCode || "—"}
@@ -224,7 +225,7 @@ export const PersonalInformationCard: React.FC = () => {
               </div>
 
               {/* RoboForex ID */}
-              <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs bg-secondary/5 border border-secondary/10 text-secondary/80">
+              <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-sm bg-secondary/5 border border-secondary/10 text-secondary/80">
                 <span className="text-secondary/50">RoboForex ID:</span>
                 <span
                   className={`font-semibold font-mono ${
@@ -234,13 +235,13 @@ export const PersonalInformationCard: React.FC = () => {
                   }`}
                 >
                   {isConnectedToRoboForex
-                    ? (user as any)?.roboforex_id || "—"
+                    ? user?.roboforex_id || "—"
                     : "Not Linked"}
                 </span>
               </div>
 
               {/* Joined */}
-              <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs bg-secondary/5 border border-secondary/10 text-secondary/80">
+              <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-sm bg-secondary/5 border border-secondary/10 text-secondary/80">
                 <span className="text-secondary/50">Joined:</span>
                 <span className="font-medium text-secondary font-mono">
                   {joinedDate || "—"}
@@ -248,7 +249,7 @@ export const PersonalInformationCard: React.FC = () => {
               </div>
 
               {/* Referrer */}
-              <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs bg-secondary/5 border border-secondary/10 text-secondary/80">
+              <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-sm bg-secondary/5 border border-secondary/10 text-secondary/80">
                 <span className="text-secondary/50">Referrer:</span>
                 <span className="font-medium text-secondary">
                   {referredBy ? "Active" : "N/A"}
@@ -257,7 +258,7 @@ export const PersonalInformationCard: React.FC = () => {
             </div>
 
             {/* 3-Column Info Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-y-3 gap-x-6 pt-2 text-xs text-secondary/80">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-y-3 gap-x-6 pt-2 text-sm text-secondary/80">
               {/* 1. Birthday / Date */}
               <div className="flex items-center gap-2 min-w-0">
                 <svg
@@ -395,7 +396,7 @@ export const PersonalInformationCard: React.FC = () => {
                 }`}
               />
             </button>
-            <span className="text-xs font-medium text-secondary">
+            <span className="text-sm font-medium text-secondary">
               Receive Notifications
             </span>
           </label>
@@ -418,7 +419,7 @@ export const PersonalInformationCard: React.FC = () => {
               />
             </button>
             <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-xs font-medium text-secondary">
+              <span className="text-sm font-medium text-secondary">
                 Show First and Last Name to Upline
               </span>
               <span className="text-[11px] text-secondary/50">
@@ -431,7 +432,7 @@ export const PersonalInformationCard: React.FC = () => {
 
       {/* ─── Edit Profile Modal ────────────────────────────────────────────────── */}
       {isEditModalOpen && (
-        <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
+        <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-secondary/40 backdrop-blur-xs animate-fade-in">
           <div className="w-full max-w-md bg-background border-[0.5px] border-secondary/15 rounded-2xl p-6 shadow-2xl flex flex-col gap-5 relative">
             {/* Header */}
             <div className="flex items-center justify-between pb-3 border-b-[0.5px] border-secondary/10">
@@ -446,7 +447,7 @@ export const PersonalInformationCard: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIsEditModalOpen(false)}
-                className="size-7 rounded-lg flex items-center justify-center text-secondary/50 hover:text-secondary hover:bg-secondary/5 cursor-pointer text-xs transition-colors"
+                className="size-7 rounded-lg flex items-center justify-center text-secondary/50 hover:text-secondary hover:bg-secondary/5 cursor-pointer text-sm transition-colors"
               >
                 ✕
               </button>
@@ -455,17 +456,17 @@ export const PersonalInformationCard: React.FC = () => {
             {/* Form */}
             <form
               onSubmit={handleSaveProfile}
-              className="flex flex-col gap-4 text-xs text-secondary"
+              className="flex flex-col gap-4 text-sm text-secondary"
             >
               {/* Feedback Alerts */}
               {editError && (
-                <div className="p-3 rounded-xl bg-error/10 border border-error/20 text-error text-xs font-medium">
+                <div className="p-3 rounded-xl bg-error/10 border border-error/20 text-error text-sm font-medium">
                   {editError}
                 </div>
               )}
 
               {editSuccess && (
-                <div className="p-3 rounded-xl bg-success/10 border border-success/20 text-success text-xs font-medium">
+                <div className="p-3 rounded-xl bg-success/10 border border-success/20 text-success text-sm font-medium">
                   {editSuccess}
                 </div>
               )}
@@ -482,7 +483,7 @@ export const PersonalInformationCard: React.FC = () => {
                     onChange={(e) => setEditFirstName(e.target.value)}
                     required
                     placeholder="First Name"
-                    className="w-full h-10 px-3.5 rounded-xl border-[0.5px] border-secondary/15 bg-secondary/4 text-secondary text-xs outline-hidden focus:border-secondary/40 transition-colors"
+                    className="w-full h-10 px-3.5 rounded-xl border-[0.5px] border-secondary/15 bg-secondary/4 text-secondary text-sm outline-hidden focus:border-secondary/40 transition-colors"
                   />
                 </div>
 
@@ -496,7 +497,7 @@ export const PersonalInformationCard: React.FC = () => {
                     onChange={(e) => setEditLastName(e.target.value)}
                     required
                     placeholder="Last Name"
-                    className="w-full h-10 px-3.5 rounded-xl border-[0.5px] border-secondary/15 bg-secondary/4 text-secondary text-xs outline-hidden focus:border-secondary/40 transition-colors"
+                    className="w-full h-10 px-3.5 rounded-xl border-[0.5px] border-secondary/15 bg-secondary/4 text-secondary text-sm outline-hidden focus:border-secondary/40 transition-colors"
                   />
                 </div>
               </div>
@@ -512,7 +513,7 @@ export const PersonalInformationCard: React.FC = () => {
                   onChange={(e) => setEditPhoneNumber(e.target.value)}
                   required
                   placeholder="+1 (555) 000-0000"
-                  className="w-full h-10 px-3.5 rounded-xl border-[0.5px] border-secondary/15 bg-secondary/4 text-secondary text-xs outline-hidden focus:border-secondary/40 transition-colors"
+                  className="w-full h-10 px-3.5 rounded-xl border-[0.5px] border-secondary/15 bg-secondary/4 text-secondary text-sm outline-hidden focus:border-secondary/40 transition-colors"
                 />
               </div>
 
@@ -524,7 +525,7 @@ export const PersonalInformationCard: React.FC = () => {
                 <select
                   value={editCountry}
                   onChange={(e) => setEditCountry(e.target.value)}
-                  className="w-full h-10 px-3.5 rounded-xl border-[0.5px] border-secondary/15 bg-secondary/4 text-secondary text-xs outline-hidden focus:border-secondary/40 transition-colors cursor-pointer"
+                  className="w-full h-10 px-3.5 rounded-xl border-[0.5px] border-secondary/15 bg-secondary/4 text-secondary text-sm outline-hidden focus:border-secondary/40 transition-colors cursor-pointer"
                 >
                   {COUNTRIES.map((c) => (
                     <option key={c.code} value={c.name}>
@@ -543,7 +544,7 @@ export const PersonalInformationCard: React.FC = () => {
                   <span className="text-[10px] text-secondary/40">Optional</span>
                 </div>
                 <div className="relative flex items-center">
-                  <span className="absolute left-3.5 text-secondary/40 text-xs font-mono select-none">
+                  <span className="absolute left-3.5 text-secondary/40 text-sm font-mono select-none">
                     @
                   </span>
                   <input
@@ -553,7 +554,7 @@ export const PersonalInformationCard: React.FC = () => {
                       setEditTelegram(e.target.value.replace(/^@+/, ""))
                     }
                     placeholder="username"
-                    className="w-full h-10 pl-8 pr-3.5 rounded-xl border-[0.5px] border-secondary/15 bg-secondary/4 text-secondary text-xs outline-hidden focus:border-secondary/40 transition-colors"
+                    className="w-full h-10 pl-8 pr-3.5 rounded-xl border-[0.5px] border-secondary/15 bg-secondary/4 text-secondary text-sm outline-hidden focus:border-secondary/40 transition-colors"
                   />
                 </div>
               </div>
@@ -572,7 +573,7 @@ export const PersonalInformationCard: React.FC = () => {
                   type="email"
                   value={email}
                   disabled
-                  className="w-full h-10 px-3.5 rounded-xl border-[0.5px] border-secondary/10 bg-secondary/2 text-secondary/50 text-xs cursor-not-allowed outline-hidden"
+                  className="w-full h-10 px-3.5 rounded-xl border-[0.5px] border-secondary/10 bg-secondary/2 text-secondary/50 text-sm cursor-not-allowed outline-hidden"
                 />
               </div>
 
@@ -581,14 +582,14 @@ export const PersonalInformationCard: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsEditModalOpen(false)}
-                  className="px-4 py-2 rounded-full border-[0.5px] border-secondary/15 text-secondary/70 hover:text-secondary hover:bg-secondary/5 text-xs font-medium transition-colors cursor-pointer"
+                  className="px-4 py-2 rounded-full border-[0.5px] border-secondary/15 text-secondary/70 hover:text-secondary hover:bg-secondary/5 text-sm font-medium transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isUpdating}
-                  className="px-5 py-2 rounded-full bg-secondary text-background font-medium text-xs hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-50 flex items-center gap-2"
+                  className="px-5 py-2 rounded-full bg-secondary text-background font-medium text-sm hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-50 flex items-center gap-2"
                 >
                   {isUpdating ? (
                     <>

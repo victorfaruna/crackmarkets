@@ -1,10 +1,9 @@
 import { drizzle, type PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "./schema";
+import { requireServerEnv } from "@/src/lib/config/env";
 
-const connectionString =
-  process.env.DATABASE_URL ||
-  "postgres://postgres:postgres@localhost:5432/crackmarkets";
+const connectionString = requireServerEnv("DATABASE_URL");
 
 // Global cache to prevent exhausted connections in Next.js HMR/serverless development
 declare global {

@@ -1,182 +1,13 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
-import { Rubik, Montserrat } from "next/font/google";
-import { GeistSans } from "geist/font/sans";
-
-const montserrat = Montserrat({
-  subsets: ["latin"],
-  variable: "--font-montserrat",
-  display: "swap",
-});
+import { Inter } from "next/font/google";
 import "./globals.css";
 import Providers from "../lib/providers/provider";
+import ThemeHydrator from "../components/shared/ThemeHydrator";
+import { DEFAULT_APP_THEME, THEME_BOOTSTRAP_SCRIPT } from "../lib/theme";
 
-const clashDisplay = localFont({
-  src: [
-    {
-      path: "../../public/fonts/ClashDisplay/ClashDisplay-Extralight.woff2",
-      weight: "200",
-      style: "normal",
-    },
-    {
-      path: "../../public/fonts/ClashDisplay/ClashDisplay-Light.woff2",
-      weight: "300",
-      style: "normal",
-    },
-    {
-      path: "../../public/fonts/ClashDisplay/ClashDisplay-Regular.woff2",
-      weight: "400",
-      style: "normal",
-    },
-    {
-      path: "../../public/fonts/ClashDisplay/ClashDisplay-Medium.woff2",
-      weight: "500",
-      style: "normal",
-    },
-    {
-      path: "../../public/fonts/ClashDisplay/ClashDisplay-Semibold.woff2",
-      weight: "600",
-      style: "normal",
-    },
-    {
-      path: "../../public/fonts/ClashDisplay/ClashDisplay-Bold.woff2",
-      weight: "700",
-      style: "normal",
-    },
-  ],
-  variable: "--font-clash-display",
-  display: "swap",
-});
-
-const satoshi = localFont({
-  src: [
-    {
-      path: "../../public/fonts/Satoshi/Satoshi-Light.woff2",
-      weight: "300",
-      style: "normal",
-    },
-    {
-      path: "../../public/fonts/Satoshi/Satoshi-LightItalic.woff2",
-      weight: "300",
-      style: "italic",
-    },
-    {
-      path: "../../public/fonts/Satoshi/Satoshi-Regular.woff2",
-      weight: "400",
-      style: "normal",
-    },
-    {
-      path: "../../public/fonts/Satoshi/Satoshi-Italic.woff2",
-      weight: "400",
-      style: "italic",
-    },
-    {
-      path: "../../public/fonts/Satoshi/Satoshi-Medium.woff2",
-      weight: "500",
-      style: "normal",
-    },
-    {
-      path: "../../public/fonts/Satoshi/Satoshi-MediumItalic.woff2",
-      weight: "500",
-      style: "italic",
-    },
-    {
-      path: "../../public/fonts/Satoshi/Satoshi-Bold.woff2",
-      weight: "700",
-      style: "normal",
-    },
-    {
-      path: "../../public/fonts/Satoshi/Satoshi-BoldItalic.woff2",
-      weight: "700",
-      style: "italic",
-    },
-    {
-      path: "../../public/fonts/Satoshi/Satoshi-Black.woff2",
-      weight: "900",
-      style: "normal",
-    },
-    {
-      path: "../../public/fonts/Satoshi/Satoshi-BlackItalic.woff2",
-      weight: "900",
-      style: "italic",
-    },
-  ],
-  variable: "--font-satoshi",
-  display: "swap",
-});
-
-const roobert = localFont({
-  src: [
-    {
-      path: "../../public/fonts/RoobertSemiMono/RoobertSemiMonoTRIAL-Light-BF67243fd53fc7c.otf",
-      weight: "300",
-      style: "normal",
-    },
-    {
-      path: "../../public/fonts/RoobertSemiMono/RoobertSemiMonoTRIAL-LightItalic-BF67243fd53a243.otf",
-      weight: "300",
-      style: "italic",
-    },
-    {
-      path: "../../public/fonts/RoobertSemiMono/RoobertSemiMonoTRIAL-Regular-BF67243fd53ad6a.otf",
-      weight: "400",
-      style: "normal",
-    },
-    {
-      path: "../../public/fonts/RoobertSemiMono/RoobertSemiMonoTRIAL-RegularItalic-BF67243fd53afce.otf",
-      weight: "400",
-      style: "italic",
-    },
-    {
-      path: "../../public/fonts/RoobertSemiMono/RoobertSemiMonoTRIAL-Medium-BF67243fd524e58.otf",
-      weight: "500",
-      style: "normal",
-    },
-    {
-      path: "../../public/fonts/RoobertSemiMono/RoobertSemiMonoTRIAL-MediumItalic-BF67243fd527dda.otf",
-      weight: "500",
-      style: "italic",
-    },
-    {
-      path: "../../public/fonts/RoobertSemiMono/RoobertSemiMonoTRIAL-SemiBold-BF67243fd539b9e.otf",
-      weight: "600",
-      style: "normal",
-    },
-    {
-      path: "../../public/fonts/RoobertSemiMono/RoobertSemiMonoTRIAL-SemiBoldItalic-BF67243fd53e269.otf",
-      weight: "600",
-      style: "italic",
-    },
-    {
-      path: "../../public/fonts/RoobertSemiMono/RoobertSemiMonoTRIAL-Bold-BF67243fd539cff.otf",
-      weight: "700",
-      style: "normal",
-    },
-    {
-      path: "../../public/fonts/RoobertSemiMono/RoobertSemiMonoTRIAL-BoldItalic-BF67243fd53f821.otf",
-      weight: "700",
-      style: "italic",
-    },
-    {
-      path: "../../public/fonts/RoobertSemiMono/RoobertSemiMonoTRIAL-Heavy-BF67243fd53d89c.otf",
-      weight: "900",
-      style: "normal",
-    },
-    {
-      path: "../../public/fonts/RoobertSemiMono/RoobertSemiMonoTRIAL-HeavyItalic-BF67243fd540151.otf",
-      weight: "900",
-      style: "italic",
-    },
-  ],
-  variable: "--font-roobert",
-  display: "swap",
-});
-
-const rubik = Rubik({
+const inter = Inter({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800", "900"],
-  style: ["normal", "italic"],
-  variable: "--font-rubik",
+  variable: "--font-inter",
   display: "swap",
 });
 
@@ -185,13 +16,13 @@ export const metadata: Metadata = {
     process.env.NEXT_PUBLIC_APP_URL || "https://trackmarkets.vercel.app",
   ),
   title: {
-    default: "Track Markets | Next-Gen Trading & Referral Platform",
-    template: "%s | Track Markets",
+    default: "Trackmarkets | Next-Gen Trading & Referral Platform",
+    template: "%s | Trackmarkets",
   },
   description:
     "Advanced service provider and 10-level referral management system integrated with RoboForex. Track team volumes, lot distributions, automated commission tiers, and instant wallet payouts.",
   keywords: [
-    "Track Markets",
+    "Trackmarkets",
     "RoboForex",
     "10-Level Referral",
     "Forex Trading",
@@ -200,14 +31,14 @@ export const metadata: Metadata = {
     "Broker Integration",
     "Fintech",
   ],
-  authors: [{ name: "Track Markets" }],
-  creator: "Track Markets",
+  authors: [{ name: "Trackmarkets" }],
+  creator: "Trackmarkets",
   openGraph: {
     type: "website",
     locale: "en_US",
     url: "/",
-    siteName: "Track Markets",
-    title: "Track Markets | Next-Gen Trading & Referral Platform",
+    siteName: "Trackmarkets",
+    title: "Trackmarkets | Next-Gen Trading & Referral Platform",
     description:
       "Advanced service provider and 10-level referral management system integrated with RoboForex. Track team volumes, lot distributions, automated commission tiers, and instant wallet payouts.",
     images: [
@@ -215,13 +46,13 @@ export const metadata: Metadata = {
         url: "/images/card-mesh.webp",
         width: 1200,
         height: 630,
-        alt: "Track Markets — Next-Gen Trading & Referral Infrastructure",
+        alt: "Trackmarkets — Next-Gen Trading & Referral Infrastructure",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Track Markets | Next-Gen Trading & Referral Platform",
+    title: "Trackmarkets | Next-Gen Trading & Referral Platform",
     description:
       "Advanced service provider and 10-level referral management system integrated with RoboForex. Track team volumes, lot distributions, automated commission tiers, and instant wallet payouts.",
     images: ["/images/card-mesh.webp"],
@@ -234,25 +65,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" data-theme="light">
+    <html lang="en" data-theme={DEFAULT_APP_THEME} suppressHydrationWarning>
       <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-          const appState = localStorage.getItem("crackmarkets-app-state");
-          console.log(appState)
-          const theme = JSON.parse(appState).state.theme;
-          if (theme) {
-            document.documentElement.setAttribute("data-theme", theme);
-          }
-        `,
-          }}
-        />
+        <script id="theme-bootstrap">{THEME_BOOTSTRAP_SCRIPT}</script>
       </head>
-
       <body
-        className={`${clashDisplay.variable} ${satoshi.variable} ${roobert.variable} ${rubik.variable} ${montserrat.variable} ${GeistSans.variable} antialiased flex bg-background`}
+        className={`${inter.variable} font-inter antialiased flex bg-background`}
       >
+        <ThemeHydrator />
         <Providers>{children}</Providers>
       </body>
     </html>

@@ -2,11 +2,11 @@
 
 import React, { useState, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import Image from "next/image";
 import { useUser } from "@/src/lib/hooks/useUser";
 import { useUserStore } from "@/src/lib/stores/userStore";
 import { useNetwork } from "@/src/lib/hooks/useNetwork";
 import { getUserPlaceholderImage } from "@/src/lib/utils/profileHandler";
-import { NetworkMemberDTO } from "@/src/lib/services/network";
 
 const LEVELS = [
   { id: "ALL", label: "All Levels" },
@@ -48,7 +48,7 @@ function NetworkContent() {
 
   const { data: networkQueryData, isLoading } = useNetwork();
   const networkData = networkQueryData?.data;
-  const members = networkData?.members || [];
+  const members = useMemo(() => networkData?.members || [], [networkData?.members]);
   const totalCount = networkData?.totalMembers ?? 0;
   const totalDirects =
     networkData?.totalDirects ?? members.filter((m) => m.level === 1).length;
@@ -57,16 +57,17 @@ function NetworkContent() {
   const activeCount = networkData?.activeCount ?? 0;
 
   const [copied, setCopied] = useState(false);
-  const [activeTab, setActiveTab] = useState<ViewTab>("tree");
+  const [selectedTab, setActiveTab] = useState<ViewTab>("tree");
   const [selectedLevel, setSelectedLevel] = useState<string | number>("ALL");
   const [search, setSearch] = useState("");
   const [expandedNodes, setExpandedNodes] = useState<Record<string, boolean>>({});
 
-  // Sync tab from drawer query param if any
-  React.useEffect(() => {
-    if (viewParam === "global") setActiveTab("network");
-    else if (viewParam === "top" || viewParam === "directs") setActiveTab("directs");
-  }, [viewParam]);
+  const activeTab: ViewTab =
+    viewParam === "global"
+      ? "network"
+      : viewParam === "top" || viewParam === "directs"
+        ? "directs"
+        : selectedTab;
 
   const appUrl =
     typeof window !== "undefined"
@@ -123,10 +124,10 @@ function NetworkContent() {
       {/* ─── Top Header Row ────────────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex flex-col gap-0.5">
-          <h1 className="text-secondary text-lg font-medium font-clash-display">
+          <h1 className="text-secondary text-lg font-medium font-inter">
             Referral Network
           </h1>
-          <p className="text-secondary/60 text-xs">
+          <p className="text-secondary/60 text-sm">
             {isLoading ? (
               "Loading referral lineage..."
             ) : (
@@ -144,7 +145,7 @@ function NetworkContent() {
             <span className="text-[0.7rem] text-secondary/60 font-medium">
               Referral Code:
             </span>
-            <span className="text-xs font-mono font-medium text-accent">
+            <span className="text-sm font-mono font-medium text-accent">
               {referralCode || "—"}
             </span>
             <button
@@ -162,36 +163,36 @@ function NetworkContent() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
         <div className="rounded-xl border border-secondary/10 bg-primary/40 p-5 sm:p-6 min-h-40 flex flex-col justify-between">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-secondary/60 text-xs font-medium">Direct Affiliates (L1)</span>
+            <span className="text-secondary/60 text-sm font-medium">Direct Affiliates (L1)</span>
             <span className="text-[11px] px-2.5 py-0.5 rounded-md bg-accent/15 text-accent font-mono font-medium">
               5% Share
             </span>
           </div>
-          <span className="text-3xl sm:text-4xl font-semibold font-clash-display text-secondary tracking-tight">
+          <span className="text-3xl sm:text-4xl font-semibold font-inter text-secondary tracking-tight">
             {isLoading ? "—" : totalDirects}
           </span>
         </div>
 
         <div className="rounded-xl border border-secondary/10 bg-primary/40 p-5 sm:p-6 min-h-40 flex flex-col justify-between">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-secondary/60 text-xs font-medium">Indirect Affiliates (L2–L10)</span>
+            <span className="text-secondary/60 text-sm font-medium">Indirect Affiliates (L2–L10)</span>
             <span className="text-[11px] px-2.5 py-0.5 rounded-md bg-secondary/10 text-secondary/70 font-mono">
               4%–1% Share
             </span>
           </div>
-          <span className="text-3xl sm:text-4xl font-semibold font-clash-display text-secondary tracking-tight">
+          <span className="text-3xl sm:text-4xl font-semibold font-inter text-secondary tracking-tight">
             {isLoading ? "—" : totalIndirects}
           </span>
         </div>
 
         <div className="rounded-xl border border-secondary/10 bg-primary/40 p-5 sm:p-6 min-h-40 flex flex-col justify-between">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-secondary/60 text-xs font-medium">Total Organization</span>
+            <span className="text-secondary/60 text-sm font-medium">Total Organization</span>
             <span className="text-[11px] px-2.5 py-0.5 rounded-md bg-success/15 text-success font-mono font-medium">
               {activeCount} Active
             </span>
           </div>
-          <span className="text-3xl sm:text-4xl font-semibold font-clash-display text-secondary tracking-tight">
+          <span className="text-3xl sm:text-4xl font-semibold font-inter text-secondary tracking-tight">
             {isLoading ? "—" : totalCount}
           </span>
         </div>
@@ -233,7 +234,7 @@ function NetworkContent() {
               placeholder="Search members..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full h-8.5 pl-3.5 pr-8 rounded-xl border border-secondary/15 bg-background text-secondary text-xs placeholder:text-secondary/40 outline-hidden focus:border-accent"
+              className="w-full h-8.5 pl-3.5 pr-8 rounded-xl border border-secondary/15 bg-background text-secondary text-sm placeholder:text-secondary/40 outline-hidden focus:border-accent"
             />
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -259,7 +260,8 @@ function NetworkContent() {
             <div className="w-full max-w-md rounded-xl border border-secondary/15 bg-background p-4 flex flex-col gap-3 shadow-xs">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3 min-w-0">
-                  <img
+                  <Image
+                    unoptimized
                     className="size-10 rounded-full bg-secondary/10 object-cover shrink-0 border border-secondary/15"
                     src={getUserPlaceholderImage(user?.email || user?.id || "root")}
                     alt={userName}
@@ -267,7 +269,7 @@ function NetworkContent() {
                     height={40}
                   />
                   <div className="flex flex-col min-w-0">
-                    <span className="text-xs font-semibold text-secondary truncate">
+                    <span className="text-sm font-semibold text-secondary truncate">
                       {userName}
                     </span>
                     <span className="text-[11px] text-secondary/60 truncate font-mono">
@@ -309,7 +311,7 @@ function NetworkContent() {
 
             {/* Direct Referral Child Cards */}
             {filteredDirects.length === 0 ? (
-              <div className="py-8 text-center text-xs text-secondary/50">
+              <div className="py-8 text-center text-sm text-secondary/50">
                 {directMembers.length === 0
                   ? "No direct affiliates connected yet. Share your referral link to build your tree."
                   : "No direct affiliates match your search."}
@@ -329,7 +331,8 @@ function NetworkContent() {
                       <div className="w-full rounded-xl border border-secondary/15 bg-background p-3.5 flex flex-col gap-2.5 shadow-2xs hover:border-secondary/30 transition-colors">
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex items-center gap-2.5 min-w-0">
-                            <img
+                            <Image
+                              unoptimized
                               className="size-7 rounded-full bg-secondary/10 object-cover shrink-0 border border-secondary/15"
                               src={getUserPlaceholderImage(member.email || member.id)}
                               alt={member.name}
@@ -337,7 +340,7 @@ function NetworkContent() {
                               height={28}
                             />
                             <div className="flex flex-col min-w-0">
-                              <span className="text-xs font-semibold text-secondary truncate">
+                              <span className="text-sm font-semibold text-secondary truncate">
                                 {member.name}
                               </span>
                               <span className="text-[10px] text-secondary/50 truncate font-mono">
@@ -406,9 +409,9 @@ function NetworkContent() {
         {activeTab === "directs" && (
           <div className="flex flex-col gap-2">
             {isLoading ? (
-              <div className="py-12 text-center text-xs text-secondary/50">Loading direct affiliates...</div>
+              <div className="py-12 text-center text-sm text-secondary/50">Loading direct affiliates...</div>
             ) : filteredDirects.length === 0 ? (
-              <div className="py-12 text-center text-xs text-secondary/50">No direct affiliates found.</div>
+              <div className="py-12 text-center text-sm text-secondary/50">No direct affiliates found.</div>
             ) : (
               filteredDirects.map((item) => (
                 <div
@@ -416,7 +419,8 @@ function NetworkContent() {
                   className="flex items-center justify-between gap-4 py-3 px-3 rounded-xl hover:bg-secondary/4 transition-colors border-b border-secondary/5 last:border-none"
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <img
+                    <Image
+                      unoptimized
                       className="size-8 rounded-full bg-secondary/10 object-cover shrink-0 border border-secondary/15"
                       src={getUserPlaceholderImage(item.email || item.id)}
                       alt={item.name}
@@ -425,7 +429,7 @@ function NetworkContent() {
                     />
                     <div className="flex flex-col justify-center gap-0.5 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <p className="text-secondary leading-none font-medium text-xs truncate">
+                        <p className="text-secondary leading-none font-medium text-sm truncate">
                           {item.name}
                         </p>
                         <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-accent/15 text-accent">
@@ -448,7 +452,7 @@ function NetworkContent() {
                     >
                       {item.status}
                     </span>
-                    <span className="hidden sm:inline text-xs text-secondary/50 font-mono">
+                    <span className="hidden sm:inline text-sm text-secondary/50 font-mono">
                       {item.createdAt ? new Date(item.createdAt).toISOString().split("T")[0] : ""}
                     </span>
                   </div>
@@ -485,9 +489,9 @@ function NetworkContent() {
             {/* Members List */}
             <div className="flex flex-col gap-2 pt-2">
               {isLoading ? (
-                <div className="py-12 text-center text-xs text-secondary/50">Loading network members...</div>
+                <div className="py-12 text-center text-sm text-secondary/50">Loading network members...</div>
               ) : filteredMembers.length === 0 ? (
-                <div className="py-12 text-center text-xs text-secondary/50">No network traders found.</div>
+                <div className="py-12 text-center text-sm text-secondary/50">No network traders found.</div>
               ) : (
                 filteredMembers.map((item) => (
                   <div
@@ -495,7 +499,8 @@ function NetworkContent() {
                     className="flex items-center justify-between gap-4 py-3 px-3 rounded-xl hover:bg-secondary/4 transition-colors border-b border-secondary/5 last:border-none"
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <img
+                      <Image
+                        unoptimized
                         className="size-8 rounded-full bg-secondary/10 object-cover shrink-0 border border-secondary/15"
                         src={getUserPlaceholderImage(item.email || item.id)}
                         alt={item.name}
@@ -504,7 +509,7 @@ function NetworkContent() {
                       />
                       <div className="flex flex-col justify-center gap-0.5 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <p className="text-secondary leading-none font-medium text-xs truncate">
+                          <p className="text-secondary leading-none font-medium text-sm truncate">
                             {item.name}
                           </p>
                           <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-accent/15 text-accent">
@@ -527,7 +532,7 @@ function NetworkContent() {
                       >
                         {item.status}
                       </span>
-                      <span className="hidden sm:inline text-xs text-secondary/50 font-mono">
+                      <span className="hidden sm:inline text-sm text-secondary/50 font-mono">
                         {item.createdAt ? new Date(item.createdAt).toISOString().split("T")[0] : ""}
                       </span>
                     </div>
@@ -546,10 +551,10 @@ function NetworkContent() {
               return (
                 <div
                   key={t.level}
-                  className="p-3.5 rounded-xl border border-secondary/10 bg-background flex items-center justify-between text-xs"
+                  className="p-3.5 rounded-xl border border-secondary/10 bg-background flex items-center justify-between text-sm"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="size-8 rounded-lg bg-accent/15 text-accent font-bold font-mono flex items-center justify-center text-xs">
+                    <span className="size-8 rounded-lg bg-accent/15 text-accent font-bold font-mono flex items-center justify-center text-sm">
                       L{t.level}
                     </span>
                     <div className="flex flex-col">
@@ -561,7 +566,7 @@ function NetworkContent() {
                       </span>
                     </div>
                   </div>
-                  <span className="text-xs font-mono font-semibold px-2 py-0.5 rounded bg-secondary/5 border border-secondary/10 text-secondary">
+                  <span className="text-sm font-mono font-semibold px-2 py-0.5 rounded bg-secondary/5 border border-secondary/10 text-secondary">
                     {tierMembers.length} members
                   </span>
                 </div>

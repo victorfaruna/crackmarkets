@@ -119,10 +119,10 @@ export default function WalletPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex flex-col gap-0.5">
           <Breadcrum />
-          <h1 className="text-secondary text-lg font-medium font-clash-display mt-1">
+          <h1 className="text-secondary text-lg font-medium font-inter mt-1">
             Wallet & Transactions
           </h1>
-          <p className="text-secondary/60 text-xs">
+          <p className="text-secondary/60 text-sm">
             Manage your referral commission payouts, available USDT balance, and live ledger transaction history.
           </p>
         </div>
@@ -138,10 +138,10 @@ export default function WalletPage() {
         {/* Header & Filter Controls */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div className="flex flex-col gap-0.5">
-            <h2 className="text-base font-semibold font-clash-display text-secondary">
+            <h2 className="text-base font-semibold font-inter text-secondary">
               Transaction History
             </h2>
-            <p className="text-xs text-secondary/60">
+            <p className="text-sm text-secondary/60">
               Full ledger of commission distributions, bonuses, and withdrawal payouts.
             </p>
           </div>
@@ -155,7 +155,7 @@ export default function WalletPage() {
                 placeholder="Search reference ID..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="input input-sm bg-primary border border-secondary/8 text-secondary text-xs rounded-md pl-8 pr-3 w-44 sm:w-52 focus:outline-none focus:border-accent"
+                className="input input-sm bg-primary border border-secondary/8 text-secondary text-sm rounded-md pl-8 pr-3 w-44 sm:w-52 focus:outline-none focus:border-accent"
               />
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -177,7 +177,7 @@ export default function WalletPage() {
             <select
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
-              className="select select-sm bg-primary border border-secondary/8 text-secondary text-xs rounded-md focus:outline-none focus:border-accent"
+              className="select select-sm bg-primary border border-secondary/8 text-secondary text-sm rounded-md focus:outline-none focus:border-accent"
             >
               {STATUS_OPTIONS.map((opt) => (
                 <option key={opt.id} value={opt.id}>
@@ -197,7 +197,7 @@ export default function WalletPage() {
                 key={tab.id}
                 type="button"
                 onClick={() => setSelectedType(tab.id)}
-                className={`text-xs font-medium px-3.5 py-1.5 rounded-md transition-colors whitespace-nowrap cursor-pointer ${
+                className={`text-sm font-medium px-3.5 py-1.5 rounded-md transition-colors whitespace-nowrap cursor-pointer ${
                   active
                     ? "bg-secondary text-background font-semibold"
                     : "bg-primary/50 text-secondary/60 hover:text-secondary hover:bg-secondary/10"
@@ -222,7 +222,7 @@ export default function WalletPage() {
         ) : transactions.length === 0 ? (
           <div className="rounded-md border border-secondary/6 bg-primary/20 p-10 flex flex-col items-center justify-center gap-2 text-center">
             <span className="text-2xl">📋</span>
-            <span className="text-xs font-semibold text-secondary">
+            <span className="text-sm font-semibold text-secondary">
               No transactions found
             </span>
             <p className="text-[11px] text-secondary/60 max-w-xs">
@@ -238,7 +238,7 @@ export default function WalletPage() {
                   setSelectedStatus("ALL");
                   setSearch("");
                 }}
-                className="mt-2 px-3 py-1 text-xs font-semibold rounded-md bg-secondary text-background hover:bg-secondary/90 transition-colors cursor-pointer"
+                className="mt-2 px-3 py-1 text-sm font-semibold rounded-md bg-secondary text-background hover:bg-secondary/90 transition-colors cursor-pointer"
               >
                 Clear Filters
               </button>
@@ -246,7 +246,7 @@ export default function WalletPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+            <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-secondary/6 text-secondary/50 font-medium pb-2">
                   <th className="py-2.5 px-3">Transaction</th>

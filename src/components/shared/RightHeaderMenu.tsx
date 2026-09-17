@@ -6,28 +6,18 @@ import { useAppStore } from "@/src/lib/stores/appStore";
 import { useUserStore, UserProfile } from "@/src/lib/stores/userStore";
 import { useNotifications } from "@/src/lib/hooks/useNotifications";
 import Link from "next/link";
-import {
-  getProfileImage,
-  getUserPlaceholderImage,
-} from "@/src/lib/utils/profileHandler";
+import Image from "next/image";
+import { getUserPlaceholderImage } from "@/src/lib/utils/profileHandler";
 
 const RightHeaderMenu = () => {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const userStore = useUserStore((s) => s.user);
-  const theme = useAppStore((s) => s.theme);
   const { data: userQueryData } = useUser();
-  const { initLogout } = useLogout();
   const { unreadCount } = useNotifications();
 
   // Combine query data with userStore fallback
   const user: UserProfile | null = userQueryData?.data?.user || userStore;
-
-  const toggleTheme = () => {
-    const newTheme = theme === "dark" ? "light" : "dark";
-    useAppStore.setState({ theme: newTheme });
-    document.documentElement.setAttribute("data-theme", newTheme);
-  };
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -63,7 +53,7 @@ const RightHeaderMenu = () => {
             d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
           />
         </svg>
-        <p className="text-xs font-medium text-subtext mr-3">Search</p>
+        <p className="text-sm font-medium text-subtext mr-3">Search</p>
         <div className="flex gap-0 items-center">
           <svg
             className="size-3"
@@ -79,7 +69,7 @@ const RightHeaderMenu = () => {
               strokeLinejoin="round"
             />
           </svg>
-          <p className="text-xs font-medium">K</p>
+          <p className="text-sm font-medium">K</p>
         </div>
       </button>
 
@@ -112,7 +102,8 @@ const RightHeaderMenu = () => {
         className="cursor-pointer"
         onClick={() => setOpen((a) => !a)}
       >
-        <img
+        <Image
+          unoptimized
           src={getUserPlaceholderImage(user?.email || "default")}
           alt="Profile Image"
           className="bg-primary rounded-full size-7.5 border-[0.5px] border-subtext/60"
@@ -143,17 +134,17 @@ const UserInfo = () => {
 
   const THEMES = ["dark", "light"] as const;
   const theme = useAppStore((s) => s.theme);
+  const setTheme = useAppStore((s) => s.setTheme);
 
-  const firstName = user?.first_name || (user as any)?.firstName || "";
-  const lastName = user?.last_name || (user as any)?.lastName || "";
+  const firstName = user?.first_name || user?.firstName || "";
+  const lastName = user?.last_name || user?.lastName || "";
   const fullName =
     firstName && lastName
       ? `${firstName} ${lastName}`
       : firstName || (user?.email ? user.email.split("@")[0] : "");
 
   const handleSelectTheme = (selectedTheme: "dark" | "light") => {
-    useAppStore.setState({ theme: selectedTheme });
-    document.documentElement.setAttribute("data-theme", selectedTheme);
+    setTheme(selectedTheme);
   };
 
   return (
@@ -171,7 +162,7 @@ const UserInfo = () => {
           {isLoading && !user?.email ? (
             <p className="skeleton w-15 h-2 rounded-xl mt-1"></p>
           ) : (
-            <p className="text-xs text-secondary/50 mt-1">
+            <p className="text-sm text-secondary/50 mt-1">
               {user?.email || ""}
             </p>
           )}
@@ -208,13 +199,13 @@ const UserInfo = () => {
       </div>
 
       <div className="max-h-64 overflow-y-auto px-4 py-2 gap-1 flex flex-col">
-        <p className="font-medium text-xs text-secondary/60">Theme</p>
+        <p className="font-medium text-sm text-secondary/60">Theme</p>
         <div className="flex w-full flex-col items-start font-medium">
           {THEMES.map((t, i) => (
             <button
               key={i}
               type="button"
-              className="text-xs capitalize w-full text-start flex items-center gap-3 p-1.5 pl-4 rounded-sm hover:bg-subtext/15 cursor-pointer"
+              className="text-sm capitalize w-full text-start flex items-center gap-3 p-1.5 pl-4 rounded-sm hover:bg-subtext/15 cursor-pointer"
               onClick={() => handleSelectTheme(t)}
             >
               <span
@@ -240,7 +231,7 @@ const UserInfo = () => {
             <p className="skeleton w-15 h-3"></p>
           ) : (
             <>
-              <p className="text-xs font-medium leading-none">Logout</p>
+              <p className="text-sm font-medium leading-none">Logout</p>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
@@ -262,5 +253,3 @@ const UserInfo = () => {
     </div>
   );
 };
-
-

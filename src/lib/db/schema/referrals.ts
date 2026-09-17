@@ -4,10 +4,13 @@ import {
   varchar,
   integer,
   numeric,
+  jsonb,
   timestamp,
   index,
+  uniqueIndex,
+  check,
 } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import { users } from "./users";
 
 export const referralNodes = pgTable(
@@ -31,6 +34,11 @@ export const referralNodes = pgTable(
       table.depth,
     ),
     index("referral_nodes_descendant_idx").on(table.descendantId),
+    uniqueIndex("referral_nodes_lineage_unique").on(
+      table.ancestorId,
+      table.descendantId,
+    ),
+    check("referral_nodes_depth_check", sql`${table.depth} between 1 and 10`),
   ],
 );
 
@@ -79,6 +87,8 @@ export const transactions = pgTable(
     referenceId: varchar("reference_id", { length: 255 }),
     level: integer("level"),
     status: varchar("status", { length: 50 }).notNull().default("COMPLETED"), // "PENDING" | "COMPLETED" | "FAILED" | "REVERSED"
+    idempotencyKey: varchar("idempotency_key", { length: 100 }).unique(),
+    metadata: jsonb("metadata"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -160,4 +170,3 @@ export type Wallet = typeof wallets.$inferSelect;
 export type Transaction = typeof transactions.$inferSelect;
 export type ReferralImpression = typeof referralImpressions.$inferSelect;
 export type NewReferralImpression = typeof referralImpressions.$inferInsert;
-

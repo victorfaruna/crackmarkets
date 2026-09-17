@@ -2,28 +2,27 @@
 
 import { useOnboardStore } from "@/src/lib/stores/onboardStore";
 import { useAppStore } from "@/src/lib/stores/appStore";
-import { useEffect } from "react";
 
 const themes = [
   {
     id: "light" as const,
     label: "Light",
     description: "Clean & minimal",
-    bg: "#f1f1f1",
-    surface: "#f1f1f1",
-    text: "#111110",
-    accent: "#b090fb",
-    border: "#e8e8e8",
+    bg: "var(--background)",
+    surface: "var(--primary)",
+    text: "var(--secondary)",
+    accent: "var(--accent)",
+    border: "var(--subtext)",
   },
   {
     id: "dark" as const,
     label: "Dark",
     description: "Easy on the eyes",
-    bg: "#090909",
-    surface: "#141414",
-    text: "#ffffff",
-    accent: "#cab4ff",
-    border: "#2a2a2a",
+    bg: "var(--background)",
+    surface: "var(--primary)",
+    text: "var(--secondary)",
+    accent: "var(--accent)",
+    border: "var(--subtext)",
   },
 ];
 
@@ -107,13 +106,8 @@ const ThemePreview = ({
 /* ─── Step component ─────────────────────────────────────────────────────── */
 
 const ThemePicker = () => {
-  const { next, back } = useOnboardStore();
+  const { next } = useOnboardStore();
   const { theme, setTheme } = useAppStore();
-
-  /* Apply the selected theme to <html> live while on this step */
-  useEffect(() => {
-    document.documentElement.setAttribute("data-theme", theme);
-  }, [theme]);
 
   return (
     <div className="flex flex-col gap-6 items-center w-full max-w-3xl animate-fade-in">

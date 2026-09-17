@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ReactNode, useState, useEffect } from "react";
+import { ReactNode, useState } from "react";
 import { useAppStore } from "@/src/lib/stores/appStore";
 
 const ICON_SIZE = 4.5;
@@ -21,12 +21,12 @@ const NavItem = ({ name, icon, href, isActive }: NavItemProps) => (
     <li
       className={`p-2 gap-2.5 w-full flex items-center rounded-md transition-colors duration-150 ${
         isActive
-          ? "text-secondary bg-secondary/4 font-semibold"
-          : "hover:bg-secondary/4 text-secondary/60 hover:text-secondary font-medium"
+          ? "text-secondary bg-secondary/4"
+          : "hover:bg-secondary/4 text-secondary/60 hover:text-secondary"
       }`}
     >
       <span className="shrink-0 flex items-center justify-center">{icon}</span>
-      <span className="font-medium text-[0.83rem] whitespace-nowrap overflow-hidden leading-none">
+      <span className="text-[0.83rem] whitespace-nowrap overflow-hidden leading-none">
         {name}
       </span>
     </li>
@@ -46,8 +46,8 @@ const SubNavItem = ({ name, href, isActive }: SubNavItemProps) => (
     <li
       className={`py-3 pl-11 pr-2 w-full flex items-center rounded-md transition-colors duration-150 ${
         isActive
-          ? "text-secondary font-semibold"
-          : "text-secondary/50 hover:text-secondary/80 font-medium"
+          ? "text-secondary"
+          : "text-secondary/50 hover:text-secondary/80"
       }`}
     >
       <span className="text-[0.78rem] whitespace-nowrap overflow-hidden leading-none">
@@ -72,12 +72,8 @@ const CollapsibleGroup = ({
   isAnyChildActive,
   children,
 }: CollapsibleGroupProps) => {
-  const [isOpen, setIsOpen] = useState(false);
-
-  // Auto-expand when a child route is active
-  useEffect(() => {
-    if (isAnyChildActive) setIsOpen(true);
-  }, [isAnyChildActive]);
+  const [isOpen, setIsOpen] = useState(isAnyChildActive);
+  const expanded = isAnyChildActive || isOpen;
 
   return (
     <li className="w-full flex flex-col">
@@ -86,14 +82,14 @@ const CollapsibleGroup = ({
         onClick={() => setIsOpen((prev) => !prev)}
         className={`p-2 gap-2.5 w-full flex items-center rounded-md transition-colors duration-150 cursor-pointer ${
           isAnyChildActive
-            ? "text-secondary bg-secondary/4 font-semibold"
-            : "hover:bg-secondary/4 text-secondary/60 hover:text-secondary font-medium"
+            ? "text-secondary bg-secondary/4 font-medium"
+            : "hover:bg-secondary/4 text-secondary/60 hover:text-secondary"
         }`}
       >
         <span className="shrink-0 flex items-center justify-center">
           {icon}
         </span>
-        <span className="font-medium text-[0.83rem] whitespace-nowrap overflow-hidden leading-none flex-1 text-left">
+        <span className="text-[0.83rem] whitespace-nowrap overflow-hidden leading-none flex-1 text-left">
           {name}
         </span>
         {/* Chevron */}
@@ -104,7 +100,7 @@ const CollapsibleGroup = ({
           strokeWidth={2}
           stroke="currentColor"
           className={`size-3.5 shrink-0 transition-transform duration-200 ${
-            isOpen ? "rotate-180" : ""
+            expanded ? "rotate-180" : ""
           }`}
         >
           <path
@@ -118,7 +114,7 @@ const CollapsibleGroup = ({
       {/* Children with smooth collapse */}
       <div
         className={`overflow-hidden transition-all duration-200 ease-out ${
-          isOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+          expanded ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
         }`}
       >
         <ul className="flex flex-col gap-0.5 pt-0.5">{children}</ul>
@@ -129,18 +125,12 @@ const CollapsibleGroup = ({
 
 /* ─── Divider ─────────────────────────────────────────────────────────── */
 
-const Divider = () => (
-  <div className="w-full border-b border-subtext/30 my-2"></div>
-);
-
 /* ─── Drawer ──────────────────────────────────────────────────────────── */
 
 export const Drawer = () => {
   const pathname = usePathname();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const isConnectedToRoboForex = useAppStore((s) => s.isConnectedToRoboForex);
-  const isWalletDrawerOpen = useAppStore((s) => s.isWalletDrawerOpen);
-  const setWalletDrawerOpen = useAppStore((s) => s.setWalletDrawerOpen);
 
   // Active state helpers
   const isNetworkActive = pathname.startsWith("/dashboard/network");
@@ -162,7 +152,7 @@ export const Drawer = () => {
         }`}
       >
         <div className="main flex-1 w-full flex flex-col p-1 overflow-y-auto">
-          <ul className="gap-1 w-full flex flex-col justify-center px-0.5 py-2">
+          <ul className="gap-1.5 w-full flex flex-col justify-center px-0.5 py-2">
             {/* ─── Overview (flat, gated) ───────────────────────────── */}
             {isConnectedToRoboForex && (
               <NavItem

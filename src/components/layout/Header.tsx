@@ -21,8 +21,8 @@ export const Header: React.FC = () => {
 
         <span className="text-subtext text-sm">/</span>
 
-        <span className="font-medium text-xs sm:text-sm text-secondary truncate">
-          Track Markets
+        <span className="font-medium text-sm text-secondary truncate">
+          Trackmarkets
         </span>
 
         <span className="text-subtext text-sm">/</span>

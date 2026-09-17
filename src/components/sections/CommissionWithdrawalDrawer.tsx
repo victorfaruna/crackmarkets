@@ -7,6 +7,8 @@ import { useAppStore } from "@/src/lib/stores/appStore";
 import { formatCurrency } from "@/src/lib/utils/formatCurrency";
 
 import { useWithdrawFunds } from "@/src/lib/hooks/useWallet";
+import axios from "axios";
+import { useUser } from "@/src/lib/hooks/useUser";
 
 interface CommissionWithdrawalDrawerProps {
   isOpen: boolean;
@@ -28,6 +30,13 @@ export const CommissionWithdrawalDrawer: React.FC<
   const isConnectedToRoboForex = useAppStore(
     (s) => s.isConnectedToRoboForex,
   );
+  const { data: userData } = useUser();
+  const user = userData?.data?.user;
+  const isAccountEligible =
+    user?.status === "ACTIVE" &&
+    user?.kyc_status === "APPROVED" &&
+    user?.funding_status === "UNLOCKED" &&
+    isConnectedToRoboForex;
   const { mutate: withdraw, isPending } = useWithdrawFunds();
 
   const [network, setNetwork] = useState("TRC20");
@@ -43,7 +52,7 @@ export const CommissionWithdrawalDrawer: React.FC<
   const netReceive = Math.max(0, numAmount - currentNetwork.fee);
 
   const handleMax = () => {
-    if (!isConnectedToRoboForex || !hasEnoughBalance) return;
+    if (!isAccountEligible || !hasEnoughBalance) return;
     setAmount(availableBalance.toString());
   };
 
@@ -60,7 +69,7 @@ export const CommissionWithdrawalDrawer: React.FC<
     e.preventDefault();
     setErrorMsg("");
     if (
-      !isConnectedToRoboForex ||
+      !isAccountEligible ||
       !hasEnoughBalance ||
       !address ||
       numAmount <= currentNetwork.fee ||
@@ -84,14 +93,17 @@ export const CommissionWithdrawalDrawer: React.FC<
             onClose();
           }, 1200);
         },
-        onError: (err: any) => {
-          setErrorMsg(err?.response?.data?.message || "Failed to process withdrawal");
+        onError: (err: unknown) => {
+          const message = axios.isAxiosError<{ message?: string }>(err)
+            ? err.response?.data?.message
+            : undefined;
+          setErrorMsg(message || "Failed to process withdrawal");
         },
       },
     );
   };
 
-  const isFormDisabled = !isConnectedToRoboForex || !hasEnoughBalance || isPending;
+  const isFormDisabled = !isAccountEligible || !hasEnoughBalance || isPending;
 
   return (
     <RightSideDrawer
@@ -111,7 +123,7 @@ export const CommissionWithdrawalDrawer: React.FC<
           </span>
           <span className="text-xl font-semibold text-secondary">
             ${formatCurrency(availableBalance, 2)}{" "}
-            <span className="text-xs font-normal text-secondary/60 font-mono">
+            <span className="text-sm font-normal text-secondary/60 font-mono">
               USDT
             </span>
           </span>
@@ -134,7 +146,7 @@ export const CommissionWithdrawalDrawer: React.FC<
                 />
               </svg>
               <div className="flex flex-col gap-0.5">
-                <p className="text-xs font-medium text-error">
+                <p className="text-sm font-medium text-error">
                   RoboForex Not Connected
                 </p>
                 <p className="text-[11px] text-secondary/70">
@@ -146,10 +158,16 @@ export const CommissionWithdrawalDrawer: React.FC<
             <Link
               href="/dashboard/profile"
               onClick={onClose}
-              className="text-xs font-medium text-accent hover:underline self-start pl-6"
+              className="text-sm font-medium text-accent hover:underline self-start pl-6"
             >
               Go to Profile to Connect →
             </Link>
+          </div>
+        )}
+
+        {isConnectedToRoboForex && !isAccountEligible && (
+          <div className="alert alert-soft alert-warning text-sm">
+            Approved KYC and unlocked funding are required before requesting a withdrawal.
           </div>
         )}
 
@@ -169,7 +187,7 @@ export const CommissionWithdrawalDrawer: React.FC<
               />
             </svg>
             <div className="flex flex-col gap-0.5">
-              <p className="text-xs font-medium text-error">
+              <p className="text-sm font-medium text-error">
                 Insufficient Balance
               </p>
               <p className="text-[11px] text-secondary/70">
@@ -182,7 +200,7 @@ export const CommissionWithdrawalDrawer: React.FC<
 
         {/* Network Selector */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-medium text-secondary/80">
+          <label className="text-sm font-medium text-secondary/80">
             Network
           </label>
           <div className="grid grid-cols-4 gap-1.5">
@@ -194,7 +212,7 @@ export const CommissionWithdrawalDrawer: React.FC<
                   type="button"
                   disabled={isFormDisabled}
                   onClick={() => setNetwork(n.id)}
-                  className={`py-2 text-xs font-medium rounded-lg border transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
+                  className={`py-2 text-sm font-medium rounded-lg border transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
                     active
                       ? "bg-secondary text-background border-secondary font-semibold"
                       : "bg-primary/40 border-subtext/30 text-secondary/70 hover:text-secondary"
@@ -210,7 +228,7 @@ export const CommissionWithdrawalDrawer: React.FC<
         {/* Destination Address */}
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center justify-between">
-            <label className="text-xs font-medium text-secondary/80">
+            <label className="text-sm font-medium text-secondary/80">
               Destination Address
             </label>
             {!isFormDisabled && (
@@ -230,14 +248,14 @@ export const CommissionWithdrawalDrawer: React.FC<
             onChange={(e) => setAddress(e.target.value)}
             placeholder={`Enter ${network} address`}
             required
-            className="w-full h-10 px-3 rounded-xl border border-subtext/30 bg-primary/40 text-secondary text-xs font-mono placeholder:font-sans placeholder:text-secondary/30 outline-hidden focus:border-subtext/70 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="w-full h-10 px-3 rounded-xl border border-subtext/30 bg-primary/40 text-secondary text-sm font-mono placeholder:font-sans placeholder:text-secondary/30 outline-hidden focus:border-subtext/70 disabled:opacity-40 disabled:cursor-not-allowed"
           />
         </div>
 
         {/* Amount */}
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center justify-between">
-            <label className="text-xs font-medium text-secondary/80">
+            <label className="text-sm font-medium text-secondary/80">
               Amount
             </label>
             <button
@@ -260,16 +278,16 @@ export const CommissionWithdrawalDrawer: React.FC<
               onChange={(e) => setAmount(e.target.value)}
               placeholder="0.00"
               required
-              className="w-full h-10 pl-3 pr-14 rounded-xl border border-subtext/30 bg-primary/40 text-secondary text-xs font-medium placeholder:text-secondary/30 outline-hidden focus:border-subtext/70 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="w-full h-10 pl-3 pr-14 rounded-xl border border-subtext/30 bg-primary/40 text-secondary text-sm font-medium placeholder:text-secondary/30 outline-hidden focus:border-subtext/70 disabled:opacity-40 disabled:cursor-not-allowed"
             />
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-secondary/40 font-mono">
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-secondary/40 font-mono">
               USDT
             </span>
           </div>
         </div>
 
         {/* Fee and Receive Summary */}
-        <div className="p-3 rounded-xl border border-subtext/30 bg-primary/20 flex flex-col gap-1 text-xs">
+        <div className="p-3 rounded-xl border border-subtext/30 bg-primary/20 flex flex-col gap-1 text-sm">
           <div className="flex items-center justify-between text-secondary/60">
             <span>Network Fee</span>
             <span className="font-mono">
@@ -288,13 +306,13 @@ export const CommissionWithdrawalDrawer: React.FC<
         </div>
 
         {errorMsg && (
-          <div className="p-3 rounded-xl bg-error/15 border border-error/30 text-error text-xs text-center font-medium">
+          <div className="p-3 rounded-xl bg-error/15 border border-error/30 text-error text-sm text-center font-medium">
             {errorMsg}
           </div>
         )}
 
         {success && (
-          <div className="p-3 rounded-xl bg-success/15 border border-success/30 text-success text-xs text-center font-medium">
+          <div className="p-3 rounded-xl bg-success/15 border border-success/30 text-success text-sm text-center font-medium">
             Withdrawal request submitted successfully.
           </div>
         )}
@@ -304,18 +322,18 @@ export const CommissionWithdrawalDrawer: React.FC<
           type="submit"
           disabled={
             isPending ||
-            !isConnectedToRoboForex ||
+            !isAccountEligible ||
             !hasEnoughBalance ||
             !address ||
             numAmount <= currentNetwork.fee ||
             numAmount > availableBalance
           }
-          className="w-full h-12 rounded-full bg-secondary text-background font-medium text-xs hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed mt-1"
+          className="w-full h-12 rounded-full bg-secondary text-background font-medium text-sm hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed mt-1"
         >
           {isPending
             ? "Processing..."
-            : !isConnectedToRoboForex
-              ? "Connect RoboForex to Withdraw"
+            : !isAccountEligible
+              ? "Complete Account Verification"
               : !hasEnoughBalance
                 ? "Insufficient Balance"
                 : "Withdraw Funds"}

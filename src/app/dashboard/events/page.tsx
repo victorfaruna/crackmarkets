@@ -5,7 +5,6 @@ import Breadcrum from "@/src/components/shared/Breadcrum";
 import EventCalendarWidget from "@/src/components/sections/events/EventCalendarWidget";
 import EventCard from "@/src/components/sections/events/EventCard";
 import { useEvents } from "@/src/lib/hooks/useEvents";
-import { EventCategory } from "@/src/lib/services/events";
 
 const CATEGORIES: Array<{ key: string; label: string }> = [
   { key: "ALL", label: "All Categories" },
@@ -17,7 +16,7 @@ const CATEGORIES: Array<{ key: string; label: string }> = [
 
 export default function EventsPage() {
   // Calendar month state
-  const [calendarDate, setCalendarDate] = useState<Date>(() => new Date(2026, 8, 1)); // Default to Sept 2026 (matching active event season)
+  const [calendarDate, setCalendarDate] = useState<Date>(() => new Date());
   // Selected day string: "YYYY-MM-DD" or null
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   // Category filter
@@ -53,10 +52,10 @@ export default function EventsPage() {
       {/* ─── Top Header Row ────────────────────────────────────────────── */}
       <div className="flex flex-col gap-0.5">
         <Breadcrum />
-        <h1 className="text-secondary text-lg font-medium font-clash-display mt-1">
+        <h1 className="text-secondary text-lg font-medium font-inter mt-1">
           Events & Competitions
         </h1>
-        <p className="text-secondary/60 text-xs">
+        <p className="text-secondary/60 text-sm">
           Participate in live trading championships, global partner summits, webinars, and leadership reward snapshots.
         </p>
       </div>
@@ -77,12 +76,12 @@ export default function EventsPage() {
           <div className="rounded-lg border border-secondary/6 bg-primary/30 p-4 flex flex-col gap-2">
             <div className="flex items-center gap-2">
               <span className="text-sm">🔔</span>
-              <span className="text-xs font-semibold text-secondary font-clash-display">
+              <span className="text-sm font-semibold text-secondary font-inter">
                 Automated Calendar Sync
               </span>
             </div>
             <p className="text-[11px] text-secondary/60 leading-relaxed">
-              Click any event date to filter schedules. Use the "Add to Calendar" button on cards to export directly to Apple, Google, or Outlook.
+              Click any event date to filter schedules. Use the &quot;Add to Calendar&quot; button on cards to export directly to Apple, Google, or Outlook.
             </p>
           </div>
         </div>
@@ -97,7 +96,7 @@ export default function EventsPage() {
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="select select-sm bg-primary border border-secondary/8 text-secondary text-xs rounded-md focus:outline-none focus:border-accent"
+                className="select select-sm bg-primary border border-secondary/8 text-secondary text-sm rounded-md focus:outline-none focus:border-accent"
               >
                 {CATEGORIES.map((cat) => (
                   <option key={cat.key} value={cat.key} className="bg-primary text-secondary">
@@ -108,7 +107,7 @@ export default function EventsPage() {
 
               {/* Active Selected Day Tag */}
               {selectedDay && (
-                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-medium bg-secondary text-background shadow-xs">
+                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-mono font-medium bg-secondary text-background shadow-xs">
                   <span>📅 {selectedDay}</span>
                   <button
                     type="button"
@@ -124,7 +123,7 @@ export default function EventsPage() {
 
             {/* Right Controls: Past Events Toggle */}
             <div className="flex items-center gap-2.5 self-end sm:self-auto">
-              <label className="text-xs text-secondary/70 font-medium select-none cursor-pointer flex items-center gap-2">
+              <label className="text-sm text-secondary/70 font-medium select-none cursor-pointer flex items-center gap-2">
                 <span>Include past events</span>
                 <input
                   type="checkbox"
@@ -154,16 +153,16 @@ export default function EventsPage() {
               ))}
             </div>
           ) : error ? (
-            <div className="rounded-2xl border border-error/20 bg-error/10 p-6 text-center text-xs text-error">
+            <div className="rounded-2xl border border-error/20 bg-error/10 p-6 text-center text-sm text-error">
               Failed to load events. Please try refreshing the page.
             </div>
           ) : events.length === 0 ? (
             <div className="rounded-2xl border border-secondary/10 bg-primary/20 p-10 flex flex-col items-center justify-center gap-3 text-center">
               <span className="text-3xl">🗓️</span>
-              <h3 className="text-sm font-semibold text-secondary font-clash-display">
+              <h3 className="text-sm font-semibold text-secondary font-inter">
                 No events found
               </h3>
-              <p className="text-xs text-secondary/60 max-w-sm">
+              <p className="text-sm text-secondary/60 max-w-sm">
                 {selectedDay
                   ? `No scheduled events on ${selectedDay}. Try selecting another date or viewing all upcoming schedules.`
                   : "No events match your current filter criteria."}
@@ -175,7 +174,7 @@ export default function EventsPage() {
                     setSelectedDay(null);
                     setSelectedCategory("ALL");
                   }}
-                  className="mt-2 px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-secondary text-background hover:bg-secondary/90 transition-colors cursor-pointer"
+                  className="mt-2 px-3.5 py-1.5 text-sm font-semibold rounded-lg bg-secondary text-background hover:bg-secondary/90 transition-colors cursor-pointer"
                 >
                   Reset Filters
                 </button>

@@ -21,7 +21,7 @@ function useDebounce<T>(value: T, delay = 500): T {
 }
 
 const OrganizationSetup = () => {
-  const { next, back, formData, setFormData } = useOnboardStore();
+  const { next, formData, setFormData } = useOnboardStore();
   const [error, setError] = useState<string>("");
   const orgName = formData.orgName;
   const orgHandle = formData.orgHandle;
@@ -85,7 +85,7 @@ const OrganizationSetup = () => {
   return (
     <div className="flex flex-col gap-5 items-center w-full max-w-md animate-fade-in">
       <div className="flex flex-col items-center gap-1">
-        <p className="font-medium text-xl font-clash-displayy text-secondary text-center leading-none">
+        <p className="font-medium text-xl font-inter text-secondary text-center leading-none">
           Organization
         </p>
         <p className="text-subtext font-medium text-center">
@@ -96,13 +96,13 @@ const OrganizationSetup = () => {
       <div className="w-full flex flex-col gap-4 mt-2">
         <div className="flex flex-col gap-3">
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-secondary/70">
+            <label className="text-sm font-medium text-secondary/70">
               Organization Name
             </label>
             <InputWithIcon
               value={orgName}
               onChange={(e) => setOrgName(e.target.value)}
-              placeholder="e.g Chainroll Inc"
+              placeholder="e.g Trackmarkets Ltd"
               icon={
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -123,11 +123,11 @@ const OrganizationSetup = () => {
           </div>
           {/* space */}
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-secondary/70 flex justify-between items-center">
-              Chainroll Handle
+            <label className="text-sm font-medium text-secondary/70 flex justify-between items-center">
+              Trackmarkets Handle
               <Link
                 href=""
-                className="text-accent font-medium text-xs flex items-center gap-1"
+                className="text-accent font-medium text-sm flex items-center gap-1"
               >
                 Learn more
                 <svg
@@ -147,12 +147,12 @@ const OrganizationSetup = () => {
               </Link>
             </label>
             <div className="w-full flex items-center gap-2 h-10 rounded-xl bg-primary border border-subtext/60 px-3 text-secondary placeholder:text-secondary/30 outline-none focus-within:border-accent/50 transition-colors">
-              <p className="text-secondary/70 font-semibold">@chainroll /</p>
+              <p className="text-secondary/70 font-semibold">@trackmarkets /</p>
               <input
                 type="text"
                 value={orgHandle}
                 onChange={(e) => setOrgHandle(e.target.value)}
-                placeholder="e.g chainroll-inc"
+                placeholder="e.g trackmarkets-team"
                 className="border-none outline-none flex-1"
               />
               {orgHandle && (

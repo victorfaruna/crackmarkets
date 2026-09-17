@@ -1,16 +1,32 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/src/lib/db";
 import { events } from "@/src/lib/db/schema/events";
-import { and, eq, gte, lte, desc, asc, SQL } from "drizzle-orm";
+import { and, eq, gte, lte, asc, SQL } from "drizzle-orm";
+import { z } from "zod";
+
+const eventQuerySchema = z
+  .object({
+    category: z.enum(["ALL", "TRADING_CONTEST", "WEBINAR", "LEADERSHIP_POOL", "PARTNER_SUMMIT"]).optional(),
+    status: z.enum(["ALL", "UPCOMING", "LIVE", "COMPLETED"]).optional(),
+    include_past: z.enum(["true", "false"]).optional(),
+    month: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/).optional(),
+    date: z.string().date().optional(),
+  })
+  .strict();
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const category = searchParams.get("category");
-    const status = searchParams.get("status");
-    const includePast = searchParams.get("include_past") === "true";
-    const month = searchParams.get("month"); // e.g. "2026-09"
-    const date = searchParams.get("date"); // e.g. "2026-09-15" (specific day)
+    const parsed = eventQuerySchema.safeParse(
+      Object.fromEntries(request.nextUrl.searchParams.entries()),
+    );
+    if (!parsed.success) {
+      return NextResponse.json(
+        { success: false, message: "Invalid event filters." },
+        { status: 400 },
+      );
+    }
+    const { category, status, month, date } = parsed.data;
+    const includePast = parsed.data.include_past === "true";
 
     const conditions: SQL[] = [];
 

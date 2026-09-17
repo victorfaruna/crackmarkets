@@ -2,26 +2,33 @@
 
 import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAppStore } from "@/src/lib/stores/appStore";
+import { useUser } from "@/src/lib/hooks/useUser";
 import TotalBalanceCard from "@/src/components/sections/TotalBalanceCard";
 import NetworkCard from "@/src/components/sections/NetworkCard";
 import PayrollHealthCard from "@/src/components/sections/PayrollHealth";
 import PartnerReferralCard from "@/src/components/sections/PartnerReferralCard";
 import OrgVerificationCard from "@/src/components/sections/OrgVerificationCard";
-import MonthlyBudgetCard from "@/src/components/sections/MonthlyBudgetCard";
 import PlatformIntegrationCards from "@/src/components/sections/PlatformIntegrationCards";
 
 export default function DashboardPage() {
   const router = useRouter();
-  const isConnectedToRoboForex = useAppStore(
-    (s) => s.isConnectedToRoboForex,
-  );
+  const { data: userData, isLoading } = useUser();
+  const isConnectedToRoboForex =
+    userData?.data?.user.roboforex_linked === true;
 
   useEffect(() => {
-    if (!isConnectedToRoboForex) {
+    if (!isLoading && userData && !isConnectedToRoboForex) {
       router.replace("/dashboard/profile");
     }
-  }, [isConnectedToRoboForex, router]);
+  }, [isConnectedToRoboForex, isLoading, router, userData]);
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-64 items-center justify-center">
+        <span className="loading loading-spinner loading-lg text-accent" />
+      </div>
+    );
+  }
 
   if (!isConnectedToRoboForex) {
     return null;
@@ -53,7 +60,6 @@ export default function DashboardPage() {
 
         <div className="flex flex-col gap-4">
           <OrgVerificationCard />
-          <MonthlyBudgetCard />
         </div>
       </div>
 

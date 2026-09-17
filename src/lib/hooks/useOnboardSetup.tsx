@@ -101,13 +101,9 @@ export const useOnboardSetup = () => {
       // All done → jump to Complete step
       setStage("complete");
       goTo(5); // Complete step index
-    } catch (err: any) {
-      console.log("error");
+    } catch (err: unknown) {
       setStage("error");
-      setError(
-        err?.response?.data?.message ||
-          "Something went wrong during setup. Please try again.",
-      );
+      setError(err instanceof Error ? err.message : "Something went wrong during setup. Please try again.");
     }
   }, [formData, orgMutation, teamMutation, payrollMutation, goTo]);
 

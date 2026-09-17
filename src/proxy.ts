@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
+import { requireServerEnv } from "@/src/lib/config/env";
 
 const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || "crackmarkets-super-secure-jwt-secret-key-32chars!",
+  requireServerEnv("JWT_SECRET"),
 );
 
 // Protected routes requiring authentication
@@ -45,6 +46,7 @@ async function refreshTokens(
       method: "POST",
       headers: {
         Cookie: `refresh_token=${refreshToken}`,
+        Origin: origin,
       },
     });
 
@@ -52,13 +54,30 @@ async function refreshTokens(
 
     return response.headers.getSetCookie();
   } catch (error) {
-    console.error("Middleware token refresh failed:", error);
+    console.error("Proxy token refresh failed:", error);
     return null;
   }
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
+
+  if (
+    pathname.startsWith("/api/") &&
+    !["GET", "HEAD", "OPTIONS"].includes(request.method)
+  ) {
+    const origin = request.headers.get("origin");
+    const fetchSite = request.headers.get("sec-fetch-site");
+    if (
+      (origin && origin !== request.nextUrl.origin) ||
+      fetchSite === "cross-site"
+    ) {
+      return NextResponse.json(
+        { success: false, message: "Cross-site request rejected." },
+        { status: 403 },
+      );
+    }
+  }
 
   const isProtectedRoute = PROTECTED_PREFIXES.some((prefix) =>
     pathname.startsWith(prefix),
@@ -137,6 +156,7 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
+    "/api/:path*",
     "/dashboard/:path*",
     "/login",
     "/register",

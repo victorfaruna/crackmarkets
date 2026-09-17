@@ -1,2 +1,2 @@
 # trackmarkets
-Frontend repo containing Track Markets dashboard
+Frontend repo containing Trackmarkets dashboard

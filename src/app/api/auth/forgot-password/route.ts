@@ -4,9 +4,27 @@ import { users, passwordResetTokens, auditLogs } from "@/src/lib/db/schema";
 import { forgotPasswordSchema } from "@/src/lib/auth/validation";
 import { generateRandomToken, hashToken } from "@/src/lib/auth/jwt";
 import { eq } from "drizzle-orm";
+import { checkRateLimit } from "@/src/lib/security/rateLimit";
+import { getRequestMetadata } from "@/src/lib/security/request";
+import { verifyTurnstile } from "@/src/lib/security/turnstile";
+import { sendPasswordResetEmail } from "@/src/lib/services/email.server";
 
 export async function POST(request: NextRequest) {
   try {
+    const { ipAddress, userAgent } = getRequestMetadata(request);
+    const rateLimit = await checkRateLimit({
+      namespace: "auth:forgot-password",
+      identifier: ipAddress,
+      limit: 5,
+      windowSeconds: 15 * 60,
+    });
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { success: false, message: "Too many requests. Please try again later." },
+        { status: 429 },
+      );
+    }
+
     const body = await request.json();
     const validationResult = forgotPasswordSchema.safeParse(body);
 
@@ -21,7 +39,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { email } = validationResult.data;
+    const { email, turnstile_token } = validationResult.data;
+    if (!(await verifyTurnstile(turnstile_token, ipAddress))) {
+      return NextResponse.json(
+        { success: false, message: "Bot verification failed. Please try again." },
+        { status: 400 },
+      );
+    }
     const normalizedEmail = email.toLowerCase().trim();
 
     const [user] = await db
@@ -46,12 +70,18 @@ export async function POST(request: NextRequest) {
       await db.insert(auditLogs).values({
         userId: user.id,
         action: "PASSWORD_RESET_REQUEST",
-        ipAddress:
-          request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-          request.headers.get("x-real-ip") ||
-          "unknown",
-        userAgent: request.headers.get("user-agent") || "unknown",
+        ipAddress,
+        userAgent,
       });
+      const emailSent = await sendPasswordResetEmail(
+        normalizedEmail,
+        rawResetToken,
+      );
+      if (!emailSent) {
+        console.error("[PASSWORD_RESET_EMAIL_DELIVERY_FAILED]", {
+          userId: user.id,
+        });
+      }
     }
 
     return NextResponse.json(
@@ -59,9 +89,6 @@ export async function POST(request: NextRequest) {
         success: true,
         message:
           "If an account with that email exists, we have sent instructions to reset your password.",
-        ...(process.env.NODE_ENV !== "production" && rawResetToken
-          ? { debugResetToken: rawResetToken }
-          : {}),
       },
       { status: 200 },
     );

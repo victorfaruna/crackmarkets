@@ -12,11 +12,8 @@ export const PlatformIntegrationCards: React.FC = () => {
   const { data: serverUserData } = useUser();
   const storeUser = useUserStore((s) => s.user);
   const user = serverUserData?.data?.user || storeUser;
-  const userIdDisplay = user?.referral_code || "";
 
-  const isConnectedToRoboForex = useAppStore(
-    (s) => s.isConnectedToRoboForex,
-  );
+  const isConnectedToRoboForex = useAppStore((s) => s.isConnectedToRoboForex);
 
   const { mutateAsync: linkRoboForex, isPending: isLinking } =
     useLinkRoboForex();
@@ -26,9 +23,7 @@ export const PlatformIntegrationCards: React.FC = () => {
 
   // Real broker ID from server
   const brokerIdDisplay =
-    serverUserData?.data?.user?.roboforex_id ||
-    (user as any)?.roboforex_id ||
-    "";
+    serverUserData?.data?.user?.roboforex_id || user?.roboforex_id || "";
 
   const handleConnectClick = () => {
     // Open RoboForex registration in new tab
@@ -60,25 +55,25 @@ export const PlatformIntegrationCards: React.FC = () => {
   return (
     <div className="w-full max-w-320 flex flex-col gap-4 mt-2">
       {/* ─── Card 1: RoboForex Registration (First Card) ────────────────────── */}
-      <div className="w-full rounded-xl bg-tetiary border border-secondary/15 p-5 sm:p-6 flex flex-col justify-between gap-5 relative shadow-sm text-white">
+      <div className="w-full rounded-xl bg-secondary border border-secondary/15 p-5 sm:p-6 flex flex-col justify-between gap-5 relative shadow-sm text-background">
         {/* Top Badges */}
         <div className="flex items-center gap-2 self-start sm:self-auto sm:absolute sm:top-5 sm:right-6">
           <span
-            className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
+            className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-sm font-semibold border ${
               isConnectedToRoboForex
                 ? "bg-success/25 text-success border-success/40"
-                : "bg-white/10 text-white/70 border-white/20"
+                : "bg-background/10 text-background/70 border-background/20"
             }`}
           >
             <span
               className={`size-1.5 rounded-full ${
-                isConnectedToRoboForex ? "bg-success" : "bg-white/40"
+                isConnectedToRoboForex ? "bg-success" : "bg-background/40"
               }`}
             />
             {isConnectedToRoboForex ? "Account Linked" : "Not Connected"}
           </span>
 
-          <span className="px-2.5 py-0.5 rounded-full text-xs font-mono bg-white/10 border border-white/20 text-white/90">
+          <span className="px-2.5 py-0.5 rounded-full text-sm font-mono bg-background/10 border border-background/20 text-background/90">
             {isConnectedToRoboForex && brokerIdDisplay
               ? `Broker ID: ${brokerIdDisplay}`
               : "Not Linked"}
@@ -88,14 +83,14 @@ export const PlatformIntegrationCards: React.FC = () => {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           {/* Left Info & CTA */}
           <div className="flex flex-col gap-2.5 max-w-2xl">
-            <h3 className="text-lg font-medium font-clash-display text-white tracking-tight">
+            <h3 className="text-lg font-medium font-inter text-background tracking-tight">
               RoboForex Registration
             </h3>
 
-            <p className="text-xs text-white/80 leading-relaxed max-w-xl">
+            <p className="text-sm text-background/80 leading-relaxed max-w-xl">
               To access all platform features, please register your Track
               Markets account exclusively using this button. Registering through
-              Track Markets ensures proper linking and synchronization between
+              Trackmarkets ensures proper linking and synchronization between
               both accounts.
             </p>
 
@@ -105,7 +100,7 @@ export const PlatformIntegrationCards: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleLoginClick}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-accent text-primary hover:bg-accent/90 text-xs font-semibold transition-all shadow-sm active:scale-98 cursor-pointer"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-accent text-primary hover:bg-accent/90 text-sm font-semibold transition-all shadow-sm active:scale-98 cursor-pointer"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -126,7 +121,7 @@ export const PlatformIntegrationCards: React.FC = () => {
               ) : awaitingConfirmation ? (
                 /* Awaiting user confirmation — collect broker ID */
                 <div className="flex flex-col gap-2 w-full max-w-sm">
-                  <label className="text-[11px] text-white/60 font-medium">
+                  <label className="text-[11px] text-background/60 font-medium">
                     Enter your RoboForex Account ID
                   </label>
                   <div className="flex items-center gap-2">
@@ -138,13 +133,13 @@ export const PlatformIntegrationCards: React.FC = () => {
                         setLinkError("");
                       }}
                       placeholder="e.g. 28941054"
-                      className="flex-1 px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white text-xs font-mono placeholder:text-white/30 focus:outline-none focus:border-accent/60 transition-colors"
+                      className="flex-1 px-3 py-2 rounded-lg bg-background/10 border border-background/20 text-background text-sm font-mono placeholder:text-background/30 focus:outline-none focus:border-accent/60 transition-colors"
                     />
                     <button
                       type="button"
                       onClick={handleConfirmLinked}
                       disabled={isLinking}
-                      className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-success text-primary hover:bg-success/90 text-xs font-semibold transition-all shadow-sm active:scale-98 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-success text-primary hover:bg-success/90 text-sm font-semibold transition-all shadow-sm active:scale-98 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -174,7 +169,7 @@ export const PlatformIntegrationCards: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleConnectClick}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-accent text-primary hover:bg-accent/90 text-xs font-semibold transition-all shadow-sm active:scale-98 cursor-pointer"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-md bg-accent text-primary hover:bg-accent/90 text-sm font-semibold transition-all shadow-sm active:scale-98 cursor-pointer"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -198,27 +193,27 @@ export const PlatformIntegrationCards: React.FC = () => {
 
           {/* Right Brand Mark */}
           <div className="flex items-center justify-start md:justify-end shrink-0 pr-4">
-            <span className="font-clash-display font-semibold text-3xl sm:text-4xl text-white/90 tracking-tight select-none">
+            <span className="font-inter font-semibold text-3xl sm:text-4xl text-background/90 tracking-tight select-none">
               ROBOFOREX
             </span>
           </div>
         </div>
 
         {/* Warning Note */}
-        <div className="pt-3 border-t border-white/10">
+        <div className="pt-3 border-t border-background/10">
           <p className="text-[11px] text-accent font-medium tracking-wide">
-            ● DO NOT REGISTER DIRECTLY ON THE ROBOFOREX PLATFORM, AS THE
-            ACCOUNT WILL NOT BE SYNCHRONIZED. ●
+            ● DO NOT REGISTER DIRECTLY ON THE ROBOFOREX PLATFORM, AS THE ACCOUNT
+            WILL NOT BE SYNCHRONIZED. ●
           </p>
         </div>
       </div>
 
       {/* ─── Card 2: FOXAi ────────────────────────────────────────────────────── */}
-      <div className="w-full rounded-xl bg-tetiary border border-secondary/15 p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-5 relative shadow-sm text-white">
+      <div className="w-full rounded-xl bg-secondary border border-secondary/15 p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-5 relative shadow-sm text-background">
         {/* Left Side */}
         <div className="flex flex-col gap-2.5 max-w-xl">
           <div className="flex items-center gap-2">
-            <div className="size-5 rounded-full bg-accent/25 border border-accent/40 flex items-center justify-center text-accent text-xs font-bold">
+            <div className="size-5 rounded-full bg-accent/25 border border-accent/40 flex items-center justify-center text-accent text-sm font-bold">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 20 20"
@@ -228,19 +223,19 @@ export const PlatformIntegrationCards: React.FC = () => {
                 <path d="M15.98 1.804a1 1 0 0 0-1.96 0l-.24 1.192a8.04 8.04 0 0 1-6.192 6.192l-1.192.24a1 1 0 0 0 0 1.96l1.192.24a8.04 8.04 0 0 1 6.192 6.192l.24 1.192a1 1 0 0 0 1.96 0l.24-1.192a8.04 8.04 0 0 1 6.192-6.192l1.192-.24a1 1 0 0 0 0-1.96l-1.192-.24a8.04 8.04 0 0 1-6.192-6.192l-.24-1.192ZM4.5 2a.75.75 0 0 0-.75.75v1.5H2.25a.75.75 0 0 0 0 1.5h1.5v1.5a.75.75 0 0 0 1.5 0v-1.5h1.5a.75.75 0 0 0 0-1.5h-1.5v-1.5A.75.75 0 0 0 4.5 2Z" />
               </svg>
             </div>
-            <h3 className="text-base font-medium font-clash-display text-white tracking-tight">
+            <h3 className="text-base font-medium font-inter text-background tracking-tight">
               FOXAi
             </h3>
           </div>
 
-          <p className="text-xs text-white/80 leading-relaxed">
+          <p className="text-sm text-background/80 leading-relaxed">
             Automate your strategies with algorithmic AI trading and analytics.
           </p>
 
           <div className="pt-1">
             <button
               type="button"
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-accent text-primary hover:bg-accent/90 text-xs font-semibold transition-all shadow-sm active:scale-98"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md bg-accent text-primary hover:bg-accent/90 text-sm font-semibold transition-all shadow-sm active:scale-98"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -264,17 +259,17 @@ export const PlatformIntegrationCards: React.FC = () => {
         {/* Right Side Brand & Link */}
         <div className="flex flex-col items-start sm:items-end gap-1.5 shrink-0">
           <div className="flex items-center gap-2">
-            <div className="size-7 rounded-lg bg-white/10 border border-white/20 flex items-center justify-center font-clash-display font-medium text-accent text-xs">
+            <div className="size-7 rounded-lg bg-background/10 border border-background/20 flex items-center justify-center font-inter font-medium text-accent text-sm">
               AI
             </div>
-            <span className="font-clash-display font-semibold text-2xl text-white tracking-tight">
+            <span className="font-inter font-semibold text-2xl text-background tracking-tight">
               FOXAi
             </span>
           </div>
 
           <Link
             href="/dashboard/trading"
-            className="text-xs text-white/70 hover:text-white flex items-center gap-1 transition-colors"
+            className="text-sm text-background/70 hover:text-background flex items-center gap-1 transition-colors"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -296,7 +291,7 @@ export const PlatformIntegrationCards: React.FC = () => {
       </div>
 
       {/* ─── Card 3: BIX Wallets & Debit Card ───────────────────────────────────── */}
-      <div className="hidden w-full rounded-xl bg-tetiary border border-secondary/15 p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-5 relative shadow-sm text-white">
+      <div className="hidden w-full rounded-xl bg-secondary border border-secondary/15 p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-5 relative shadow-sm text-background">
         {/* Left Side */}
         <div className="flex flex-col gap-2.5 max-w-xl">
           <div className="flex items-center gap-2 flex-wrap">
@@ -312,20 +307,20 @@ export const PlatformIntegrationCards: React.FC = () => {
                 clipRule="evenodd"
               />
             </svg>
-            <h3 className="text-base font-medium font-clash-display text-white tracking-tight">
+            <h3 className="text-base font-medium font-inter text-background tracking-tight">
               BIX Wallets & Debit Card
             </h3>
-            <span className="text-xs text-white/60">(Coming Soon)</span>
+            <span className="text-sm text-background/60">(Coming Soon)</span>
           </div>
 
-          <p className="text-xs text-white/80 leading-relaxed">
+          <p className="text-sm text-background/80 leading-relaxed">
             Add an extra layer of security to your account.
           </p>
 
           <div className="pt-1">
             <button
               type="button"
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-accent text-primary hover:bg-accent/90 text-xs font-semibold transition-all shadow-sm active:scale-98"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md bg-accent text-primary hover:bg-accent/90 text-sm font-semibold transition-all shadow-sm active:scale-98"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -349,17 +344,17 @@ export const PlatformIntegrationCards: React.FC = () => {
         {/* Right Side Brand & Link */}
         <div className="flex flex-col items-start sm:items-end gap-1.5 shrink-0">
           <div className="flex items-center gap-2">
-            <div className="size-7 rounded-full bg-accent/20 border border-accent/40 flex items-center justify-center text-accent text-xs font-bold">
+            <div className="size-7 rounded-full bg-accent/20 border border-accent/40 flex items-center justify-center text-accent text-sm font-bold">
               ✦
             </div>
-            <span className="font-clash-display font-semibold text-2xl text-white tracking-tight">
+            <span className="font-inter font-semibold text-2xl text-background tracking-tight">
               BIX
             </span>
           </div>
 
           <Link
             href="/dashboard/profile"
-            className="text-xs text-white/70 hover:text-white flex items-center gap-1 transition-colors"
+            className="text-sm text-background/70 hover:text-background flex items-center gap-1 transition-colors"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"

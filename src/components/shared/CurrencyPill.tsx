@@ -14,7 +14,7 @@ export default function CurrencyPill({
       {/* Overlapping pair: USDT / USD token + US Flag badge */}
       <div className="flex items-center -space-x-1.5">
         {/* Token / USD Logo */}
-        <div className="size-4.5 rounded-full shrink-0 z-2 ring-1 ring-background overflow-hidden flex items-center justify-center bg-[#26A17B]">
+        <div className="size-4.5 rounded-full shrink-0 z-2 ring-1 ring-background overflow-hidden flex items-center justify-center bg-success">
           {currencyName === "USD" ? (
             <svg
               viewBox="0 0 32 32"
@@ -22,13 +22,13 @@ export default function CurrencyPill({
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
             >
-              <circle cx="16" cy="16" r="16" fill="#16A34A" />
+              <circle cx="16" cy="16" r="16" fill="var(--success)" />
               <text
                 x="50%"
                 y="55%"
                 textAnchor="middle"
                 dominantBaseline="middle"
-                fill="#ffffff"
+                fill="var(--background)"
                 fontFamily="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
                 fontSize="18"
                 fontWeight="bold"
@@ -44,11 +44,11 @@ export default function CurrencyPill({
               xmlns="http://www.w3.org/2000/svg"
             >
               <path
-                fill="#26A17B"
+                fill="var(--success)"
                 d="M1000 0c552.28 0 1000 447.72 1000 1000s-447.72 1000-1000 1000S0 1552.28 0 1000 447.72 0 1000 0z"
               />
               <path
-                fill="#FFF"
+                fill="var(--background)"
                 d="M1237.7 758.9v108.6c0 1.9-1.5 3.4-3.4 3.4h-172.9v118.8c187.3 8.8 327.9 44.5 327.9 87.7 0 43.1-140.6 78.8-327.9 87.7v359.8c0 1.9-1.5 3.4-3.4 3.4h-117.8c-1.9 0-3.4-1.5-3.4-3.4v-359.8c-187.3-8.8-327.9-44.5-327.9-87.7 0-43.1 140.6-78.8 327.9-87.7V870.9H668.9c-1.9 0-3.4-1.5-3.4-3.4V758.9c0-1.9 1.5-3.4 3.4-3.4h565.4c1.9 0 3.4 1.5 3.4 3.4zm-297.5 378.9c-164.7 0-299.7-25.7-313.1-58.4 13.4-32.7 148.4-58.4 313.1-58.4s299.7 25.7 313.1 58.4c-13.4 32.7-148.4 58.4-313.1 58.4z"
               />
             </svg>
@@ -66,13 +66,13 @@ export default function CurrencyPill({
               <circle cx="256" cy="256" r="256" />
             </clipPath>
             <g clipPath="url(#usFlagClipInline)">
-              <path fill="#f0f0f0" d="M0 0h512v512H0z" />
+              <path fill="var(--primary)" d="M0 0h512v512H0z" />
               <path
-                fill="#d80027"
+                fill="var(--error)"
                 d="M0 0h512v39.4H0zm0 78.8h512v39.4H0zm0 78.8h512v39.4H0zm0 78.8h512v39.4H0zm0 78.7h512v39.4H0zm0 78.8h512v39.4H0zm0 78.8h512V512H0z"
               />
-              <path fill="#0052b4" d="M0 0h256v275.7H0z" />
-              <g fill="#ffffff">
+              <path fill="var(--accent)" d="M0 0h256v275.7H0z" />
+              <g fill="var(--background)">
                 <circle cx="35" cy="35" r="7" />
                 <circle cx="95" cy="35" r="7" />
                 <circle cx="155" cy="35" r="7" />

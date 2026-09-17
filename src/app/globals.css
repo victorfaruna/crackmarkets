@@ -8,9 +8,8 @@
   --primary: #f4f4f4;
   --secondary: #010312;
   --subtext: #a2a2a2;
-  --accent: #9d7aef;
+  --accent: #d07d53;
   --neo: oklch(64.735% 0.12579 124.323);
-  --tetiary: #010312;
   --error: rgb(255, 0, 0);
   --success: #67cd5b;
 
@@ -25,10 +24,8 @@
   --primary: rgb(17, 17, 17);
   --secondary: #dbdbdb;
   --subtext: #787878;
-  --accent: #9e84d9;
+  --accent: #7289ff;
   --neo: oklch(64.735% 0.12579 124.323);
-
-  --tetiary: #010312;
 
   --error: rgb(255, 107, 144);
   --success: #bdffb5;
@@ -42,7 +39,7 @@
 .tooltip[data-tip]:before,
 .tooltip[data-tip]:after {
   background-color: var(--subtext);
-  color: #fff;
+  color: var(--background);
   font-weight: 500;
   font-size: 0.75rem;
   border-radius: 4px;
@@ -50,24 +47,16 @@
   z-index: 999;
 }
 
-/* Rubik base weight — override body's font-weight: 500 */
-
 @theme inline {
   --color-background: var(--background);
   --color-primary: var(--primary);
   --color-secondary: var(--secondary);
   --color-accent: var(--accent);
   --color-neo: var(--neo);
-  --color-tetiary: var(--tetiary);
   --color-subtext: var(--subtext);
   --color-error: var(--error);
   --color-success: var(--success);
-  --font-plus-jakarta-sans: var(--font-plus-jakarta-sans);
-  --font-satoshi: var(--font-satoshi);
-  --font-clash-display: var(--font-clash-display);
-  --font-roobert: var(--font-roobert);
-  --font-rubik: var(--font-rubik);
-  --font-geist: var(--font-geist-sans);
+  --font-inter: var(--font-inter);
 
   --breakpoint-cxl: 90rem;
 }
@@ -76,8 +65,8 @@ body {
   background: var(--background);
   color: var(--secondary);
   font-weight: 400;
-  font-size: 0.83rem;
-  font-family: var(--font-satoshi);
+  font-size: 1rem;
+  font-family: var(--font-inter);
 }
 
 button {

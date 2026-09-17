@@ -1,11 +1,13 @@
 "use client";
 
+import Link from "next/link";
+
 const OrgVerificationCard = () => {
   return (
     <div className="w-full rounded-3xl bg-primary p-5 flex flex-col gap-3">
       {/* Icon */}
       <div className="flex items-start justify-between">
-        <div className="size-10 rounded-full bg-background flex items-center justify-center text-[#9b87f5]">
+        <div className="size-10 rounded-full bg-background flex items-center justify-center text-accent">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
@@ -24,14 +26,14 @@ const OrgVerificationCard = () => {
         <p className="text-secondary font-medium text-sm">
           Account Verification
         </p>
-        <p className="text-subtext text-xs leading-relaxed">
+        <p className="text-subtext text-sm leading-relaxed">
           Complete your account verification to unlock secure transactions and
           full financial access.
         </p>
       </div>
-      <button className="w-fit px-4 h-9 rounded-full border border-[#7AE25A] text-[#7AE25A] text-xs font-medium hover:bg-[#7AE25A]/10 transition-colors">
+      <Link href="/dashboard/kyc" className="w-fit px-4 h-9 rounded-full border border-success text-success text-sm font-medium hover:bg-success/10 transition-colors flex items-center">
         Verify Account
-      </button>
+      </Link>
     </div>
   );
 };

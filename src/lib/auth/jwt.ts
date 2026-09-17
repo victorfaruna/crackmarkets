@@ -1,8 +1,9 @@
 import { SignJWT, jwtVerify } from "jose";
 import crypto from "crypto";
+import { requireServerEnv } from "@/src/lib/config/env";
 
 const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || "crackmarkets-super-secure-jwt-secret-key-32chars!",
+  requireServerEnv("JWT_SECRET"),
 );
 
 export interface TokenPayload {

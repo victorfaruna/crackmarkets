@@ -1,4 +1,14 @@
 import api from "./api";
+import axios from "axios";
+
+type OrganisationPayload = Record<string, unknown>;
+
+function errorMessage(error: unknown): string {
+  if (axios.isAxiosError<{ message?: string }>(error)) {
+    return error.response?.data?.message || "Organisation request failed";
+  }
+  return "Organisation request failed";
+}
 
 export const getOrgs = async () => {
   try {
@@ -10,13 +20,12 @@ export const getOrgs = async () => {
   }
 };
 
-export const createOrg = async (data: any) => {
+export const createOrg = async (data: OrganisationPayload) => {
   try {
     const res = await api.post("/organisations", data);
     return res.data;
-  } catch (error: any) {
-    console.log(error);
-    throw new Error(error?.response?.data?.message);
+  } catch (error: unknown) {
+    throw new Error(errorMessage(error));
   }
 };
 
@@ -26,9 +35,8 @@ export const getOrgByHandle = async (handle: string, cookieHeader?: string) => {
       headers: cookieHeader ? { Cookie: cookieHeader } : {},
     });
     return res.data;
-  } catch (error: any) {
-    console.log(error);
-    throw new Error(error?.response?.data?.message);
+  } catch (error: unknown) {
+    throw new Error(errorMessage(error));
   }
 };
 
@@ -36,9 +44,8 @@ export const checkOrgHandle = async (handle: string) => {
   try {
     const res = await api.get(`/organisations/check-handle/${handle}`);
     return res.data;
-  } catch (error: any) {
-    console.log(error);
-    throw new Error(error?.response?.data?.message);
+  } catch (error: unknown) {
+    throw new Error(errorMessage(error));
   }
 };
 
@@ -51,9 +58,8 @@ export const inviteTeamMembers = async (
   try {
     const res = await api.post(`/organisations/${orgId}/invitations`, data);
     return res.data;
-  } catch (error: any) {
-    console.log(error);
-    throw new Error(error?.response?.data?.message);
+  } catch (error: unknown) {
+    throw new Error(errorMessage(error));
   }
 };
 
@@ -67,8 +73,7 @@ export const setPayrollPreferences = async (
       data,
     );
     return res.data;
-  } catch (error: any) {
-    console.log(error);
-    throw new Error(error?.response?.data?.message);
+  } catch (error: unknown) {
+    throw new Error(errorMessage(error));
   }
 };

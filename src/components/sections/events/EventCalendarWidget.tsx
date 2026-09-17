@@ -174,7 +174,7 @@ export default function EventCalendarWidget({
         <button
           type="button"
           onClick={handleToday}
-          className="px-3 py-1 text-xs font-medium rounded-md border border-secondary/8 bg-primary/60 text-secondary hover:bg-secondary/10 transition-colors cursor-pointer"
+          className="px-3 py-1 text-sm font-medium rounded-md border border-secondary/8 bg-primary/60 text-secondary hover:bg-secondary/10 transition-colors cursor-pointer"
         >
           Today
         </button>
@@ -202,7 +202,7 @@ export default function EventCalendarWidget({
             </svg>
           </button>
 
-          <span className="font-clash-display font-semibold text-secondary text-sm sm:text-base px-2 select-none min-w-[130px] text-center">
+          <span className="font-inter font-semibold text-secondary text-sm sm:text-base px-2 select-none min-w-[130px] text-center">
             {MONTH_NAMES[month]} {year}
           </span>
 
@@ -231,7 +231,7 @@ export default function EventCalendarWidget({
       </div>
 
       {/* ─── Weekdays Header ────────────────────────────────────────────── */}
-      <div className="grid grid-cols-7 gap-1 text-center font-medium text-xs text-secondary/50 select-none pb-1 border-b border-secondary/6">
+      <div className="grid grid-cols-7 gap-1 text-center font-medium text-sm text-secondary/50 select-none pb-1 border-b border-secondary/6">
         {WEEKDAYS.map((w) => (
           <div key={w} className="py-1">
             {w}
@@ -255,7 +255,7 @@ export default function EventCalendarWidget({
                   onSelectDate(cell.dateStr);
                 }
               }}
-              className={`relative h-9 sm:h-10 rounded-md flex flex-col items-center justify-center gap-0.5 transition-all text-xs cursor-pointer ${
+              className={`relative h-9 sm:h-10 rounded-md flex flex-col items-center justify-center gap-0.5 transition-all text-sm cursor-pointer ${
                 cell.isSelected
                   ? "bg-secondary text-background font-bold shadow-xs scale-105"
                   : cell.isCurrentMonth

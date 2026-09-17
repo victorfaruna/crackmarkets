@@ -1,5 +1,5 @@
 /**
- * Calendar helpers for Track Markets events.
+ * Calendar helpers for Trackmarkets events.
  * Generates .ics file download and Google Calendar URLs.
  */
 
@@ -24,7 +24,7 @@ export function downloadIcsFile(event: EventItem) {
   const icsContent = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//Track Markets//Events Calendar//EN",
+    "PRODID:-//Trackmarkets//Events Calendar//EN",
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
     "BEGIN:VEVENT",

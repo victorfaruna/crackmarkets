@@ -1,7 +1,9 @@
+import Image from "next/image";
+
 const Logo = ({ size = 18 }: { size?: number }) => {
   return (
     <div className={`flex items-center justify-center`}>
-      <img src="/logo.webp" alt="Lgogo" className="size-5 rounded-sm" />
+      <Image src="/logo.webp" alt="Trackmarkets" width={size} height={size} className="rounded-sm" />
     </div>
   );
 };
