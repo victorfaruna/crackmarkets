@@ -274,6 +274,7 @@ Configured in the git-ignored `.env` file (with optional `.env.local` overrides)
 | `NEXT_PUBLIC_API_URL`| Custom backend API URL prefix | `/api` | No |
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Cloudflare Turnstile public site key | Cloudflare-issued key | Production |
 | `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile server verification secret | Cloudflare-issued secret | Production |
+| `TURNSTILE_ENABLED` | Server-side Turnstile enforcement feature flag | `false` temporarily; set to `true` when Turnstile keys are configured | Yes |
 | `RESEND_API_KEY` | Private API key used for verification and password-reset email delivery | Provider-issued secret | Production |
 | `EMAIL_FROM` | Verified sender identity for transactional security email | `Trackmarkets <security@example.com>` | Production |
 | `ROBOFOREX_ACCOUNT_VERIFY_URL` | Server endpoint used to verify account ownership | Provider endpoint | Broker linking |
@@ -300,7 +301,7 @@ All development MUST adhere to the security rules specified in `.agents/rules/se
 2. **XSS Protection**: Rely on React's automatic string escaping; avoid `dangerouslySetInnerHTML`. Validate external URLs before rendering links.
 3. **Environment Security**: Never prefix secrets with `NEXT_PUBLIC_`. Keep private API keys strictly on the server.
 4. **Client Validation is UX Only**: Always treat client-side validation as untrusted and enforce authoritative validation on the server.
-5. **Bot Protection**: Enforce Cloudflare Turnstile on public and authentication forms.
+5. **Bot Protection**: Cloudflare Turnstile enforcement is controlled by `TURNSTILE_ENABLED`. It is temporarily disabled and must be enabled for production once valid keys are configured.
 
 ### Financial Data Integrity
 1. Broker-derived balances, equity, positions, deposits, lots, and trading volume must never be synthesized or inferred from referral-member counts.

@@ -10,6 +10,10 @@ export async function verifyTurnstile(
   token: string | undefined,
   remoteIp: string,
 ): Promise<boolean> {
+  if (process.env.TURNSTILE_ENABLED !== "true") {
+    return true;
+  }
+
   const secret = process.env.TURNSTILE_SECRET_KEY;
 
   if (!secret) {
