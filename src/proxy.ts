@@ -59,6 +59,27 @@ async function refreshTokens(
   }
 }
 
+async function refreshAdminTokens(
+  refreshToken: string,
+  origin: string,
+): Promise<string[] | null> {
+  try {
+    const response = await fetch(`${origin}/api/admin/auth/refresh`, {
+      method: "POST",
+      headers: {
+        Cookie: `admin_refresh_token=${refreshToken}`,
+        Origin: origin,
+      },
+    });
+
+    if (!response.ok) return null;
+    return response.headers.getSetCookie();
+  } catch (error) {
+    console.error("Admin proxy token refresh failed:", error);
+    return null;
+  }
+}
+
 export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
 
@@ -77,6 +98,51 @@ export async function proxy(request: NextRequest) {
         { status: 403 },
       );
     }
+  }
+
+  const isAdminLogin = pathname === "/admin/login";
+  const isAdminRoute = pathname === "/admin" || pathname.startsWith("/admin/");
+  if (isAdminRoute) {
+    let adminAccessToken = request.cookies.get("admin_access_token")?.value;
+    const adminRefreshToken = request.cookies.get("admin_refresh_token")?.value;
+    let adminPayload = adminAccessToken ? await verifyToken(adminAccessToken) : null;
+    let adminSetCookies: string[] | null = null;
+
+    const isValidAdmin =
+      adminPayload?.scope === "admin" && adminPayload?.role === "ADMIN";
+
+    if (!isValidAdmin && adminRefreshToken) {
+      adminSetCookies = await refreshAdminTokens(
+        adminRefreshToken,
+        request.nextUrl.origin,
+      );
+      const accessCookie = adminSetCookies?.find((cookie) =>
+        cookie.startsWith("admin_access_token="),
+      );
+      const match = accessCookie?.match(/admin_access_token=([^;]+)/);
+      if (match) {
+        adminAccessToken = match[1];
+        adminPayload = await verifyToken(adminAccessToken);
+      }
+    }
+
+    const isAuthenticatedAdmin =
+      adminPayload?.scope === "admin" && adminPayload?.role === "ADMIN";
+
+    if (!isAdminLogin && !isAuthenticatedAdmin) {
+      return NextResponse.redirect(new URL("/admin/login", request.url));
+    }
+    if (isAdminLogin && isAuthenticatedAdmin) {
+      return NextResponse.redirect(new URL("/admin", request.url));
+    }
+
+    let adminResponse = NextResponse.next();
+    if (adminSetCookies?.length) {
+      if (adminAccessToken) request.cookies.set("admin_access_token", adminAccessToken);
+      adminResponse = NextResponse.next({ request: { headers: request.headers } });
+      adminSetCookies.forEach((cookie) => adminResponse.headers.append("Set-Cookie", cookie));
+    }
+    return adminResponse;
   }
 
   const isProtectedRoute = PROTECTED_PREFIXES.some((prefix) =>
@@ -157,6 +223,7 @@ export async function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     "/api/:path*",
+    "/admin/:path*",
     "/dashboard/:path*",
     "/login",
     "/register",

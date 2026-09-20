@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { loginWithCredentials } from "@/src/lib/services/auth";
 import { useUserStore } from "@/src/lib/stores/userStore";
 import { useAppStore } from "@/src/lib/stores/appStore";
+import AuthIcon from "@/src/components/shared/AuthIcon";
 import TurnstileWidget from "@/src/components/shared/TurnstileWidget";
 
 interface LoginFormProps {
@@ -95,7 +96,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-3 w-full">
+    <form onSubmit={handleSubmit} className="flex w-full flex-col gap-3">
       {/* Alert Error / Success */}
       {error && (
         <div className="p-3 rounded-xl bg-error/10 border border-error/20 text-error text-sm font-medium flex items-center gap-2">
@@ -134,49 +135,41 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
       )}
 
       {/* Email Address */}
-      <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium text-secondary/70">
-          Email Address
-        </label>
+      <div className="relative flex flex-col gap-1.5">
+        <label htmlFor="log-email" className="sr-only">Email Address</label>
+        <AuthIcon name="email" className="pointer-events-none absolute bottom-2.5 left-3 z-1 size-5 text-secondary/50" />
         <input
+          id="log-email"
           type="email"
-          placeholder="name@example.com"
+          placeholder="Email address"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
           autoComplete="email"
-          className="w-full h-12 px-4 rounded-xl border border-secondary/15 bg-primary/20 text-secondary placeholder:text-secondary/40 outline-none focus:border-accent focus:ring-1 focus:ring-accent/5 transition-all text-sm font-medium"
+          className="input w-full h-10 pl-11 pr-4 rounded-md border border-secondary/10 bg-primary/20 text-secondary placeholder:text-secondary/40 outline-none focus:border-accent focus:ring-1 focus:ring-accent/10 transition-all text-sm font-medium"
         />
       </div>
 
       {/* Password with eye toggle */}
       <div className="flex flex-col gap-1.5">
-        <div className="flex items-center justify-between">
-          <label className="text-sm font-medium text-secondary/70">
-            Password
-          </label>
-          <Link
-            href="/forgot-password"
-            className="text-sm text-accent hover:underline font-medium"
-          >
-            Forgot password?
-          </Link>
-        </div>
+        <label htmlFor="login-password" className="sr-only">Password</label>
         <div className="relative w-full">
+          <AuthIcon name="lock" className="pointer-events-none absolute left-3 top-2.5 z-1 size-5 text-secondary/50" />
           <input
+            id="login-password"
             type={showPassword ? "text" : "password"}
             placeholder="Enter your password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
             autoComplete="current-password"
-            className="w-full h-12 pl-4 pr-11 rounded-xl border border-secondary/15 bg-primary/20 text-secondary placeholder:text-secondary/40 outline-none focus:border-accent focus:ring-1 focus:ring-accent/5 transition-all text-sm font-medium"
+            className="input w-full h-10 pl-11 pr-11 rounded-md border border-secondary/10 bg-primary/20 text-secondary placeholder:text-secondary/40 outline-none focus:border-accent focus:ring-1 focus:ring-accent/10 transition-all text-sm font-medium"
           />
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
             aria-label={showPassword ? "Hide password" : "Show password"}
-            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-secondary/50 hover:text-secondary transition-colors p-1 cursor-pointer"
+            className="absolute z-1 right-3.5 top-1/2 -translate-y-1/2 text-secondary/50 hover:text-secondary transition-colors p-1 cursor-pointer"
           >
             {showPassword ? (
               <svg
@@ -219,7 +212,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
       </div>
 
       {/* Remember Me */}
-      <div className="flex items-center justify-between py-1">
+      <div className="flex flex-wrap items-center justify-between gap-2 py-1">
         <label className="flex items-center gap-2 cursor-pointer select-none">
           <input
             type="checkbox"
@@ -231,6 +224,12 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
             Remember this device
           </span>
         </label>
+          <Link
+            href="/forgot-password"
+            className="text-sm text-accent hover:underline font-medium"
+          >
+            Forgot password?
+          </Link>
       </div>
 
       <TurnstileWidget onToken={setTurnstileToken} />
@@ -239,7 +238,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
       <button
         type="submit"
         disabled={isLoading}
-        className="w-full h-12 mt-1 rounded-lg bg-accent hover:bg-accent/90 active:scale-[0.99] text-white font-medium text-base transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
+        className="btn w-full h-11 min-h-11 mt-1 rounded-lg border-0 bg-auth-action hover:bg-auth-action/90 active:scale-[0.99] text-on-dark font-medium text-base transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
       >
         {isLoading ? (
           <span className="loading loading-spinner loading-sm"></span>

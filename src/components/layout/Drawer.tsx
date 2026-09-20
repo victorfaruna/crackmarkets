@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ReactNode, useState } from "react";
+import { DashboardMark } from "./DashboardBrand";
 import { useAppStore } from "@/src/lib/stores/appStore";
 
 const ICON_SIZE = 4.5;
@@ -17,20 +18,26 @@ interface NavItemProps {
 }
 
 const NavItem = ({ name, icon, href, isActive }: NavItemProps) => (
-  <Link className="w-full" href={href}>
-    <li
-      className={`p-2 gap-2.5 w-full flex items-center rounded-md transition-colors duration-150 ${
+  <li className="w-full">
+    <Link
+      href={href}
+      aria-current={isActive ? "page" : undefined}
+      className={`relative min-h-11 px-3.5 py-2 gap-3 w-full flex items-center rounded-lg transition-colors duration-150 ${
         isActive
-          ? "text-secondary bg-secondary/4"
-          : "hover:bg-secondary/4 text-secondary/60 hover:text-secondary"
+          ? "text-on-dark bg-shell-surface before:absolute before:left-0 before:inset-y-1 before:w-0.5 before:rounded-full before:bg-shell-accent"
+          : "hover:bg-on-dark/5 text-on-dark/65 hover:text-on-dark"
       }`}
     >
-      <span className="shrink-0 flex items-center justify-center">{icon}</span>
+      <span
+        className={`shrink-0 flex items-center justify-center ${isActive ? "text-shell-accent" : ""}`}
+      >
+        {icon}
+      </span>
       <span className="text-[0.83rem] whitespace-nowrap overflow-hidden leading-none">
         {name}
       </span>
-    </li>
-  </Link>
+    </Link>
+  </li>
 );
 
 /* ─── SubNavItem (indented child link) ────────────────────────────────── */
@@ -42,19 +49,19 @@ interface SubNavItemProps {
 }
 
 const SubNavItem = ({ name, href, isActive }: SubNavItemProps) => (
-  <Link className="w-full" href={href}>
-    <li
-      className={`py-3 pl-11 pr-2 w-full flex items-center rounded-md transition-colors duration-150 ${
-        isActive
-          ? "text-secondary"
-          : "text-secondary/50 hover:text-secondary/80"
+  <li className="w-full">
+    <Link
+      href={href}
+      aria-current={isActive ? "page" : undefined}
+      className={`py-3 pl-12 pr-2 w-full flex items-center rounded-md transition-colors duration-150 ${
+        isActive ? "text-on-dark" : "text-on-dark/65 hover:text-on-dark"
       }`}
     >
       <span className="text-[0.78rem] whitespace-nowrap overflow-hidden leading-none">
         {name}
       </span>
-    </li>
-  </Link>
+    </Link>
+  </li>
 );
 
 /* ─── CollapsibleGroup (parent with expandable children) ──────────────── */
@@ -80,10 +87,11 @@ const CollapsibleGroup = ({
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        className={`p-2 gap-2.5 w-full flex items-center rounded-md transition-colors duration-150 cursor-pointer ${
+        aria-expanded={expanded}
+        className={`relative min-h-11 px-3.5 py-2 gap-3 w-full flex items-center rounded-lg transition-colors duration-150 cursor-pointer ${
           isAnyChildActive
-            ? "text-secondary bg-secondary/4 font-medium"
-            : "hover:bg-secondary/4 text-secondary/60 hover:text-secondary"
+            ? "text-on-dark bg-shell-surface font-medium"
+            : "hover:bg-on-dark/5 text-on-dark/65 hover:text-on-dark"
         }`}
       >
         <span className="shrink-0 flex items-center justify-center">
@@ -144,15 +152,16 @@ export const Drawer = () => {
     <aside
       onMouseEnter={() => setIsDrawerOpen(true)}
       onMouseLeave={() => setIsDrawerOpen(false)}
-      className="relative w-55 h-full shrink-0 z-30"
+      className="relative w-57 h-full shrink-0 z-30"
     >
       <div
-        className={`flex bg-background absolute left-0 top-0 z-20 h-full items-center justify-between flex-col gap-6 px-1 pb-8 border-r-[0.5px] border-subtext/30 shadow-xs transition-all duration-200 ease-out overflow-hidden ${
-          isDrawerOpen ? "w-55" : "w-55"
+        className={`flex bg-shell-background absolute left-0 top-0 z-20 h-full items-center justify-between flex-col gap-6 px-2.5 pb-15 transition-all duration-200 ease-out overflow-hidden ${
+          isDrawerOpen ? "w-57" : "w-57"
         }`}
       >
-        <div className="main flex-1 w-full flex flex-col p-1 overflow-y-auto">
-          <ul className="gap-1.5 w-full flex flex-col justify-center px-0.5 py-2">
+        <DrawerChart />
+        <div className="relative min-h-0 flex-1 w-full flex flex-col overflow-y-auto pt-10">
+          <ul className="gap-1.5 w-full flex flex-col justify-center py-1">
             {/* ─── Overview (flat, gated) ───────────────────────────── */}
             {isConnectedToRoboForex && (
               <NavItem
@@ -352,24 +361,35 @@ export const Drawer = () => {
           </ul>
         </div>
 
-        <div className="flex items-end">
-          <button
-            data-tip="24/7 Support"
-            className="tooltip tooltip-right size-10 rounded-full bg-primary flex items-center text-subtext justify-center hover:text-secondary cursor-pointer shrink-0 transition-colors"
+        <div className="card relative mx-2 shrink-0 self-stretch rounded-xl border border-on-dark/20 bg-linear-to-br from-shell-surface/60 to-shell-background p-5 text-center text-on-dark shadow-inner shadow-on-dark/5">
+          <DashboardMark size={30} className="text-center mx-auto" />
+          <p className="text-sm font-semibold">
+            Trade Smarter.
+            <br />
+            <span className="text-shell-accent">Grow</span> Further.
+          </p>
+          <a
+            href="https://my.roboforex.com/en/?a=lazwx"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn-outline mt-4 h-9 min-h-9 w-full gap-2 rounded-lg border-on-dark/60 bg-shell-background/50 text-xs font-medium text-on-dark shadow-none hover:border-shell-accent hover:bg-shell-surface"
           >
+            Trade Now
             <svg
-              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
+              className="size-4"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
-              strokeWidth={STROKE_WIDTH}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="lucide lucide-headphones-icon lucide-headphones size-5"
+              strokeWidth="1.5"
             >
-              <path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M5 12h14m-5-5 5 5-5 5"
+              />
             </svg>
-          </button>
+          </a>
         </div>
       </div>
     </aside>
@@ -377,3 +397,56 @@ export const Drawer = () => {
 };
 
 export default Drawer;
+
+// Decorative market motif; this is not a chart of account or broker data.
+function DrawerChart() {
+  const candles = [
+    [8, 290, 34],
+    [27, 268, 27],
+    [46, 248, 39],
+    [65, 225, 30],
+    [84, 232, 22],
+    [103, 196, 37],
+    [122, 166, 44],
+    [141, 172, 26],
+    [160, 137, 34],
+    [179, 111, 32],
+    [198, 84, 39],
+    [217, 63, 35],
+  ];
+  return (
+    <div
+      aria-hidden="true"
+      className="pointer-events-none absolute inset-0 overflow-hidden"
+    >
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_100%_50%,var(--shell-surface),transparent_75%)]" />
+      <svg
+        className="absolute top-1/3 h-90 w-full text-shell-accent opacity-12"
+        viewBox="0 0 228 360"
+        fill="none"
+      >
+        <path
+          d="M-15 285 20 245 58 229 91 190 131 181 167 140 195 108 240 61"
+          stroke="currentColor"
+          opacity=".35"
+        />
+        {candles.map(([x, y, height]) => (
+          <g key={x}>
+            <path
+              d={`M${x + 4} ${y - 10}v${height + 20}`}
+              stroke="currentColor"
+            />
+            <rect
+              x={x}
+              y={y}
+              width="8"
+              height={height}
+              rx="1"
+              fill="currentColor"
+            />
+          </g>
+        ))}
+      </svg>
+    </div>
+  );
+}

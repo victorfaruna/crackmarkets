@@ -3,8 +3,8 @@
 import React from "react";
 import Link from "next/link";
 import { useAppStore } from "@/src/lib/stores/appStore";
-import Logo from "../shared/Logo";
-import Breadcrum from "../shared/Breadcrum";
+import DashboardBrand from "./DashboardBrand";
+import DashboardSearch from "./DashboardSearch";
 import RightHeaderMenu from "../shared/RightHeaderMenu";
 
 export const Header: React.FC = () => {
@@ -13,24 +13,15 @@ export const Header: React.FC = () => {
   );
 
   return (
-    <header className="w-full z-90 bg-background top-0 flex border-b border-subtext/30 items-center py-2 px-5 shrink-0">
-      <div className="inner relative h-full w-full gap-4 items-center flex justify-between">
-        <Link href={isConnectedToRoboForex ? "/dashboard" : "/dashboard/profile"}>
-          <Logo />
-        </Link>
+    <header className="navbar relative z-90 h-19 min-h-19 w-full shrink-0 gap-6 border-b border-on-dark/5 bg-shell-background px-5 text-on-dark lg:gap-10 lg:px-7">
+      <Link className="shrink-0" href={isConnectedToRoboForex ? "/dashboard" : "/dashboard/profile"}>
+        <DashboardBrand />
+      </Link>
 
-        <span className="text-subtext text-sm">/</span>
-
-        <span className="font-medium text-sm text-secondary truncate">
-          Trackmarkets
-        </span>
-
-        <span className="text-subtext text-sm">/</span>
-
-        <nav className="flex flex-1 justify-start">
-          <Breadcrum />
-        </nav>
-
+      <div className="hidden min-w-0 max-w-132 flex-1 md:block">
+        <DashboardSearch />
+      </div>
+      <div className="ml-auto shrink-0">
         <RightHeaderMenu />
       </div>
     </header>

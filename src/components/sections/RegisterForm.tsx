@@ -6,6 +6,7 @@ import { COUNTRIES, Country } from "@/src/lib/constants/countries";
 import { register } from "@/src/lib/services/auth";
 import { useRouter, useSearchParams } from "next/navigation";
 import { trackReferralImpression } from "@/src/lib/services/impressions";
+import AuthIcon from "@/src/components/shared/AuthIcon";
 import TurnstileWidget from "@/src/components/shared/TurnstileWidget";
 
 interface RegisterFormProps {
@@ -150,7 +151,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-3 w-full">
+    <form onSubmit={handleSubmit} className="flex w-full flex-col gap-3">
       {/* Alert Error / Success */}
       {error && (
         <div className="p-3 rounded-xl bg-error/10 border border-error/20 text-error text-sm font-medium flex items-center gap-2">
@@ -188,67 +189,67 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
         </div>
       )}
 
-      {/* First & Last Name */}
-      <div className="grid grid-cols-2 gap-3">
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-secondary/70">
-            First Name
-          </label>
-          <input
-            type="text"
-            placeholder="e.g. John"
-            value={firstName}
-            onChange={(e) => setFirstName(e.target.value)}
-            required
-            autoComplete="given-name"
-            className="w-full h-12 px-4 rounded-xl border border-secondary/15 bg-primary/20 text-secondary placeholder:text-secondary/40 outline-none focus:border-accent focus:ring-1 focus:ring-accent/5 transition-all text-sm font-medium"
-          />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-secondary/70">
-            Last Name
-          </label>
-          <input
-            type="text"
-            placeholder="e.g. Doe"
-            value={lastName}
-            onChange={(e) => setLastName(e.target.value)}
-            required
-            autoComplete="family-name"
-            className="w-full h-12 px-4 rounded-xl border border-secondary/15 bg-primary/20 text-secondary placeholder:text-secondary/40 outline-none focus:border-accent focus:ring-1 focus:ring-accent/5 transition-all text-sm font-medium"
-          />
-        </div>
-      </div>
-
       {/* Email Address */}
-      <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium text-secondary/70">
-          Email Address
-        </label>
+      <div className="relative flex flex-col gap-1.5">
+        <label htmlFor="reg-email" className="sr-only">Email Address</label>
+        <AuthIcon name="email" className="pointer-events-none absolute bottom-2.5 left-3 z-1 size-5 text-secondary/50" />
         <input
+          id="reg-email"
           type="email"
-          placeholder="name@example.com"
+          placeholder="Email address"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
           autoComplete="email"
-          className="w-full h-12 px-4 rounded-xl border border-secondary/15 bg-primary/20 text-secondary placeholder:text-secondary/40 outline-none focus:border-accent focus:ring-1 focus:ring-accent/5 transition-all text-sm font-medium"
+          className="input w-full h-10 pl-11 pr-4 rounded-md border border-secondary/10 bg-primary/20 text-secondary placeholder:text-secondary/40 outline-none focus:border-accent focus:ring-1 focus:ring-accent/10 transition-all text-sm font-medium"
         />
+      </div>
+
+      {/* First & Last Name */}
+      <div className="grid grid-cols-1 gap-3">
+        <div className="relative flex flex-col gap-1.5">
+          <label htmlFor="reg-firstName" className="sr-only">First Name</label>
+          <AuthIcon name="person" className="pointer-events-none absolute bottom-2.5 left-3 z-1 size-5 text-secondary/50" />
+          <input
+            id="reg-firstName"
+            type="text"
+            placeholder="First name"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+            required
+            autoComplete="given-name"
+            className="input w-full h-10 pl-11 pr-4 rounded-md border border-secondary/10 bg-primary/20 text-secondary placeholder:text-secondary/40 outline-none focus:border-accent focus:ring-1 focus:ring-accent/10 transition-all text-sm font-medium"
+          />
+        </div>
+        <div className="relative flex flex-col gap-1.5">
+          <label htmlFor="reg-lastName" className="sr-only">Last Name</label>
+          <AuthIcon name="person" className="pointer-events-none absolute bottom-2.5 left-3 z-1 size-5 text-secondary/50" />
+          <input
+            id="reg-lastName"
+            type="text"
+            placeholder="Last name"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+            required
+            autoComplete="family-name"
+            className="input w-full h-10 pl-11 pr-4 rounded-md border border-secondary/10 bg-primary/20 text-secondary placeholder:text-secondary/40 outline-none focus:border-accent focus:ring-1 focus:ring-accent/10 transition-all text-sm font-medium"
+          />
+        </div>
       </div>
 
       {/* Phone Number Field with Code Selector */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium text-secondary/70">
-          Phone Number
-        </label>
+        <label htmlFor="register-phone" className="sr-only">Phone Number</label>
         <div
-          className="relative w-full flex items-center rounded-xl border border-secondary/15 bg-primary/20 focus-within:border-accent focus-within:ring-1 focus-within:ring-accent/5 transition-all h-12"
+          className="relative w-full flex items-center rounded-md border border-secondary/10 bg-primary/20 focus-within:border-accent focus-within:ring-1 focus-within:ring-accent/10 transition-all h-10"
           ref={phoneRef}
         >
           <button
             type="button"
             onClick={() => setIsPhoneCodeOpen(!isPhoneCodeOpen)}
-            className="h-full pl-3.5 pr-2.5 flex items-center gap-1.5 border-r border-secondary/15 text-sm font-medium text-secondary hover:bg-secondary/5 rounded-l-xl transition-colors shrink-0 cursor-pointer"
+            aria-label={`Country: ${selectedCountry.name}, ${selectedCountry.dialCode}`}
+            aria-expanded={isPhoneCodeOpen}
+            className="h-full pl-3.5 pr-2.5 flex items-center gap-1.5 border-r border-secondary/15 text-sm font-medium text-secondary hover:bg-secondary/5 rounded-l-md transition-colors shrink-0 cursor-pointer"
           >
             <span className="text-lg leading-none">{selectedCountry.flag}</span>
             <span className="text-secondary/90 font-medium">
@@ -273,13 +274,14 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
           </button>
 
           <input
+            id="register-phone"
             type="tel"
-            placeholder="e.g. 555 123 4567"
+            placeholder="Mobile phone number"
             value={phoneNumber}
             onChange={(e) => setPhoneNumber(e.target.value)}
             required
             autoComplete="tel"
-            className="flex-1 h-full px-3.5 bg-transparent text-secondary placeholder:text-secondary/40 outline-none text-sm font-medium"
+            className="min-w-0 flex-1 h-full px-3.5 bg-transparent text-secondary placeholder:text-secondary/40 outline-none text-sm font-medium"
           />
 
           {isPhoneCodeOpen && (
@@ -325,24 +327,24 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
 
       {/* Password with eye toggle */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium text-secondary/70">
-          Password
-        </label>
+        <label htmlFor="register-password" className="sr-only">Password</label>
         <div className="relative w-full">
+          <AuthIcon name="lock" className="pointer-events-none absolute left-3 top-2.5 z-1 size-5 text-secondary/50" />
           <input
+            id="register-password"
             type={showPassword ? "text" : "password"}
-            placeholder="Create a strong password (min. 12 chars)"
+            placeholder="Password (at least 12 characters)"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
             autoComplete="new-password"
-            className="w-full h-12 pl-4 pr-11 rounded-xl border border-secondary/15 bg-primary/20 text-secondary placeholder:text-secondary/40 outline-none focus:border-accent focus:ring-1 focus:ring-accent/5 transition-all text-sm font-medium"
+            className="input w-full h-10 pl-11 pr-11 rounded-md border border-secondary/10 bg-primary/20 text-secondary placeholder:text-secondary/40 outline-none focus:border-accent focus:ring-1 focus:ring-accent/10 transition-all text-sm font-medium"
           />
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
             aria-label={showPassword ? "Hide password" : "Show password"}
-            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-secondary/50 hover:text-secondary transition-colors p-1 cursor-pointer"
+            className="absolute z-1 right-3.5 top-1/2 -translate-y-1/2 text-secondary/50 hover:text-secondary transition-colors p-1 cursor-pointer"
           >
             {showPassword ? (
               <svg
@@ -385,17 +387,19 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
       </div>
 
       {/* Referral Code (Optional) */}
-      <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium text-secondary/70">
+      <div className="relative flex flex-col gap-1.5">
+        <label htmlFor="register-referral" className="sr-only">
           Referral Code{" "}
           <span className="text-secondary/40 font-normal">(Optional)</span>
         </label>
+        <AuthIcon name="network" className="pointer-events-none absolute bottom-2.5 left-3 z-1 size-5 text-secondary/50" />
         <input
+          id="register-referral"
           type="text"
-          placeholder="e.g. TM82910"
+          placeholder="Referral code (optional)"
           value={referralCode}
           onChange={(e) => setReferralCode(e.target.value)}
-          className="w-full h-12 px-4 rounded-xl border border-secondary/15 bg-primary/20 text-secondary placeholder:text-secondary/40 outline-none focus:border-accent focus:ring-1 focus:ring-accent/5 transition-all text-sm font-medium"
+          className="input w-full h-10 pl-11 pr-4 rounded-md border border-secondary/10 bg-primary/20 text-secondary placeholder:text-secondary/40 outline-none focus:border-accent focus:ring-1 focus:ring-accent/10 transition-all text-sm font-medium"
         />
       </div>
 
@@ -437,12 +441,12 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
       <button
         type="submit"
         disabled={isLoading}
-        className="w-full h-12 mt-1 rounded-lg bg-accent hover:bg-accent/90 active:scale-[0.99] text-white font-medium text-base transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
+        className="btn w-full h-11 min-h-11 mt-1 rounded-lg border-0 bg-auth-action hover:bg-auth-action/90 active:scale-[0.99] text-on-dark font-medium text-base transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
       >
         {isLoading ? (
           <span className="loading loading-spinner loading-sm"></span>
         ) : (
-          "Register Now"
+          "Create Account"
         )}
       </button>
 

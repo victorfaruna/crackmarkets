@@ -32,6 +32,10 @@ Welcome to **Trackmarkets**. This document is the single source of truth for the
 | **Primary Accent / CTA** | `--accent` | `bg-accent`, `text-accent`, `hover:bg-accent/90`, `focus:border-accent`, `accent-accent` | Primary action buttons, active tabs, focus rings |
 | **Error / Destructive** | `--error` | `text-error`, `bg-error/10`, `border-error/20` | Form validation errors, danger alerts |
 | **Success / Status** | `--success` | `text-success`, `bg-success`, `bg-success/10`, `border-success/20` | Badges, success alerts, verification icons |
+| **Brand Chrome** | `--shell-background` | `bg-shell-background` | Fixed dark green dashboard chrome and login/signup hero in both themes |
+| **Dashboard Chrome Layer** | `--shell-surface` | `bg-shell-surface` | Active navigation and decorative drawer surfaces |
+| **Dashboard Brand Green** | `--shell-accent` | `text-shell-accent`, `bg-shell-accent` | Dashboard wordmark, active indicator, and decorative market graphic |
+| **Authentication CTA** | `--auth-action` | `bg-auth-action`, `border-auth-action` | Green login/signup submit buttons and active tab underline; form focus, links, and checked controls continue to use the global `--accent` token |
 
 ### Color Hierarchy with Opacity Fractions
 - `text-secondary/90` — High emphasis text
@@ -158,7 +162,9 @@ Calculated per traded lot generated across the organization:
 
 ## 8. Authentication & Next.js API Routes
 
+- **Login & Signup Presentation**: `/login` and `/register` share `AuthEntryLayout`, a responsive two-column screen with the generated decorative bull-and-phone hero and supporting copy on the left and a constrained account form on the right. Existing credential validation, referral attribution, country selection, risk acknowledgments, and Turnstile behavior are retained. Recovery and verification pages continue to use `AuthLayout`.
 - **Session Strategy**: Dual-token architecture with HTTP-only cookies (`access_token` 15m JWT + `refresh_token` 7d rotated hash).
+- **Admin Session Strategy**: `/admin` uses an isolated admin-scoped JWT and cookie pair (`admin_access_token` + `admin_refresh_token`). Admin login accepts only active `ADMIN` users, rotates persisted refresh tokens, and never reuses the customer dashboard session.
 - **Proactive Middleware**: `src/middleware.ts` seamlessly refreshes tokens when expired using `/api/auth/refresh`.
 - **API Route Endpoints (`src/app/api/auth/`)**:
   - `POST /api/auth/register`: Immediate account activation, wallet initialization, and 10-level tree attribution while email verification is disabled.
@@ -173,6 +179,18 @@ Calculated per traded lot generated across the organization:
   - `GET /api/wallet/transactions`: Query user transactions with category, status, and search filters.
   - `POST /api/wallet/withdraw`: Validate account/KYC/funding/broker state, atomically reserve available balance, and create an idempotent `PENDING` withdrawal request. Completion requires a separately verified payout integration.
   - `GET /api/commissions`: Query commissions summary, monthly previews, and 8 income streams breakdown.
+  - `POST /api/admin/auth/login`, `POST /api/admin/auth/refresh`, `POST /api/admin/auth/logout`: Isolated administrator authentication with stricter login rate limiting and audited session activity.
+  - `PATCH /api/admin/users/:id`: Admin-only, strictly validated role (`USER`/`SUPPORT`), account, KYC, and funding state changes. Funding unlocks require approved KYC, moving KYC out of approved automatically locks funding, suspensions revoke active sessions, and every change is audited.
+  - `DELETE /api/admin/users/:id/sessions`: Revoke every active customer refresh session and record the administrator action.
+  - `DELETE /api/admin/users/:id/broker`: Unlink a customer's RoboForex account, clear its broker identifier, lock funding, and record the administrator action.
+  - `PATCH /api/admin/withdrawals/:id`: Reverse a `PENDING` withdrawal with a required reason, atomically return its reserved amount to the user's available balance, and record the administrator action. Withdrawal completion remains unavailable until a verified payout integration exists.
+
+### Administrator Console
+
+- **Route**: `/admin` (login at `/admin/login`), protected independently from `/dashboard`.
+- **Dashboard**: Responsive operations workspace with live totals for users, active accounts, KYC, broker links, withdrawals, and wallet balances; a pending-withdrawal queue; the 100 newest non-admin accounts; and recent administrator audit activity.
+- **Actions**: Search and filter users; assign `USER` or `SUPPORT` roles; update account, KYC, and funding states; revoke customer sessions; unlink broker accounts; and reverse pending withdrawals to return reserved funds. Admin accounts cannot be modified through the user-management table.
+- **Provisioning**: Promote an existing registered account with `yarn admin:promote admin@example.com`; the role grant is recorded in `audit_logs`.
 
 ---
 
@@ -231,7 +249,7 @@ Events                     /dashboard/events           (flat, gated by RoboForex
 9. **Trader Profile (`/dashboard/profile`)**:
    - **Personal Information Card**: Dynamic profile avatar, full name, account badges (Partner, Referral ID, RoboForex ID, Joined date, Referrer status), contact & identity grid (Birthday, Email, Phone, Telegram, Country, Living Address), and interactive privacy & notification switches.
    - **Partner Referral QR Card**: Live QR code generator with avatar inlay, custom link copy, and native share.
-   - **Platform Integration Cards**: RoboForex, FOXAi, and BIX Wallets integration cards. RoboForex actions use the `lazwx` master referral URL; FOXAi actions use the copy-trading profile for account `77055739`.
+   - **Platform Integration Cards**: RoboForex, FoxAlgo, and BIX Wallets integration cards. RoboForex actions use the `lazwx` master referral URL; FoxAlgo actions use the copy-trading profile for account `77030815`.
 
 10. **Notifications (`/dashboard/notifications`)**: Centralized notifications center for commissions, network events, security milestones, and system notices with category filtering and mark-as-read workflows.
 

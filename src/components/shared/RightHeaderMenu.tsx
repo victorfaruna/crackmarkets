@@ -19,6 +19,11 @@ const RightHeaderMenu = () => {
   // Combine query data with userStore fallback
   const user: UserProfile | null = userQueryData?.data?.user || userStore;
 
+  const fullName = [user?.first_name || user?.firstName, user?.last_name || user?.lastName]
+    .filter(Boolean)
+    .join(" ") || user?.email?.split("@")[0] || "Trader";
+  const role = user?.role === "USER" ? "Partner" : user?.role || "Partner";
+
   // Close dropdown on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -36,46 +41,23 @@ const RightHeaderMenu = () => {
   return (
     <div
       ref={dropdownRef}
-      className="relative flex text-secondary/70 items-center gap-3 justify-end"
+      className="relative flex items-center justify-end gap-4 text-on-dark/80"
     >
-      <button className="flex items-center gap-1.5 border-[0.5px] border-subtext/60 rounded-full py-2 px-3 bg-primary ">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth={1.5}
-          stroke="currentColor"
-          className="size-3.5"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
-          />
+      <span aria-label="Language: English" className="hidden items-center gap-2 border-r border-on-dark/10 pr-4 text-sm sm:flex">
+        <svg aria-hidden="true" className="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <circle cx="12" cy="12" r="9" />
+          <ellipse cx="12" cy="12" rx="4" ry="9" />
+          <path d="M3 12h18M5 7h14M5 17h14" />
         </svg>
-        <p className="text-sm font-medium text-subtext mr-3">Search</p>
-        <div className="flex gap-0 items-center">
-          <svg
-            className="size-3"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M9 9V6C9 4.34315 7.65685 3 6 3C4.34315 3 3 4.34315 3 6C3 7.65685 4.34315 9 6 9H9ZM9 9V15M9 9H15M9 15V18C9 19.6569 7.65685 21 6 21C4.34315 21 3 19.6569 3 18C3 16.3431 4.34315 15 6 15H9ZM9 15H15M15 15H18C19.6569 15 21 16.3431 21 18C21 19.6569 19.6569 21 18 21C16.3431 21 15 19.6569 15 18V15ZM15 15V9M15 9V6C15 4.34315 16.3431 3 18 3C19.6569 3 21 4.34315 21 6C21 7.65685 19.6569 9 18 9H15Z"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-          <p className="text-sm font-medium">K</p>
-        </div>
-      </button>
+        EN
+        <svg aria-hidden="true" className="size-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" />
+        </svg>
+      </span>
 
       <Link
         href="/dashboard/notifications"
-        className="round-button relative"
+        className="relative flex size-8 items-center justify-center rounded-lg text-on-dark/80 transition-colors hover:bg-on-dark/10 hover:text-on-dark"
         aria-label="Notifications"
       >
         <svg
@@ -87,26 +69,30 @@ const RightHeaderMenu = () => {
           strokeWidth="1.5"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className="size-4"
+          className="size-5.5"
         >
           <path d="M15.5 18C15.5 19.933 13.933 21.5 12 21.5C10.067 21.5 8.5 19.933 8.5 18" />
           <path d="M19.2311 18H4.76887C3.79195 18 3 17.208 3 16.2311C3 15.762 3.18636 15.3121 3.51809 14.9803L4.12132 14.3771C4.68393 13.8145 5 13.0514 5 12.2558V9.5C5 5.63401 8.13401 2.5 12 2.5C15.866 2.5 19 5.634 19 9.5V12.2558C19 13.0514 19.3161 13.8145 19.8787 14.3771L20.4819 14.9803C20.8136 15.3121 21 15.762 21 16.2311C21 17.208 20.208 18 19.2311 18Z" />
         </svg>
         {unreadCount > 0 && (
-          <span className="absolute top-1 right-1 size-2 rounded-full bg-accent animate-pulse" />
+          <span className="absolute top-1 right-1 size-2 rounded-full bg-shell-accent ring-2 ring-shell-background" />
         )}
       </Link>
 
       <button
         id="profile-image"
-        className="cursor-pointer"
+        type="button"
+        aria-label="Account menu"
+        aria-expanded={open}
+        aria-controls={open ? "org-switcher-dropdown" : undefined}
+        className="flex items-center gap-2.5 border-l border-on-dark/10 pl-4 text-left cursor-pointer"
         onClick={() => setOpen((a) => !a)}
       >
         <Image
           unoptimized
           src={getUserPlaceholderImage(user?.email || "default")}
           alt="Profile Image"
-          className="bg-primary rounded-full size-7.5 border-[0.5px] border-subtext/60"
+          className="size-9 shrink-0 rounded-full border border-on-dark/15 bg-shell-surface"
           width={50}
           height={50}
           referrerPolicy="no-referrer"
@@ -116,6 +102,13 @@ const RightHeaderMenu = () => {
             target.src = getUserPlaceholderImage(user?.email || "default");
           }}
         />
+        <span className="hidden min-w-0 md:block">
+          <span className="block max-w-44 truncate text-sm font-medium text-on-dark">{fullName}</span>
+          <span className="block text-xs capitalize text-on-dark/60">{role.toLowerCase()}</span>
+        </span>
+        <svg aria-hidden="true" className={`ml-1 size-4 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
+          <path strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" />
+        </svg>
       </button>
 
       {/* Dropdown */}

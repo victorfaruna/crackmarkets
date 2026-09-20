@@ -7,8 +7,8 @@ import { useUserStore } from "@/src/lib/stores/userStore";
 import { useAppStore } from "@/src/lib/stores/appStore";
 
 const ROBOFOREX_MASTER_URL = "https://my.roboforex.com/en/?a=lazwx";
-const FOXAI_URL =
-  "https://my.roboforex.com/en/copy-trading/traders/bbbb/77055739?period=3";
+const FOXALGO_URL =
+  "https://my.roboforex.com/en/copy-trading/traders/bbbb/77030815?period=3";
 
 export const PlatformIntegrationCards: React.FC = () => {
   const { data: serverUserData } = useUser();
@@ -210,7 +210,7 @@ export const PlatformIntegrationCards: React.FC = () => {
         </div>
       </div>
 
-      {/* ─── Card 2: FOXAi ────────────────────────────────────────────────────── */}
+      {/* ─── Card 2: FoxAlgo ──────────────────────────────────────────────────── */}
       <div className="w-full rounded-xl bg-[#010312] border border-secondary/15 p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-5 relative shadow-sm text-on-dark">
         {/* Left Side */}
         <div className="flex flex-col gap-2.5 max-w-xl">
@@ -226,7 +226,7 @@ export const PlatformIntegrationCards: React.FC = () => {
               </svg>
             </div>
             <h3 className="text-base font-medium font-inter text-on-dark tracking-tight">
-              FOXAi
+              FoxAlgo
             </h3>
           </div>
 
@@ -236,7 +236,7 @@ export const PlatformIntegrationCards: React.FC = () => {
 
           <div className="pt-1">
             <a
-              href={FOXAI_URL}
+              href={FOXALGO_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md bg-accent text-on-dark hover:bg-accent/90 text-sm font-semibold transition-all shadow-sm active:scale-98"
@@ -267,12 +267,12 @@ export const PlatformIntegrationCards: React.FC = () => {
               AI
             </div>
             <span className="font-inter font-semibold text-2xl text-on-dark tracking-tight">
-              FOXAi
+              FoxAlgo
             </span>
           </div>
 
           <a
-            href={FOXAI_URL}
+            href={FOXALGO_URL}
             target="_blank"
             rel="noopener noreferrer"
             className="text-sm text-on-dark/70 hover:text-on-dark flex items-center gap-1 transition-colors"

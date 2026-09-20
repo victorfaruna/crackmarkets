@@ -3,6 +3,14 @@
   exclude: rootcolor;
 }
 
+:root {
+  /* Fixed brand chrome, shared by both content themes. */
+  --shell-background: #031312;
+  --shell-surface: #102c25;
+  --shell-accent: #00df75;
+  --auth-action: #008d46;
+}
+
 :root[data-theme="light"] {
   --background: #ffffff;
   --primary: #f4f4f4;
@@ -59,6 +67,10 @@
   --color-subtext: var(--subtext);
   --color-error: var(--error);
   --color-success: var(--success);
+  --color-shell-background: var(--shell-background);
+  --color-shell-surface: var(--shell-surface);
+  --color-shell-accent: var(--shell-accent);
+  --color-auth-action: var(--auth-action);
   --font-inter: var(--font-inter);
 
   --breakpoint-cxl: 90rem;
