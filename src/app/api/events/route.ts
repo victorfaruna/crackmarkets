@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/src/lib/db";
 import { events } from "@/src/lib/db/schema/events";
-import { and, eq, gte, lte, asc, SQL } from "drizzle-orm";
+import { and, eq, gte, lt, or, isNull, asc, SQL, sql } from "drizzle-orm";
 import { z } from "zod";
 
 const eventQuerySchema = z
@@ -11,6 +11,7 @@ const eventQuerySchema = z
     include_past: z.enum(["true", "false"]).optional(),
     month: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/).optional(),
     date: z.string().date().optional(),
+    utc_offset_minutes: z.coerce.number().int().min(-840).max(840).optional(),
   })
   .strict();
 
@@ -26,9 +27,17 @@ export async function GET(request: NextRequest) {
       );
     }
     const { category, status, month, date } = parsed.data;
+    const offsetMilliseconds = (parsed.data.utc_offset_minutes ?? 0) * 60_000;
     const includePast = parsed.data.include_past === "true";
 
     const conditions: SQL[] = [];
+    const now = new Date();
+    const nowIso = now.toISOString();
+    const effectiveStatus = sql<string>`case
+      when ${events.status} = 'COMPLETED' or (${events.endsAt} is not null and ${events.endsAt} <= ${nowIso}::timestamptz) then 'COMPLETED'
+      when ${events.startsAt} <= ${nowIso}::timestamptz then 'LIVE'
+      else 'UPCOMING'
+    end`;
 
     // Category filter
     if (category && category !== "ALL") {
@@ -37,30 +46,37 @@ export async function GET(request: NextRequest) {
 
     // Status filter
     if (status && status !== "ALL") {
-      conditions.push(eq(events.status, status.toUpperCase()));
+      conditions.push(eq(effectiveStatus, status));
     }
 
     // Specific day filter
     if (date) {
-      const startOfDay = new Date(`${date}T00:00:00.000Z`);
-      const endOfDay = new Date(`${date}T23:59:59.999Z`);
-      conditions.push(gte(events.startsAt, startOfDay));
-      conditions.push(lte(events.startsAt, endOfDay));
+      const startOfDay = new Date(Date.parse(`${date}T00:00:00.000Z`) + offsetMilliseconds);
+      const endOfDay = new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000);
+      conditions.push(lt(events.startsAt, endOfDay));
+      conditions.push(or(gte(events.startsAt, startOfDay), gte(events.endsAt, startOfDay))!);
     } else if (month) {
       // Month range filter (e.g. 2026-09)
       const [yearStr, monthStr] = month.split("-");
       const year = parseInt(yearStr, 10);
       const monthNum = parseInt(monthStr, 10) - 1; // 0-indexed
-      const startOfMonth = new Date(Date.UTC(year, monthNum, 1, 0, 0, 0));
-      const endOfMonth = new Date(Date.UTC(year, monthNum + 1, 0, 23, 59, 59));
-      conditions.push(gte(events.startsAt, startOfMonth));
-      conditions.push(lte(events.startsAt, endOfMonth));
-    } else if (!includePast) {
-      // By default if no specific date/month selected and includePast is false, show today onwards or non-completed
-      const now = new Date();
-      // Include events starting from beginning of today or status UPCOMING/LIVE
-      const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      conditions.push(gte(events.startsAt, startOfToday));
+      const startOfMonth = new Date(Date.UTC(year, monthNum, 1) + offsetMilliseconds);
+      const endOfMonth = new Date(Date.UTC(year, monthNum + 1, 1) + offsetMilliseconds);
+      conditions.push(lt(events.startsAt, endOfMonth));
+      conditions.push(or(gte(events.startsAt, startOfMonth), gte(events.endsAt, startOfMonth))!);
+    }
+
+    if (!includePast && !date) {
+      conditions.push(
+        or(
+          gte(events.startsAt, now),
+          and(
+            lt(events.startsAt, now),
+            or(isNull(events.endsAt), gte(events.endsAt, now)),
+          ),
+        )!,
+      );
+      conditions.push(sql`${effectiveStatus} <> 'COMPLETED'`);
     }
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
@@ -75,7 +91,7 @@ export async function GET(request: NextRequest) {
         location: events.location,
         starts_at: events.startsAt,
         ends_at: events.endsAt,
-        status: events.status,
+        status: effectiveStatus,
         created_at: events.createdAt,
         updated_at: events.updatedAt,
       })

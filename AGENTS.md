@@ -12,6 +12,9 @@ Welcome to **Trackmarkets**. This document is the single source of truth for the
 - **Theme State**: `useAppStore` is the source of truth for `light`/`dark`, with `light` as the default. Its persisted Zustand value is applied to `<html data-theme>` by a pre-hydration bootstrap in the root layout, then kept synchronized by the store setter and `ThemeHydrator`.
 - **Font Stack**: Inter (`font-inter`) is the sole application font for body copy, headings, labels, metrics, and interface text.
 - **Core Principle**: Broker data is the source of truth for deposits, trades, lots, and trading volume. The platform database is the source of truth for referral relationships, commission calculations, qualifications, wallets, withdrawals, and rewards.
+- **Calculation Boundary**: `src/lib/commissions/calculations.ts` contains pure, four-decimal fixed-point rules for 10-level profit share and lot rebates, strong-leg qualification, and volume-ladder tiers. It does not credit wallets or generate trading data. Commission posting requires an authoritative verified broker event and a separate idempotent ledger workflow, which is not yet integrated.
+- **Referral Lineage Model**: `users.referred_by_id` is the authoritative direct-parent relationship. Registration creates its 10-level closure links from this parent chain; network, overview, and impression counts traverse it through `src/lib/referrals/lineage.ts`. Legacy `referral_nodes` rows may be stale and must be reconciled before a commission-posting workflow uses them.
+- **Legacy Data Repair**: Reviewed one-time scripts in `scripts/repair-referral-lineage.sql` and `scripts/backfill-wallets.sql` reconcile stale closure rows and create missing zero-balance wallets. They are not run automatically on requests or deployment.
 
 ---
 
@@ -146,6 +149,7 @@ Calculated per traded lot generated across the organization:
 ## 7. Database & Drizzle ORM Architecture
 
 - **ORM**: Drizzle ORM (`drizzle-orm`) with PostgreSQL driver (`postgres`). Config in `drizzle.config.ts`, DB client in `src/lib/db/index.ts`.
+- **Calculation Runtime**: TypeScript targets ES2020 so commission rules and ledger summaries can use `bigint` fixed-point arithmetic without binary floating-point rounding. Incremental type checking is disabled to keep project checks reliable after target changes. `yarn verify` includes the pure commission-rule tests.
 - **Database Schema Models (`src/lib/db/schema/`)**:
   - `users`: `id`, `first_name`, `last_name`, `email` (unique), `phone_number`, `country`, `telegram_handle`, `password_hash`, `referral_code` (unique), `referred_by_id`, `status`, `kyc_status`, `funding_status`, `role`, `created_at`, `updated_at`.
   - `refresh_tokens`: `id`, `user_id`, `token_hash` (unique), `user_agent`, `ip_address`, `expires_at`, `revoked_at`, `created_at`.
@@ -167,7 +171,7 @@ Calculated per traded lot generated across the organization:
 - **Admin Session Strategy**: `/admin` uses an isolated admin-scoped JWT and cookie pair (`admin_access_token` + `admin_refresh_token`). Admin login accepts only active `ADMIN` users, rotates persisted refresh tokens, and never reuses the customer dashboard session.
 - **Proactive Middleware**: `src/middleware.ts` seamlessly refreshes tokens when expired using `/api/auth/refresh`.
 - **API Route Endpoints (`src/app/api/auth/`)**:
-  - `POST /api/auth/register`: Immediate account activation, wallet initialization, and 10-level tree attribution while email verification is disabled.
+  - `POST /api/auth/register`: Immediate account activation, wallet initialization, and 10-level tree attribution from an active referrer's direct-parent chain while email verification is disabled.
   - `POST /api/auth/login`: Credential validation, refresh token storage, HTTP-only cookie attachment.
   - `POST /api/auth/refresh`: Token rotation (revokes old token, issues new pair).
   - `POST /api/auth/logout`: Revokes active refresh token and clears cookies.
@@ -175,10 +179,11 @@ Calculated per traded lot generated across the organization:
   - `POST /api/auth/verify-email`: Retained for restoring email verification later; registration does not currently issue verification tokens.
   - `POST /api/auth/forgot-password`: Generates reset token & sends recovery instructions.
   - `POST /api/auth/reset-password`: Validates token, updates password, revokes active sessions.
-  - `GET /api/events`: Query events with category, status, date, and month calendar filters.
   - `GET /api/wallet/transactions`: Query user transactions with category, status, and search filters.
-  - `POST /api/wallet/withdraw`: Validate account/KYC/funding/broker state, atomically reserve available balance, and create an idempotent `PENDING` withdrawal request. Completion requires a separately verified payout integration.
-  - `GET /api/commissions`: Query commissions summary, monthly previews, and 8 income streams breakdown.
+  - `POST /api/wallet/withdraw`: Validate account/KYC/funding/broker state, serialize retries by idempotency key, atomically reserve available balance once, and create a `PENDING` withdrawal request. Completion requires a separately verified payout integration.
+  - `GET /api/commissions`: Read completed ledger credits only, filter by trailing week, selected UTC month, or all time; classify leadership rewards by metadata when available, leaving unknown categories unclassified.
+  - `GET /api/network`: Traverse direct-parent relationships to return the full 10-level lineage and exact direct and indirect counts without a 100-member truncation.
+  - `GET /api/events`, `GET /api/events/:id`: Return date-derived event status so stale stored `UPCOMING` flags do not present completed events as live. Date and month filters use half-open ranges adjusted by the client's UTC offset, and include events overlapping the chosen period.
   - `POST /api/admin/auth/login`, `POST /api/admin/auth/refresh`, `POST /api/admin/auth/logout`: Isolated administrator authentication with stricter login rate limiting and audited session activity.
   - `PATCH /api/admin/users/:id`: Admin-only, strictly validated role (`USER`/`SUPPORT`), account, KYC, and funding state changes. Funding unlocks require approved KYC, moving KYC out of approved automatically locks funding, suspensions revoke active sessions, and every change is audited.
   - `DELETE /api/admin/users/:id/sessions`: Revoke every active customer refresh session and record the administrator action.
@@ -224,6 +229,7 @@ Events                     /dashboard/events           (flat, gated by RoboForex
    - **Wallet Balance Card**: Available commission balance ($XX,XXX.XX USDT), lifetime earnings, total withdrawn, instant settlement badge, and direct withdrawal modal launcher.
    - **Payout Metrics**: Supported crypto networks (TRC20, BEP20, ERC20), instant processing timelines, and withdrawal status indicators.
    - **Live Transaction Ledger**: Searchable & filterable table of all 5 commission bonus distributions, crypto withdrawals, and deposit syncs with reference IDs, status pills, timestamps, and quick-copy action buttons.
+   - **Reversed Withdrawals**: A reversed request is labelled as reserved funds returned and keeps its `REVERSED` status; it is not displayed as a completed payout or a fresh commission credit.
 
 3. **10-Level Network Lineage System (`/dashboard/network`)**:
    - **Overview Metrics**: Real-time counter cards for Direct Affiliates (Level 1: 5%), Indirect Affiliates (Levels 2–10), and Total Organization.

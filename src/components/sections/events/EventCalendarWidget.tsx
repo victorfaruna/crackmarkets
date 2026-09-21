@@ -58,6 +58,10 @@ const MONTH_NAMES = [
 
 const WEEKDAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
+function localDateKey(date: Date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
 export default function EventCalendarWidget({
   currentDate,
   onDateChange,
@@ -80,7 +84,7 @@ export default function EventCalendarWidget({
   const handleToday = () => {
     const today = new Date();
     onDateChange(today);
-    const todayStr = today.toISOString().split("T")[0];
+    const todayStr = localDateKey(today);
     onSelectDate(todayStr);
   };
 
@@ -88,15 +92,25 @@ export default function EventCalendarWidget({
   const eventsByDate = useMemo(() => {
     const map = new Map<string, EventItem[]>();
     events.forEach((evt) => {
-      const d = new Date(evt.starts_at);
-      const key = d.toISOString().split("T")[0];
-      if (!map.has(key)) {
-        map.set(key, []);
+      const startsAt = new Date(evt.starts_at);
+      const endsAt = evt.ends_at ? new Date(evt.ends_at) : startsAt;
+      const firstDay = new Date(year, month, 1);
+      const lastDay = Math.min(endsAt.getTime(), new Date(year, month + 1, 0, 23, 59, 59).getTime());
+      for (
+        let day = new Date(Math.max(
+          new Date(startsAt.getFullYear(), startsAt.getMonth(), startsAt.getDate()).getTime(),
+          firstDay.getTime(),
+        ));
+        day.getTime() <= lastDay;
+        day = new Date(day.getFullYear(), day.getMonth(), day.getDate() + 1)
+      ) {
+        const key = localDateKey(day);
+        if (!map.has(key)) map.set(key, []);
+        map.get(key)!.push(evt);
       }
-      map.get(key)!.push(evt);
     });
     return map;
-  }, [events]);
+  }, [events, year, month]);
 
   // Compute 42 calendar grid cells (6 rows * 7 days)
   const calendarCells = useMemo(() => {
@@ -113,13 +127,13 @@ export default function EventCalendarWidget({
       events: EventItem[];
     }> = [];
 
-    const todayStr = new Date().toISOString().split("T")[0];
+    const todayStr = localDateKey(new Date());
 
     // Previous month trailing days
     for (let i = firstDayIndex - 1; i >= 0; i--) {
       const dayNum = daysInPrevMonth - i;
       const prevMonthDate = new Date(year, month - 1, dayNum);
-      const dateStr = prevMonthDate.toISOString().split("T")[0];
+      const dateStr = localDateKey(prevMonthDate);
       cells.push({
         dayNumber: dayNum,
         dateStr,
@@ -153,7 +167,7 @@ export default function EventCalendarWidget({
     const remaining = 42 - cells.length;
     for (let dayNum = 1; dayNum <= remaining; dayNum++) {
       const nextMonthDate = new Date(year, month + 1, dayNum);
-      const dateStr = nextMonthDate.toISOString().split("T")[0];
+      const dateStr = localDateKey(nextMonthDate);
       cells.push({
         dayNumber: dayNum,
         dateStr,

@@ -19,13 +19,16 @@ const STATUS_OPTIONS = [
   { id: "COMPLETED", label: "Completed" },
   { id: "PENDING", label: "Pending" },
   { id: "FAILED", label: "Failed" },
+  { id: "REVERSED", label: "Reversed" },
 ];
 
 function getTransactionMetadata(type: TransactionType, level: number | null) {
   switch (type) {
     case "COMMISSION_BONUS_1":
       return {
-        label: level ? `Level ${level} Referral Profit (5%)` : "Referral Profit Commission",
+        label: level
+          ? `Level ${level} Referral Profit (${level === 1 ? 5 : level === 2 ? 4 : level === 3 ? 3 : level === 10 ? 1 : 2}%)`
+          : "Referral Profit Commission",
         iconType: "inbound",
         color: "text-success",
         badge: "Profit Share",
@@ -263,6 +266,8 @@ export default function WalletPage() {
                     tx.transaction_type,
                     tx.level,
                   );
+                  const isReversedWithdrawal =
+                    tx.transaction_type === "WITHDRAWAL" && tx.status === "REVERSED";
                   const isPositive = tx.transaction_type !== "WITHDRAWAL";
                   const numAmount = parseFloat(tx.amount) || 0;
                   const dateObj = new Date(tx.created_at);
@@ -325,10 +330,10 @@ export default function WalletPage() {
 
                           <div className="flex flex-col">
                             <span className="font-semibold text-secondary">
-                              {meta.label}
+                              {isReversedWithdrawal ? "Withdrawal reversed" : meta.label}
                             </span>
                             <span className="text-[10px] text-secondary/50">
-                              {meta.badge}
+                              {isReversedWithdrawal ? "Reserved funds returned" : meta.badge}
                             </span>
                           </div>
                         </div>
@@ -384,6 +389,8 @@ export default function WalletPage() {
                               ? "bg-success/15 text-success border-success/20"
                               : tx.status === "PENDING"
                                 ? "bg-accent/15 text-accent border-accent/20 animate-pulse"
+                                : tx.status === "REVERSED"
+                                  ? "bg-secondary/10 text-secondary/70 border-secondary/15"
                                 : "bg-error/15 text-error border-error/20"
                           }`}
                         >
@@ -393,6 +400,8 @@ export default function WalletPage() {
                                 ? "bg-success"
                                 : tx.status === "PENDING"
                                   ? "bg-accent"
+                                  : tx.status === "REVERSED"
+                                    ? "bg-secondary/70"
                                   : "bg-error"
                             }`}
                           />
@@ -407,7 +416,7 @@ export default function WalletPage() {
                             isPositive ? "text-success" : "text-secondary"
                           }`}
                         >
-                          {isPositive ? "+" : "-"}${formatCurrency(numAmount, 2)}
+                          {isReversedWithdrawal ? "" : isPositive ? "+" : "-"}${formatCurrency(numAmount, 2)}
                         </span>
                       </td>
                     </tr>

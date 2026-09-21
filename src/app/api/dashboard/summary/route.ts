@@ -1,8 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, inArray } from "drizzle-orm";
 import { getSessionFromRequest } from "@/src/lib/auth/session";
 import { db } from "@/src/lib/db";
-import { referralNodes, transactions, users, wallets } from "@/src/lib/db/schema";
+import { transactions, users, wallets } from "@/src/lib/db/schema";
+import { getReferralLineage } from "@/src/lib/referrals/lineage";
 import type {
   CommissionTransactionType,
   DashboardSummary,
@@ -91,12 +92,16 @@ export async function GET(request: NextRequest) {
         .from(transactions)
         .where(eq(transactions.userId, session.userId))
         .orderBy(desc(transactions.createdAt)),
-      db
-        .select({ status: users.status, depth: referralNodes.depth })
-        .from(referralNodes)
-        .innerJoin(users, eq(referralNodes.descendantId, users.id))
-        .where(eq(referralNodes.ancestorId, session.userId)),
+      getReferralLineage(session.userId),
     ]);
+
+    const downlineUsers = downlineRows.length
+      ? await db
+          .select({ id: users.id, status: users.status })
+          .from(users)
+          .where(inArray(users.id, downlineRows.map((row) => row.id)))
+      : [];
+    const statusById = new Map(downlineUsers.map((row) => [row.id, row.status]));
 
     const wallet = userWallet[0];
     const completedTransactions = userTransactions.filter(
@@ -118,7 +123,7 @@ export async function GET(request: NextRequest) {
         ratePercent: LEVEL_RATES[level].percent,
         lotRate: LEVEL_RATES[level].lot,
         membersCount: members.length,
-        activeTradersCount: members.filter((row) => row.status === "ACTIVE").length,
+        activeTradersCount: members.filter((row) => statusById.get(row.id) === "ACTIVE").length,
         teamDeposits: 0,
         totalVolume: 0,
         lotsTraded: 0,
@@ -160,7 +165,7 @@ export async function GET(request: NextRequest) {
       },
       referralTree: {
         totalTraders: downlineRows.length,
-        activeTraders: downlineRows.filter((row) => row.status === "ACTIVE").length,
+        activeTraders: downlineRows.filter((row) => statusById.get(row.id) === "ACTIVE").length,
         totalTeamDeposits: 0,
         strongLegVolume: 0,
         weakLegVolume: 0,
@@ -202,11 +207,12 @@ export async function GET(request: NextRequest) {
         level: transaction.level || undefined,
         referenceId: transaction.referenceId || `TX-${transaction.id.slice(0, 8)}`,
         status:
-          transaction.status === "COMPLETED"
-            ? "COMPLETED"
-            : transaction.status === "PENDING"
-              ? "PENDING"
-              : "PROCESSING",
+          transaction.status === "COMPLETED" ||
+          transaction.status === "PENDING" ||
+          transaction.status === "FAILED" ||
+          transaction.status === "REVERSED"
+            ? transaction.status
+            : "PROCESSING",
         createdAt: transaction.createdAt.toISOString(),
       })),
     };

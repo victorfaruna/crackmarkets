@@ -42,7 +42,8 @@ export function downloadIcsFile(event: EventItem) {
 
   const blob = new Blob([icsContent], { type: "text/calendar;charset=utf-8" });
   const link = document.createElement("a");
-  link.href = window.URL.createObjectURL(blob);
+  const objectUrl = window.URL.createObjectURL(blob);
+  link.href = objectUrl;
   link.setAttribute(
     "download",
     `${event.title.toLowerCase().replace(/[^a-z0-9]/g, "-")}.ics`,
@@ -50,6 +51,7 @@ export function downloadIcsFile(event: EventItem) {
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+  window.URL.revokeObjectURL(objectUrl);
 }
 
 /**
@@ -78,7 +80,7 @@ export function getGoogleCalendarUrl(event: EventItem): string {
 /**
  * Calculates remaining time formatted as: "18 Days, 23 Hours, 32 Minutes"
  */
-export function getCountdown(targetDate: string | Date): {
+export function getCountdown(targetDate: string | Date, endDate?: string | Date | null): {
   isPast: boolean;
   text: string;
 } {
@@ -87,6 +89,9 @@ export function getCountdown(targetDate: string | Date): {
   const diff = target - now;
 
   if (diff <= 0) {
+    if (endDate && new Date(endDate).getTime() <= now) {
+      return { isPast: true, text: "Completed" };
+    }
     return { isPast: true, text: "Live / In Progress" };
   }
 

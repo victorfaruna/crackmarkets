@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/src/lib/db";
 import { events } from "@/src/lib/db/schema/events";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { z } from "zod";
 
 export async function GET(
@@ -28,7 +28,11 @@ export async function GET(
         location: events.location,
         starts_at: events.startsAt,
         ends_at: events.endsAt,
-        status: events.status,
+        status: sql<string>`case
+          when ${events.status} = 'COMPLETED' or (${events.endsAt} is not null and ${events.endsAt} <= now()) then 'COMPLETED'
+          when ${events.startsAt} <= now() then 'LIVE'
+          else 'UPCOMING'
+        end`,
         created_at: events.createdAt,
         updated_at: events.updatedAt,
       })

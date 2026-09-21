@@ -8,7 +8,7 @@ import {
 } from "@/src/lib/db/schema";
 import { registerSchema } from "@/src/lib/auth/validation";
 import { hashPassword } from "@/src/lib/auth/password";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import crypto from "crypto";
 import { checkRateLimit } from "@/src/lib/security/rateLimit";
 import { getRequestMetadata } from "@/src/lib/security/request";
@@ -89,12 +89,12 @@ export async function POST(request: NextRequest) {
     let referrerId: string | null = null;
     if (referral_code && referral_code.trim().length > 0) {
       const [referrer] = await db
-        .select({ id: users.id })
+        .select({ id: users.id, status: users.status })
         .from(users)
         .where(eq(users.referralCode, referral_code.trim().toUpperCase()))
         .limit(1);
 
-      if (!referrer) {
+      if (!referrer || referrer.status !== "ACTIVE") {
         return NextResponse.json(
           {
             success: false,
@@ -154,33 +154,28 @@ export async function POST(request: NextRequest) {
         lifetimeEarnings: "0.0000",
       });
 
-      // 4c. Build 10-level referral tree
+      // 4c. Build the closure links from direct parent pointers, not legacy
+      // closure rows that may have been imported with incorrect depths.
       if (referrerId) {
-        // Direct Level 1 link
-        await tx.insert(referralNodes).values({
-          ancestorId: referrerId,
-          descendantId: insertedUser.id,
-          depth: 1,
-        });
-
-        // Pull higher ancestors up to depth 9 (so new node is depth <= 10)
-        const higherAncestors = await tx
-          .select({
-            ancestorId: referralNodes.ancestorId,
-            depth: referralNodes.depth,
-          })
-          .from(referralNodes)
-          .where(eq(referralNodes.descendantId, referrerId));
-
-        for (const anc of higherAncestors) {
-          if (anc.depth < 10) {
-            await tx.insert(referralNodes).values({
-              ancestorId: anc.ancestorId,
-              descendantId: insertedUser.id,
-              depth: anc.depth + 1,
-            });
-          }
-        }
+        const ancestors = await tx.execute<{ id: string; depth: number }>(sql`
+          with recursive chain as (
+            select id, referred_by_id, 1::integer as depth
+            from users where id = ${referrerId}
+            union all
+            select parent.id, parent.referred_by_id, chain.depth + 1
+            from users parent
+            inner join chain on chain.referred_by_id = parent.id
+            where chain.depth < 10
+          )
+          select id, depth from chain
+        `);
+        await tx.insert(referralNodes).values(
+          Array.from(ancestors, (ancestor) => ({
+            ancestorId: ancestor.id,
+            descendantId: insertedUser.id,
+            depth: ancestor.depth,
+          })),
+        );
       }
 
       // 4d. Audit log

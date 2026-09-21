@@ -76,7 +76,7 @@ export interface CommissionTransaction {
   type: CommissionTransactionType;
   level?: number;
   referenceId: string;
-  status: "COMPLETED" | "PENDING" | "PROCESSING";
+  status: "COMPLETED" | "PENDING" | "FAILED" | "REVERSED" | "PROCESSING";
   createdAt: string;
 }
 

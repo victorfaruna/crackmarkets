@@ -9,11 +9,13 @@ const TIME_TABS = ["Monthly", "Weekly", "All Time"] as const;
 
 export default function CommissionsPage() {
   const [timeframe, setTimeframe] = useState<(typeof TIME_TABS)[number]>("Monthly");
-  const [selectedMonth, setSelectedMonth] = useState<string>("2026-08");
+  const [selectedMonth, setSelectedMonth] = useState<string>(() =>
+    new Date().toISOString().slice(0, 7),
+  );
   const [selectedFilter, setSelectedFilter] = useState<string>("ALL");
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  const { data: commResponse, isLoading } = useCommissions({
+  const { data: commResponse, isLoading, isError } = useCommissions({
     timeframe: timeframe.toLowerCase(),
     month: timeframe === "Monthly" ? selectedMonth : undefined,
   });
@@ -57,14 +59,23 @@ export default function CommissionsPage() {
       new Date(t.created_at).toISOString(),
     ]);
 
-    const csvContent = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+    const csvCell = (value: string | number) => {
+      const text = String(value);
+      const safe = /^[=+@-]/.test(text) ? `'${text}` : text;
+      return `"${safe.replaceAll('"', '""')}"`;
+    };
+    const csvContent = [headers, ...rows]
+      .map((row) => row.map(csvCell).join(","))
+      .join("\n");
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
+    const objectUrl = URL.createObjectURL(blob);
+    link.href = objectUrl;
     link.setAttribute("download", `commissions-report-${selectedMonth}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(objectUrl);
   };
 
   return (
@@ -273,6 +284,7 @@ export default function CommissionsPage() {
               type="month"
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
+              disabled={timeframe !== "Monthly"}
               className="px-3 py-1 text-sm font-mono font-medium rounded-[3px] border border-secondary/8 bg-primary text-secondary focus:outline-none focus:border-accent cursor-pointer"
             />
           </div>
@@ -368,6 +380,10 @@ export default function CommissionsPage() {
                 className="h-14 rounded-[3px] bg-primary/20 border border-secondary/6 animate-pulse"
               />
             ))}
+          </div>
+        ) : isError ? (
+          <div className="alert alert-error alert-soft text-sm">
+            Unable to load commission records. Please refresh and try again.
           </div>
         ) : filteredTransactions.length === 0 ? (
           <div className="rounded-[3px] border border-secondary/6 bg-primary/20 p-8 flex flex-col items-center justify-center gap-2 text-center">

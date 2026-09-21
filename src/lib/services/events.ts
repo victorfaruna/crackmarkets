@@ -28,6 +28,7 @@ export interface EventsFilterParams {
   include_past?: boolean;
   month?: string; // "YYYY-MM"
   date?: string; // "YYYY-MM-DD"
+  utc_offset_minutes?: number;
 }
 
 export interface EventsResponse {
@@ -58,6 +59,9 @@ export const getEvents = async (
     }
     if (params?.date) {
       searchParams.set("date", params.date);
+    }
+    if (params?.utc_offset_minutes !== undefined) {
+      searchParams.set("utc_offset_minutes", String(params.utc_offset_minutes));
     }
 
     const queryString = searchParams.toString();

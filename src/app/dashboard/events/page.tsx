@@ -4,6 +4,7 @@ import React, { useState, useMemo } from "react";
 import Breadcrum from "@/src/components/shared/Breadcrum";
 import EventCalendarWidget from "@/src/components/sections/events/EventCalendarWidget";
 import EventCard from "@/src/components/sections/events/EventCard";
+import EventsAnnouncementPopup from "@/src/components/sections/events/EventsAnnouncementPopup";
 import { useEvents } from "@/src/lib/hooks/useEvents";
 
 const CATEGORIES: Array<{ key: string; label: string }> = [
@@ -30,25 +31,38 @@ export default function EventsPage() {
     const m = String(calendarDate.getMonth() + 1).padStart(2, "0");
     return `${y}-${m}`;
   }, [calendarDate]);
+  const calendarOffset = new Date(
+    calendarDate.getFullYear(),
+    calendarDate.getMonth(),
+    1,
+  ).getTimezoneOffset();
+  const selectedDayOffset = selectedDay
+    ? new Date(`${selectedDay}T12:00:00`).getTimezoneOffset()
+    : calendarOffset;
 
   // Fetch all events for the current month and upcoming to populate calendar dots & list
   const { data: eventsResponse, isLoading, error } = useEvents({
     include_past: includePast,
     category: selectedCategory !== "ALL" ? selectedCategory : undefined,
     date: selectedDay || undefined,
+    month: selectedDay ? undefined : currentMonthStr,
+    utc_offset_minutes: selectedDayOffset,
   });
 
   // Also query month-wide events for the calendar markers
   const { data: monthEventsResponse } = useEvents({
     include_past: true,
     month: currentMonthStr,
+    utc_offset_minutes: calendarOffset,
   });
 
   const events = eventsResponse?.data || [];
   const monthEvents = monthEventsResponse?.data || [];
 
   return (
-    <section className="w-full max-w-330 min-h-full pt-5 px-5 pb-16 flex flex-col gap-5">
+    <>
+      <EventsAnnouncementPopup />
+      <section className="w-full max-w-330 min-h-full pt-5 px-5 pb-16 flex flex-col gap-5">
       {/* ─── Top Header Row ────────────────────────────────────────────── */}
       <div className="flex flex-col gap-0.5">
         <Breadcrum />
@@ -81,7 +95,7 @@ export default function EventsPage() {
               </span>
             </div>
             <p className="text-[11px] text-secondary/60 leading-relaxed">
-              Click any event date to filter schedules. Use the &quot;Add to Calendar&quot; button on cards to export directly to Apple, Google, or Outlook.
+              Click any event date to filter schedules. Use &quot;Add to Calendar&quot; to download a calendar file, or the Google Calendar button to create an entry there.
             </p>
           </div>
         </div>
@@ -190,5 +204,6 @@ export default function EventsPage() {
         </div>
       </div>
     </section>
+    </>
   );
 }

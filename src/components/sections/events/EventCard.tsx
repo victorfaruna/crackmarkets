@@ -45,15 +45,17 @@ const CATEGORY_BADGE_STYLE: Record<
 export default function EventCard({ event }: EventCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [countdown, setCountdown] = useState(() => getCountdown(event.starts_at));
+  const [countdown, setCountdown] = useState(() =>
+    getCountdown(event.starts_at, event.ends_at),
+  );
 
   // Live countdown ticker every minute
   useEffect(() => {
     const timer = setInterval(() => {
-      setCountdown(getCountdown(event.starts_at));
+      setCountdown(getCountdown(event.starts_at, event.ends_at));
     }, 60000);
     return () => clearInterval(timer);
-  }, [event.starts_at]);
+  }, [event.starts_at, event.ends_at]);
 
   const startDate = new Date(event.starts_at);
   const monthShort = startDate.toLocaleDateString("en-US", { month: "short" });
@@ -186,7 +188,7 @@ export default function EventCard({ event }: EventCardProps) {
                 rel="noopener noreferrer"
                 className="px-3 py-1 text-sm font-medium rounded-lg bg-accent text-background font-semibold hover:bg-accent/90 transition-colors flex items-center gap-1 cursor-pointer"
               >
-                Join / RSVP
+                Google Calendar
               </a>
 
               {/* Share Button */}
@@ -232,7 +234,7 @@ export default function EventCard({ event }: EventCardProps) {
             {/* Countdown / Status badge */}
             <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-primary border border-secondary/10 text-secondary/80">
               <span>🔥</span>
-              <span>{countdown.text}</span>
+              <span>{event.status === "COMPLETED" ? "Completed" : countdown.text}</span>
             </div>
 
             {/* Accordion Chevron */}

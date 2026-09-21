@@ -4,6 +4,7 @@ import { db } from "@/src/lib/db";
 import { transactions } from "@/src/lib/db/schema";
 import { eq, and, desc, or } from "drizzle-orm";
 import { z } from "zod";
+import { decimalUnits, formatUnits } from "@/src/lib/commissions/calculations";
 
 const commissionsQuerySchema = z
   .object({
@@ -48,6 +49,7 @@ export async function GET(request: NextRequest) {
         reference_id: transactions.referenceId,
         level: transactions.level,
         status: transactions.status,
+        metadata: transactions.metadata,
         created_at: transactions.createdAt,
       })
       .from(transactions)
@@ -66,17 +68,24 @@ export async function GET(request: NextRequest) {
       )
       .orderBy(desc(transactions.createdAt));
 
-    // Calculate Weekly Previews (last 7 days) and Monthly Previews (current month or selected month)
+    // Weekly cards use the trailing seven days. The monthly card and selected
+    // ledger use the chosen UTC month, or the current UTC month by default.
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    let weeklyProfitShare = 0;
-    let weeklyLotCommission = 0;
-    let monthlyVolumePools = 0;
+    const [year, monthIndex] = month
+      ? month.split("-").map(Number)
+      : [now.getUTCFullYear(), now.getUTCMonth() + 1];
+    const startOfMonth = new Date(Date.UTC(year, monthIndex - 1, 1));
+    const startOfNextMonth = new Date(Date.UTC(year, monthIndex, 1));
+    const inSelectedMonth = (date: Date) =>
+      date >= startOfMonth && date < startOfNextMonth;
+    let weeklyProfitShare = 0n;
+    let weeklyLotCommission = 0n;
+    let monthlyVolumePools = 0n;
 
     allCommissionTxs.forEach((tx) => {
-      const amt = parseFloat(tx.amount) || 0;
+      const amt = decimalUnits(tx.amount);
       const txDate = new Date(tx.created_at);
 
-      // Weekly preview: within last 7 days (or all if within recent period)
       if (txDate >= sevenDaysAgo) {
         if (tx.transaction_type === "COMMISSION_BONUS_1") {
           weeklyProfitShare += amt;
@@ -86,11 +95,11 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      // Monthly preview: within current month (or all recent volume bonuses)
       if (
-        tx.transaction_type === "STRONG_LEG_BONUS_3" ||
-        tx.transaction_type === "VOLUME_BONUS_4" ||
-        tx.transaction_type === "LEADERSHIP_REWARD"
+        inSelectedMonth(txDate) &&
+        ["STRONG_LEG_BONUS_3", "VOLUME_BONUS_4", "LEADERSHIP_REWARD"].includes(
+          tx.transaction_type,
+        )
       ) {
         monthlyVolumePools += amt;
       }
@@ -104,48 +113,39 @@ export async function GET(request: NextRequest) {
         (tx) => new Date(tx.created_at) >= sevenDaysAgo,
       );
     } else if (timeframe === "monthly") {
-      if (month) {
-        const [yStr, mStr] = month.split("-");
-        const y = parseInt(yStr, 10);
-        const m = parseInt(mStr, 10) - 1;
-        const startOfMonth = new Date(Date.UTC(y, m, 1, 0, 0, 0));
-        const endOfMonth = new Date(Date.UTC(y, m + 1, 0, 23, 59, 59));
-        filteredTxs = allCommissionTxs.filter((tx) => {
-          const d = new Date(tx.created_at);
-          return d >= startOfMonth && d <= endOfMonth;
-        });
-      }
+      filteredTxs = allCommissionTxs.filter((tx) =>
+        inSelectedMonth(new Date(tx.created_at)),
+      );
     }
 
     const activeSet = filteredTxs;
 
     // Calculate streams from activeSet
-    let profitShareTotal = 0;
+    let profitShareTotal = 0n;
     let profitShareCount = 0;
 
-    let lotCommissionTotal = 0;
+    let lotCommissionTotal = 0n;
     let lotCommissionCount = 0;
 
-    let strongLegTotal = 0;
+    let strongLegTotal = 0n;
     let strongLegCount = 0;
 
-    let volumeLadderTotal = 0;
+    let volumeLadderTotal = 0n;
     let volumeLadderCount = 0;
 
-    let leaderPool1Total = 0;
+    let leaderPool1Total = 0n;
     let leaderPool1Count = 0;
-
-    const leaderPool2Total = 0;
-    const leaderPool2Count = 0;
-
-    const grandEstateTotal = 0;
-    const grandEstateCount = 0;
-
-    const travelBenefitTotal = 0;
-    const travelBenefitCount = 0;
+    let leaderPool2Total = 0n;
+    let leaderPool2Count = 0;
+    let grandEstateTotal = 0n;
+    let grandEstateCount = 0;
+    let travelBenefitTotal = 0n;
+    let travelBenefitCount = 0;
+    let otherLeadershipTotal = 0n;
+    let otherLeadershipCount = 0;
 
     activeSet.forEach((tx) => {
-      const amt = parseFloat(tx.amount) || 0;
+      const amt = decimalUnits(tx.amount);
       switch (tx.transaction_type) {
         case "COMMISSION_BONUS_1":
           profitShareTotal += amt;
@@ -164,8 +164,32 @@ export async function GET(request: NextRequest) {
           volumeLadderCount++;
           break;
         case "LEADERSHIP_REWARD":
-          leaderPool1Total += amt;
-          leaderPool1Count++;
+          const rewardMetadata =
+            tx.metadata &&
+            typeof tx.metadata === "object" &&
+            !Array.isArray(tx.metadata)
+              ? (tx.metadata as Record<string, unknown>)
+              : {};
+          const rewardType =
+            typeof rewardMetadata.rewardType === "string"
+              ? rewardMetadata.rewardType
+              : null;
+          if (rewardType === "LEADER_POOL_1") {
+            leaderPool1Total += amt;
+            leaderPool1Count++;
+          } else if (rewardType === "LEADER_POOL_2") {
+            leaderPool2Total += amt;
+            leaderPool2Count++;
+          } else if (rewardType === "GRAND_ESTATE") {
+            grandEstateTotal += amt;
+            grandEstateCount++;
+          } else if (rewardType === "TRAVEL_BENEFIT") {
+            travelBenefitTotal += amt;
+            travelBenefitCount++;
+          } else {
+            otherLeadershipTotal += amt;
+            otherLeadershipCount++;
+          }
           break;
       }
     });
@@ -178,10 +202,13 @@ export async function GET(request: NextRequest) {
       leaderPool1Total +
       leaderPool2Total +
       grandEstateTotal +
-      travelBenefitTotal;
+      travelBenefitTotal +
+      otherLeadershipTotal;
 
-    const calcPercent = (val: number) =>
-      totalCommissions > 0 ? ((val / totalCommissions) * 100).toFixed(1) : "0";
+    const calcPercent = (val: bigint) =>
+      totalCommissions > 0n
+        ? (Number((val * 1_000n + totalCommissions / 2n) / totalCommissions) / 10).toFixed(1)
+        : "0.0";
 
     const streams = [
       {
@@ -190,7 +217,7 @@ export async function GET(request: NextRequest) {
         bonusCode: "Bonus 2",
         frequency: "Weekly",
         count: lotCommissionCount,
-        amount: lotCommissionTotal.toFixed(2),
+        amount: formatUnits(lotCommissionTotal),
         percentage: calcPercent(lotCommissionTotal),
         dotColor: "bg-accent",
         description: "$2.00/lot (L1-L3), $1.00/lot (L4), $0.50/lot (L5-L10)",
@@ -201,7 +228,7 @@ export async function GET(request: NextRequest) {
         bonusCode: "Bonus 1",
         frequency: "Weekly",
         count: profitShareCount,
-        amount: profitShareTotal.toFixed(2),
+        amount: formatUnits(profitShareTotal),
         percentage: calcPercent(profitShareTotal),
         dotColor: "bg-success",
         description: "5% L1 down to 1% L10 on downline trading profits",
@@ -212,7 +239,7 @@ export async function GET(request: NextRequest) {
         bonusCode: "Bonus 3",
         frequency: "Monthly",
         count: strongLegCount,
-        amount: strongLegTotal.toFixed(2),
+        amount: formatUnits(strongLegTotal),
         percentage: calcPercent(strongLegTotal),
         dotColor: "bg-secondary",
         description: "$1 x Strong Leg Lots for volume >= $500k",
@@ -223,7 +250,7 @@ export async function GET(request: NextRequest) {
         bonusCode: "Bonus 4",
         frequency: "Monthly",
         count: volumeLadderCount,
-        amount: volumeLadderTotal.toFixed(2),
+        amount: formatUnits(volumeLadderTotal),
         percentage: calcPercent(volumeLadderTotal),
         dotColor: "bg-error",
         description: "1% to 8% team trading volume bonus ladder",
@@ -234,7 +261,7 @@ export async function GET(request: NextRequest) {
         bonusCode: "Bonus 5",
         frequency: "Monthly",
         count: leaderPool1Count,
-        amount: leaderPool1Total.toFixed(2),
+        amount: formatUnits(leaderPool1Total),
         percentage: calcPercent(leaderPool1Total),
         dotColor: "bg-accent",
         description: "Family luxury trip for 2 consecutive qualification months",
@@ -245,7 +272,7 @@ export async function GET(request: NextRequest) {
         bonusCode: "Bonus 5",
         frequency: "Monthly",
         count: leaderPool2Count,
-        amount: leaderPool2Total.toFixed(2),
+        amount: formatUnits(leaderPool2Total),
         percentage: calcPercent(leaderPool2Total),
         dotColor: "bg-success",
         description: "Car incentive reward for 2 consecutive qualification months",
@@ -256,7 +283,7 @@ export async function GET(request: NextRequest) {
         bonusCode: "Bonus 5",
         frequency: "Monthly",
         count: grandEstateCount,
-        amount: grandEstateTotal.toFixed(2),
+        amount: formatUnits(grandEstateTotal),
         percentage: calcPercent(grandEstateTotal),
         dotColor: "bg-secondary",
         description: "Estate prize pool for 6 months sustained qualification",
@@ -267,18 +294,31 @@ export async function GET(request: NextRequest) {
         bonusCode: "Bonus 5",
         frequency: "Monthly",
         count: travelBenefitCount,
-        amount: travelBenefitTotal.toFixed(2),
+        amount: formatUnits(travelBenefitTotal),
         percentage: calcPercent(travelBenefitTotal),
         dotColor: "bg-error",
         description: "$50,000 monthly team deposits for 3 consecutive months",
       },
+      ...(otherLeadershipCount
+        ? [{
+            id: "other-leadership",
+            name: "Other Leadership Rewards",
+            bonusCode: "Bonus 5",
+            frequency: "Monthly",
+            count: otherLeadershipCount,
+            amount: formatUnits(otherLeadershipTotal),
+            percentage: calcPercent(otherLeadershipTotal),
+            dotColor: "bg-subtext",
+            description: "Leadership rewards without a specific pool classification",
+          }]
+        : []),
     ];
 
     const preview = {
-      profitShareWeekly: weeklyProfitShare.toFixed(2),
-      lotCommissionWeekly: weeklyLotCommission.toFixed(2),
-      cpaMonthly: monthlyVolumePools.toFixed(2),
-      totalCommissions: totalCommissions.toFixed(2),
+      profitShareWeekly: formatUnits(weeklyProfitShare),
+      lotCommissionWeekly: formatUnits(weeklyLotCommission),
+      cpaMonthly: formatUnits(monthlyVolumePools),
+      totalCommissions: formatUnits(totalCommissions),
     };
 
     return NextResponse.json({
@@ -286,7 +326,17 @@ export async function GET(request: NextRequest) {
       data: {
         preview,
         streams,
-        transactions: activeSet,
+        transactions: activeSet.map((transaction) => ({
+          id: transaction.id,
+          user_id: transaction.user_id,
+          source_user_id: transaction.source_user_id,
+          amount: transaction.amount,
+          transaction_type: transaction.transaction_type,
+          reference_id: transaction.reference_id,
+          level: transaction.level,
+          status: transaction.status,
+          created_at: transaction.created_at,
+        })),
         total: activeSet.length,
       },
     });

@@ -1,7 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getSessionFromRequest } from "@/src/lib/auth/session";
 import { db } from "@/src/lib/db";
-import { referralImpressions, referralNodes } from "@/src/lib/db/schema";
+import { referralImpressions } from "@/src/lib/db/schema";
+import { getReferralLineage } from "@/src/lib/referrals/lineage";
 import { eq, and, gte, lte, sql } from "drizzle-orm";
 
 let tableEnsured = false;
@@ -108,12 +109,7 @@ export async function GET(request: NextRequest) {
         : "Active";
 
     // 3. Count total direct & network referrals for conversion rate
-    const [memberCountResult] = await db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(referralNodes)
-      .where(eq(referralNodes.ancestorId, session.userId));
-
-    const totalMembers = memberCountResult?.count ?? 0;
+    const totalMembers = (await getReferralLineage(session.userId)).length;
     const conversionRate =
       totalClicks > 0
         ? Math.round((totalMembers / totalClicks) * 1000) / 10

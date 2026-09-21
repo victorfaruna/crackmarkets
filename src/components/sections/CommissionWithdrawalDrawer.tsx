@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import RightSideDrawer from "../shared/RightSideDrawer";
-import { useAppStore } from "@/src/lib/stores/appStore";
 import { formatCurrency } from "@/src/lib/utils/formatCurrency";
 
 import { useWithdrawFunds } from "@/src/lib/hooks/useWallet";
@@ -27,11 +26,9 @@ const NETWORKS = [
 export const CommissionWithdrawalDrawer: React.FC<
   CommissionWithdrawalDrawerProps
 > = ({ isOpen, onClose, availableBalance }) => {
-  const isConnectedToRoboForex = useAppStore(
-    (s) => s.isConnectedToRoboForex,
-  );
   const { data: userData } = useUser();
   const user = userData?.data?.user;
+  const isConnectedToRoboForex = user?.roboforex_linked === true;
   const isAccountEligible =
     user?.status === "ACTIVE" &&
     user?.kyc_status === "APPROVED" &&

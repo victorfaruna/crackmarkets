@@ -88,29 +88,43 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const [existing] = await db
-      .select({ id: transactions.id, status: transactions.status })
-      .from(transactions)
-      .where(
-        and(
-          eq(transactions.userId, session.userId),
-          eq(transactions.idempotencyKey, idempotencyKey),
-        ),
-      )
-      .limit(1);
-    if (existing) {
-      return NextResponse.json({
-        success: true,
-        message: "Withdrawal request already received.",
-        data: { transaction: existing },
-      });
-    }
-
     const amountValue = amount.toFixed(4);
     const referenceId = `WTH-${crypto.randomUUID().replaceAll("-", "").slice(0, 16).toUpperCase()}`;
     const { ipAddress, userAgent } = getRequestMetadata(request);
 
     const result = await db.transaction(async (tx) => {
+      // Serialize requests sharing a key before reserving funds. A retry of
+      // the same request returns the original record without a second debit.
+      await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended(${idempotencyKey}, 0))`);
+      const [existing] = await tx
+        .select({
+          id: transactions.id,
+          userId: transactions.userId,
+          amount: transactions.amount,
+          status: transactions.status,
+          metadata: transactions.metadata,
+        })
+        .from(transactions)
+        .where(eq(transactions.idempotencyKey, idempotencyKey))
+        .limit(1);
+      if (existing) {
+        const metadata = existing.metadata &&
+          typeof existing.metadata === "object" &&
+          !Array.isArray(existing.metadata)
+          ? (existing.metadata as Record<string, unknown>)
+          : null;
+        if (
+          existing.userId !== session.userId ||
+          existing.amount !== amountValue ||
+          !metadata ||
+          metadata.network !== network ||
+          metadata.destinationAddress !== address
+        ) {
+          throw new WithdrawalError("Idempotency key was used for another withdrawal.", 409);
+        }
+        return { existing: { id: existing.id, status: existing.status } };
+      }
+
       const [updatedWallet] = await tx
         .update(wallets)
         .set({
@@ -167,6 +181,14 @@ export async function POST(request: NextRequest) {
 
       return { updatedWallet, transaction };
     });
+
+    if ("existing" in result) {
+      return NextResponse.json({
+        success: true,
+        message: "Withdrawal request already received.",
+        data: { transaction: result.existing },
+      });
+    }
 
     return NextResponse.json(
       {
