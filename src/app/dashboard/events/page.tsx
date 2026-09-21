@@ -4,8 +4,10 @@ import React, { useState, useMemo } from "react";
 import Breadcrum from "@/src/components/shared/Breadcrum";
 import EventCalendarWidget from "@/src/components/sections/events/EventCalendarWidget";
 import EventCard from "@/src/components/sections/events/EventCard";
+import EventDetailsModal from "@/src/components/sections/events/EventDetailsModal";
 import EventsAnnouncementPopup from "@/src/components/sections/events/EventsAnnouncementPopup";
 import { useEvents } from "@/src/lib/hooks/useEvents";
+import type { EventItem } from "@/src/lib/services/events";
 
 const CATEGORIES: Array<{ key: string; label: string }> = [
   { key: "ALL", label: "All Categories" },
@@ -24,6 +26,7 @@ export default function EventsPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>("ALL");
   // Past events toggle
   const [includePast, setIncludePast] = useState<boolean>(false);
+  const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
 
   // Form month query string e.g. "2026-09"
   const currentMonthStr = useMemo(() => {
@@ -62,6 +65,7 @@ export default function EventsPage() {
   return (
     <>
       <EventsAnnouncementPopup />
+      <EventDetailsModal event={selectedEvent} onClose={() => setSelectedEvent(null)} />
       <section className="w-full max-w-330 min-h-full pt-5 px-5 pb-16 flex flex-col gap-5">
       {/* ─── Top Header Row ────────────────────────────────────────────── */}
       <div className="flex flex-col gap-0.5">
@@ -197,7 +201,7 @@ export default function EventsPage() {
           ) : (
             <div className="flex flex-col gap-3">
               {events.map((event) => (
-                <EventCard key={event.id} event={event} />
+                <EventCard key={event.id} event={event} onOpen={setSelectedEvent} />
               ))}
             </div>
           )}

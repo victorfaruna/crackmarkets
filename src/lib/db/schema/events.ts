@@ -17,6 +17,7 @@ export const events = pgTable(
     category: varchar("category", { length: 100 }).notNull(), // "TRADING_CONTEST" | "WEBINAR" | "LEADERSHIP_POOL" | "PARTNER_SUMMIT"
     description: text("description").notNull().default(""),
     rewardPool: varchar("reward_pool", { length: 255 }), // nullable
+    imageUrl: varchar("image_url", { length: 1000 }), // nullable – path or URL to event poster/banner
     location: varchar("location", { length: 255 }).notNull().default("Online"),
     startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
     endsAt: timestamp("ends_at", { withTimezone: true }),

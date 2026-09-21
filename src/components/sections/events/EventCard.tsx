@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Image from "next/image";
 import { EventItem, EventCategory } from "@/src/lib/services/events";
 import {
   downloadIcsFile,
@@ -10,6 +11,7 @@ import {
 
 interface EventCardProps {
   event: EventItem;
+  onOpen: (event: EventItem) => void;
 }
 
 const CATEGORY_BADGE_STYLE: Record<
@@ -42,8 +44,7 @@ const CATEGORY_BADGE_STYLE: Record<
   },
 };
 
-export default function EventCard({ event }: EventCardProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
+export default function EventCard({ event, onOpen }: EventCardProps) {
   const [copied, setCopied] = useState(false);
   const [countdown, setCountdown] = useState(() =>
     getCountdown(event.starts_at, event.ends_at),
@@ -88,18 +89,45 @@ export default function EventCard({ event }: EventCardProps) {
       {/* ─── Main Row ─────────────────────────────────────────────────── */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         {/* Left Section: Thumbnail + Info */}
-        <div className="flex items-start sm:items-center gap-3.5 flex-1 min-w-0">
-          {/* Date Badge / Thumbnail Pill */}
-          <div
-            className={`relative size-16 sm:size-20 rounded-lg shrink-0 overflow-hidden border border-secondary/8 flex flex-col items-center justify-center bg-gradient-to-br ${catStyle.bg} bg-primary/80`}
-          >
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold font-mono tracking-wider text-background bg-secondary shadow-xs uppercase">
-              {monthShort} {dayNumber}
-            </span>
-            <span className="text-[10px] text-secondary/60 mt-1 font-mono">
-              {startDate.getFullYear()}
-            </span>
-          </div>
+        <div className="flex flex-col sm:flex-row items-start gap-4 flex-1 min-w-0">
+          {/* Clickable event poster */}
+          {event.image_url ? (
+            <button
+              type="button"
+              onClick={() => onOpen(event)}
+              className="group relative h-52 w-full shrink-0 overflow-hidden rounded-lg border border-secondary/8 sm:h-36 sm:w-52"
+              aria-label={`Open ${event.title} details`}
+            >
+              <Image
+                src={event.image_url}
+                alt={event.title}
+                fill
+                unoptimized
+                className="object-cover object-top transition-transform duration-300 group-hover:scale-105"
+                sizes="(min-width: 640px) 208px, 100vw"
+              />
+              <div className="absolute inset-x-0 bottom-0 flex items-center justify-between bg-secondary/75 px-3 py-2 text-on-dark">
+                <span className="text-xs font-bold tracking-wide">
+                  {monthShort} {dayNumber}
+                </span>
+                <span className="text-xs font-semibold opacity-0 transition-opacity group-hover:opacity-100">View details</span>
+              </div>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => onOpen(event)}
+              className={`relative h-32 w-full rounded-lg border border-secondary/8 flex flex-col items-center justify-center bg-gradient-to-br ${catStyle.bg} bg-primary/80 sm:h-36 sm:w-52 shrink-0`}
+              aria-label={`Open ${event.title} details`}
+            >
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold font-mono tracking-wider text-background bg-secondary shadow-xs uppercase">
+                {monthShort} {dayNumber}
+              </span>
+              <span className="text-[10px] text-secondary/60 mt-1 font-mono">
+                {startDate.getFullYear()}
+              </span>
+            </button>
+          )}
 
           {/* Event Details */}
           <div className="flex flex-col gap-1.5 min-w-0 flex-1">
@@ -157,6 +185,13 @@ export default function EventCard({ event }: EventCardProps) {
 
             {/* Action Buttons Row */}
             <div className="flex items-center gap-2 pt-1 flex-wrap">
+              <button
+                type="button"
+                onClick={() => onOpen(event)}
+                className="px-3 py-1 text-sm font-semibold rounded-lg bg-secondary text-background hover:bg-secondary/90 transition-colors cursor-pointer"
+              >
+                View details
+              </button>
               {/* Add to Calendar Button */}
               <button
                 type="button"
@@ -221,7 +256,7 @@ export default function EventCard({ event }: EventCardProps) {
           </div>
         </div>
 
-        {/* Right Section: Status Badge + Countdown + Accordion toggle */}
+        {/* Right Section: Status Badge + Countdown */}
         <div className="flex md:flex-col items-center md:items-end justify-between md:justify-center gap-2 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-secondary/10">
           <div className="flex items-center gap-2">
             {/* Published / Status pill */}
@@ -237,58 +272,10 @@ export default function EventCard({ event }: EventCardProps) {
               <span>{event.status === "COMPLETED" ? "Completed" : countdown.text}</span>
             </div>
 
-            {/* Accordion Chevron */}
-            <button
-              type="button"
-              onClick={() => setIsExpanded((prev) => !prev)}
-              className="size-7 rounded-lg border border-secondary/15 bg-primary hover:bg-secondary/10 flex items-center justify-center text-secondary/70 hover:text-secondary transition-colors cursor-pointer"
-              aria-label="Expand event details"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={2}
-                stroke="currentColor"
-                className={`size-3.5 transition-transform duration-200 ${
-                  isExpanded ? "rotate-180" : ""
-                }`}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="m19.5 8.25-7.5 7.5-7.5-7.5"
-                />
-              </svg>
-            </button>
           </div>
         </div>
       </div>
 
-      {/* ─── Expandable Description & Details ──────────────────────────── */}
-      {isExpanded && (
-        <div className="pt-3 border-t border-secondary/10 flex flex-col gap-3 text-sm animate-fadeIn">
-          <div>
-            <span className="font-semibold text-secondary">Description: </span>
-            <p className="text-secondary/70 mt-1 leading-relaxed">
-              {event.description || "No specific details provided."}
-            </p>
-          </div>
-
-          {event.reward_pool && (
-            <div className="flex items-center gap-2 p-2.5 rounded-xl bg-accent/10 border border-accent/20">
-              <span className="text-base">🏆</span>
-              <span className="font-semibold text-accent">Reward Pool:</span>
-              <span className="text-secondary font-mono">{event.reward_pool}</span>
-            </div>
-          )}
-
-          <div className="flex items-center justify-between text-[11px] text-secondary/50 font-mono pt-1">
-            <span>Event ID: {event.id.slice(0, 8)}...</span>
-            <span>Starts: {new Date(event.starts_at).toUTCString()}</span>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

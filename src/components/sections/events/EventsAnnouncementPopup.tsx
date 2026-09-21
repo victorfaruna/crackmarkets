@@ -85,7 +85,7 @@ export default function EventsAnnouncementPopup() {
             onClick={handleClose}
             className="flex-1 py-2.5 rounded-xl text-sm font-bold bg-shell-accent text-shell-background hover:opacity-90 transition-opacity cursor-pointer font-inter shadow-md"
           >
-            I'm Interested 🏆
+            I&apos;m Interested 🏆
           </button>
         </div>
       </div>

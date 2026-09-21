@@ -14,6 +14,7 @@ export interface EventItem {
   category: EventCategory;
   description: string;
   reward_pool: string | null;
+  image_url: string | null;
   location: string;
   starts_at: string;
   ends_at: string | null;

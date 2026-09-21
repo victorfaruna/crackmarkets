@@ -88,6 +88,7 @@ export async function GET(request: NextRequest) {
         category: events.category,
         description: events.description,
         reward_pool: events.rewardPool,
+        image_url: events.imageUrl,
         location: events.location,
         starts_at: events.startsAt,
         ends_at: events.endsAt,
