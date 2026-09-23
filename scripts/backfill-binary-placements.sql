@@ -1,16 +1,6 @@
-CREATE TABLE "binary_placements" (
-	"user_id" uuid PRIMARY KEY NOT NULL,
-	"parent_user_id" uuid NOT NULL,
-	"side" varchar(5) NOT NULL,
-	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
-	CONSTRAINT "binary_placements_side_check" CHECK ("binary_placements"."side" in ('LEFT', 'RIGHT')),
-	CONSTRAINT "binary_placements_no_self_parent" CHECK ("binary_placements"."user_id" <> "binary_placements"."parent_user_id")
-);
---> statement-breakpoint
-ALTER TABLE "binary_placements" ADD CONSTRAINT "binary_placements_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "binary_placements" ADD CONSTRAINT "binary_placements_parent_user_id_users_id_fk" FOREIGN KEY ("parent_user_id") REFERENCES "public"."users"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-CREATE UNIQUE INDEX "binary_placements_parent_side_unique" ON "binary_placements" USING btree ("parent_user_id","side");--> statement-breakpoint
-CREATE INDEX "binary_placements_parent_idx" ON "binary_placements" USING btree ("parent_user_id");--> statement-breakpoint
+-- One-time repair for referred users without a binary placement.
+-- Keep every sponsored member inside their sponsor's placement branch.
+-- The DO statement is atomic and shares the registration advisory lock.
 DO $$
 DECLARE
   candidate record;

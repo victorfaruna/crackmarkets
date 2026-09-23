@@ -156,34 +156,18 @@ export async function POST(request: NextRequest) {
       });
 
       // Sponsorship drives commissions; binary placement drives the display.
-      // Serialize placement so concurrent signups cannot take the same slot.
+      // Fill the first vacancy beneath this sponsor so every direct referral
+      // remains visible in the sponsor's branch. Serialize concurrent signups.
       if (referrerId) {
         await tx.execute(sql`select pg_advisory_xact_lock(7461930)`);
-
-        const [root] = await tx.execute<{ id: string }>(sql`
-          with recursive sponsor_chain as (
-            select id, referred_by_id, array[id] as visited
-            from users where id = ${referrerId}
-            union all
-            select parent.id, parent.referred_by_id,
-              sponsor_chain.visited || parent.id
-            from users parent
-            join sponsor_chain on sponsor_chain.referred_by_id = parent.id
-            where not parent.id = any(sponsor_chain.visited)
-          )
-          select id from sponsor_chain
-          where referred_by_id is null
-          limit 1
-        `);
-        if (!root) throw new Error("Referral root could not be found");
 
         const [position] = await tx.execute<{
           parent_user_id: string;
           side: "LEFT" | "RIGHT";
         }>(sql`
           with recursive subtree as (
-            select ${root.id}::uuid as user_id, ''::text as path,
-              0::integer as depth, array[${root.id}::uuid] as visited
+            select ${referrerId}::uuid as user_id, ''::text as path,
+              0::integer as depth, array[${referrerId}::uuid] as visited
             union all
             select child.user_id,
               subtree.path || case child.side when 'LEFT' then '0' else '1' end,
