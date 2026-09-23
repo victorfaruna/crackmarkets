@@ -3,7 +3,8 @@ import { getSessionFromRequest } from "@/src/lib/auth/session";
 import { db } from "@/src/lib/db";
 import { users } from "@/src/lib/db/schema";
 import { getReferralLineage } from "@/src/lib/referrals/lineage";
-import { inArray } from "drizzle-orm";
+import type { BinaryPlacementMember } from "@/src/lib/referrals/binary-tree";
+import { eq, inArray, sql } from "drizzle-orm";
 
 export interface NetworkMemberDTO {
   id: string;
@@ -27,6 +28,7 @@ export interface NetworkSummaryResponse {
   totalDirects: number;
   totalIndirects: number;
   members: NetworkMemberDTO[];
+  binaryMembers: BinaryPlacementMember[];
 }
 
 export async function GET(request: NextRequest) {
@@ -40,6 +42,18 @@ export async function GET(request: NextRequest) {
           message: "Unauthenticated",
         },
         { status: 401 },
+      );
+    }
+
+    const [currentUser] = await db
+      .select({ status: users.status })
+      .from(users)
+      .where(eq(users.id, session.userId))
+      .limit(1);
+    if (!currentUser || currentUser.status !== "ACTIVE") {
+      return NextResponse.json(
+        { success: false, message: "User account is not active." },
+        { status: 403 },
       );
     }
 
@@ -115,6 +129,43 @@ export async function GET(request: NextRequest) {
     const totalIndirects = members.filter((m) => m.level > 1).length;
     const activeCount = members.filter((m) => m.status === "ACTIVE").length;
 
+    const placementRows = await db.execute<{
+      user_id: string;
+      parent_user_id: string;
+      side: "LEFT" | "RIGHT";
+      depth: number;
+      first_name: string;
+      last_name: string;
+    }>(sql`
+      with recursive placement_tree as (
+        select placement.user_id, placement.parent_user_id, placement.side,
+          1::integer as depth,
+          array[${session.userId}::uuid, placement.user_id] as visited
+        from binary_placements placement
+        where placement.parent_user_id = ${session.userId}
+        union all
+        select child.user_id, child.parent_user_id, child.side,
+          placement_tree.depth + 1,
+          placement_tree.visited || child.user_id
+        from binary_placements child
+        join placement_tree on child.parent_user_id = placement_tree.user_id
+        where not child.user_id = any(placement_tree.visited)
+      )
+      select placement_tree.user_id, placement_tree.parent_user_id,
+        placement_tree.side, placement_tree.depth,
+        member.first_name, member.last_name
+      from placement_tree
+      join users member on member.id = placement_tree.user_id
+      order by placement_tree.depth, placement_tree.parent_user_id, placement_tree.side
+    `);
+    const binaryMembers: BinaryPlacementMember[] = Array.from(placementRows, (row) => ({
+      id: row.user_id,
+      parentId: row.parent_user_id,
+      side: row.side,
+      level: row.depth,
+      name: `${row.first_name} ${row.last_name.charAt(0)}.`.trim(),
+    }));
+
     return NextResponse.json(
       {
         success: true,
@@ -124,6 +175,7 @@ export async function GET(request: NextRequest) {
           totalDirects,
           totalIndirects,
           members,
+          binaryMembers,
         },
       },
       { status: 200 },

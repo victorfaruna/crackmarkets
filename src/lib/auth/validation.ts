@@ -31,6 +31,7 @@ export const registerSchema = z.object({
 export const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(1, "Password is required"),
+  remember_me: z.boolean().default(true),
   turnstile_token: turnstileToken,
 }).strict();
 

@@ -37,13 +37,13 @@ export default function DashboardPage() {
   const defaultInitialData = {
     currency: {
       name: "USDT",
-      logoUrl: "/images/stablecoins/usdt.png",
+      logoUrl: "/images/stablecoins/usdt.svg",
       fiatSign: "$",
     },
   };
 
   return (
-    <section className="w-full h-full overflow-y-auto pt-5 px-5 pb-16 flex flex-col gap-4">
+    <section className="w-full h-full overflow-y-auto pt-5 px-3 pb-16 flex flex-col gap-4 sm:px-5">
       {/* Main Dashboard Grid */}
       <div className="grid w-full max-w-320 grid-cols-1 md:grid-cols-2 xl:grid-cols-3 cxl:grid-cols-3 gap-4 mt-0">
         {/* Top Row (Three Top Cards) */}

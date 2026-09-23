@@ -4,6 +4,7 @@ import {
   users,
   wallets,
   referralNodes,
+  binaryPlacements,
   auditLogs,
 } from "@/src/lib/db/schema";
 import { registerSchema } from "@/src/lib/auth/validation";
@@ -153,6 +154,63 @@ export async function POST(request: NextRequest) {
         totalWithdrawn: "0.0000",
         lifetimeEarnings: "0.0000",
       });
+
+      // Sponsorship drives commissions; binary placement drives the display.
+      // Serialize placement so concurrent signups cannot take the same slot.
+      if (referrerId) {
+        await tx.execute(sql`select pg_advisory_xact_lock(7461930)`);
+
+        const [root] = await tx.execute<{ id: string }>(sql`
+          with recursive sponsor_chain as (
+            select id, referred_by_id, array[id] as visited
+            from users where id = ${referrerId}
+            union all
+            select parent.id, parent.referred_by_id,
+              sponsor_chain.visited || parent.id
+            from users parent
+            join sponsor_chain on sponsor_chain.referred_by_id = parent.id
+            where not parent.id = any(sponsor_chain.visited)
+          )
+          select id from sponsor_chain
+          where referred_by_id is null
+          limit 1
+        `);
+        if (!root) throw new Error("Referral root could not be found");
+
+        const [position] = await tx.execute<{
+          parent_user_id: string;
+          side: "LEFT" | "RIGHT";
+        }>(sql`
+          with recursive subtree as (
+            select ${root.id}::uuid as user_id, ''::text as path,
+              0::integer as depth, array[${root.id}::uuid] as visited
+            union all
+            select child.user_id,
+              subtree.path || case child.side when 'LEFT' then '0' else '1' end,
+              subtree.depth + 1, subtree.visited || child.user_id
+            from binary_placements child
+            join subtree on child.parent_user_id = subtree.user_id
+            where not child.user_id = any(subtree.visited)
+          )
+          select subtree.user_id as parent_user_id,
+            case when left_slot.user_id is null then 'LEFT' else 'RIGHT' end as side
+          from subtree
+          left join binary_placements left_slot
+            on left_slot.parent_user_id = subtree.user_id and left_slot.side = 'LEFT'
+          left join binary_placements right_slot
+            on right_slot.parent_user_id = subtree.user_id and right_slot.side = 'RIGHT'
+          where left_slot.user_id is null or right_slot.user_id is null
+          order by subtree.depth, subtree.path
+          limit 1
+        `);
+        if (!position) throw new Error("No binary position available");
+
+        await tx.insert(binaryPlacements).values({
+          userId: insertedUser.id,
+          parentUserId: position.parent_user_id,
+          side: position.side,
+        });
+      }
 
       // 4c. Build the closure links from direct parent pointers, not legacy
       // closure rows that may have been imported with incorrect depths.

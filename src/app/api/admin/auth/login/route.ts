@@ -9,8 +9,8 @@ import { setAdminAuthCookies } from "@/src/lib/auth/admin-cookies";
 import {
   generateRandomToken,
   hashToken,
-  REFRESH_TOKEN_MAX_AGE_SECONDS,
 } from "@/src/lib/auth/jwt";
+import { ADMIN_REFRESH_TOKEN_MAX_AGE_SECONDS } from "@/src/lib/auth/refresh-duration";
 import { checkRateLimit } from "@/src/lib/security/rateLimit";
 import { getRequestMetadata } from "@/src/lib/security/request";
 import { verifyTurnstile } from "@/src/lib/security/turnstile";
@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
         tokenHash: hashToken(rawRefreshToken),
         userAgent,
         ipAddress,
-        expiresAt: new Date(Date.now() + REFRESH_TOKEN_MAX_AGE_SECONDS * 1000),
+        expiresAt: new Date(Date.now() + ADMIN_REFRESH_TOKEN_MAX_AGE_SECONDS * 1000),
       });
       await tx.insert(auditLogs).values({
         userId: admin.id,

@@ -184,7 +184,7 @@ export default function EventCalendarWidget({
   return (
     <div className="w-full rounded-lg border border-secondary/6 bg-primary/40 p-5 sm:p-6 flex flex-col gap-4 shadow-2xs">
       {/* ─── Top Month Header ────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <button
           type="button"
           onClick={handleToday}
@@ -193,7 +193,7 @@ export default function EventCalendarWidget({
           Today
         </button>
 
-        <div className="flex items-center gap-1.5">
+        <div className="flex w-full items-center justify-between gap-1.5 sm:w-auto">
           <button
             type="button"
             onClick={handlePrevMonth}
@@ -216,7 +216,7 @@ export default function EventCalendarWidget({
             </svg>
           </button>
 
-          <span className="font-inter font-semibold text-secondary text-sm sm:text-base px-2 select-none min-w-[130px] text-center">
+          <span className="min-w-0 px-2 text-center font-inter text-sm font-semibold text-secondary select-none sm:min-w-32.5 sm:text-base">
             {MONTH_NAMES[month]} {year}
           </span>
 

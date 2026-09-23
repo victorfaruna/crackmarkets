@@ -24,17 +24,18 @@
 - **Access Token (JWT)**:
   - Expiry: 15 minutes (`15m`).
   - Algorithm: `HS256`.
-  - Stored in: HTTP-only cookie `access_token` and returned in API response.
+  - Stored in: HTTP-only cookie `access_token`; not returned in API responses.
   - Payload: `{ userId, email, role, status, kycStatus, fundingStatus, iat, exp }`.
 - **Refresh Token (Opaque Hash)**:
-  - Expiry: 7 days.
-  - Generated as a 48-byte cryptographically secure random string.
+  - Customer expiry: 14 inactive days when “Remember this device” is checked (the login default). When unchecked, the cookies last for the browser session and the refresh token has a 7-day server expiry. Active sessions extend on rotation.
+  - Administrator expiry: 7 days on the separate admin cookie pair.
+  - Generated from 48 cryptographically secure random bytes, with a `session_` prefix for browser-session customer tokens.
   - Stored in: Database table `refresh_tokens` as a SHA-256 hash (`token_hash`).
   - Stored in browser as: HTTP-only, `SameSite=Lax`, secure cookie `refresh_token`.
   - **Rotation Policy**: Every call to `/api/auth/refresh` immediately revokes the consumed refresh token (`revoked_at = NOW()`) and issues a brand-new refresh token pair.
 
-### Proactive Middleware Refresh
-- Next.js middleware in `src/middleware.ts` intercepts requests:
+### Proactive Proxy Refresh
+- Next.js proxy in `src/proxy.ts` intercepts requests:
   - If `access_token` is missing or expired, but `refresh_token` exists, it calls `/api/auth/refresh` behind the scenes and attaches the updated cookies to both the browser response and downstream SSR request headers.
 
 ---
@@ -96,6 +97,12 @@ All database operations use Drizzle ORM configured with PostgreSQL (`src/lib/db/
   - `descendant_id`: UUID (FK -> `users.id`)
   - `depth`: Integer (1 to 10)
 
+- **`binary_placements`** (Separate Display Tree):
+  - `user_id`: UUID (one position per referred user)
+  - `parent_user_id`: UUID (the position above)
+  - `side`: `LEFT` or `RIGHT`, unique with `parent_user_id`
+  - The placement tree fills breadth first and does not replace `users.referred_by_id` for commission attribution.
+
 - **`wallets`**:
   - `id`: UUID (Primary Key)
   - `user_id`: UUID (FK -> `users.id`, Unique)
@@ -146,4 +153,5 @@ interface ApiResponse<T = unknown> {
 2. **Never Return Sensitive Data**: Never include `password_hash`, `token_hash`, or internal secrets in API responses.
 3. **HTTP-Only Cookies**: Tokens stored in cookies must always use `httpOnly: true`, `sameSite: "lax"`, and `secure: process.env.NODE_ENV === "production"`.
 4. **Referral Attribution Atomicity**: When a user registers with a referral code, the direct link and all ancestor links up to depth 10 must be recorded atomically within the registration database transaction.
-5. **Session Revocation on Password Reset**: When a user successfully resets their password, all existing refresh tokens for that user MUST be revoked immediately.
+5. **Binary Placement Atomicity**: Assign the first open Left/Right position within the sponsorship root's tree in the same transaction, while preserving the sponsor link separately.
+6. **Session Revocation on Password Reset**: When a user successfully resets their password, all existing refresh tokens for that user MUST be revoked immediately.

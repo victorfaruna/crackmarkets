@@ -7,8 +7,11 @@ import {
   signAccessToken,
   generateRandomToken,
   hashToken,
-  REFRESH_TOKEN_MAX_AGE_SECONDS,
 } from "@/src/lib/auth/jwt";
+import {
+  createCustomerRefreshToken,
+  customerRefreshTokenMaxAgeSeconds,
+} from "@/src/lib/auth/refresh-duration";
 import { setAuthCookies } from "@/src/lib/auth/cookies";
 import { eq } from "drizzle-orm";
 import { checkRateLimit } from "@/src/lib/security/rateLimit";
@@ -45,7 +48,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { email, password, turnstile_token } = validationResult.data;
+    const { email, password, turnstile_token, remember_me } = validationResult.data;
     if (!(await verifyTurnstile(turnstile_token, ipAddress))) {
       return NextResponse.json(
         { success: false, message: "Bot verification failed. Please try again." },
@@ -114,10 +117,13 @@ export async function POST(request: NextRequest) {
     }
 
     // 4. Generate new refresh token
-    const rawRefreshToken = generateRandomToken();
+    const rawRefreshToken = createCustomerRefreshToken(
+      generateRandomToken(),
+      remember_me,
+    );
     const hashedRefreshToken = hashToken(rawRefreshToken);
     const refreshTokenExpiresAt = new Date(
-      Date.now() + REFRESH_TOKEN_MAX_AGE_SECONDS * 1000,
+      Date.now() + customerRefreshTokenMaxAgeSeconds(rawRefreshToken) * 1000,
     );
 
     await db.insert(refreshTokens).values({

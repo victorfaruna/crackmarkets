@@ -165,10 +165,11 @@ export const PartnerReferralCard: React.FC = () => {
       </div>
 
       {/* Dark Partner Identity Sub-card */}
-      <div className="w-full rounded-2xl p-2 flex items-start gap-4 text-secondary ">
+      <div className="w-full rounded-2xl p-2 flex flex-col items-start gap-4 text-secondary sm:flex-row">
         {/* QR Code with custom logo center */}
-        <div className="relative shrink-0 p-4 bg-background rounded-xl shadow-sm flex items-center justify-center">
+        <div className="relative max-w-full shrink-0 self-center p-4 bg-background rounded-xl shadow-sm flex items-center justify-center sm:self-auto">
           <QRCodeSVG
+            className="h-auto max-w-full"
             value={referralLink}
             size={200}
             level="L"
@@ -184,7 +185,7 @@ export const PartnerReferralCard: React.FC = () => {
         </div>
 
         {/* User Identity Details from Server */}
-        <div className="flex flex-col justify-center gap-1.5 min-w-0 p-2">
+        <div className="flex w-full min-w-0 flex-col justify-center gap-1.5 p-2 sm:w-auto">
           <h3 className="text-xl font-medium text-secondary tracking-tight truncate leading-tight">
             {fullName}
           </h3>

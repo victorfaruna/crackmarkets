@@ -143,7 +143,7 @@ const UserInfo = () => {
   return (
     <div
       id="org-switcher-dropdown"
-      className="absolute text-secondary top-full right-3 mt-1 w-75 bg-background border border-subtext/30 rounded-xl z-50 animate-fade-in shadow-2xl shadow-base-300 overflow-hidden"
+      className="absolute text-secondary top-full right-3 mt-1 w-75 max-w-[calc(100vw-1.5rem)] bg-background border border-subtext/30 rounded-xl z-50 animate-fade-in shadow-2xl shadow-base-300 overflow-hidden"
     >
       <div className="p-4 border-b border-subtext/30 font-medium flex items-center justify-between">
         <div>

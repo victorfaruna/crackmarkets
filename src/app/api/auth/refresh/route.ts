@@ -5,8 +5,12 @@ import {
   signAccessToken,
   generateRandomToken,
   hashToken,
-  REFRESH_TOKEN_MAX_AGE_SECONDS,
 } from "@/src/lib/auth/jwt";
+import {
+  createCustomerRefreshToken,
+  customerRefreshTokenMaxAgeSeconds,
+  isBrowserSessionToken,
+} from "@/src/lib/auth/refresh-duration";
 import { setAuthCookies, REFRESH_COOKIE_NAME } from "@/src/lib/auth/cookies";
 import { eq, and, isNull, gt } from "drizzle-orm";
 
@@ -69,10 +73,13 @@ export async function POST(request: NextRequest) {
     }
 
     // 4. Token Rotation: revoke and replace atomically.
-    const newRawRefreshToken = generateRandomToken();
+    const newRawRefreshToken = createCustomerRefreshToken(
+      generateRandomToken(),
+      !isBrowserSessionToken(rawRefreshToken),
+    );
     const newHashedRefreshToken = hashToken(newRawRefreshToken);
     const newExpiresAt = new Date(
-      Date.now() + REFRESH_TOKEN_MAX_AGE_SECONDS * 1000,
+      Date.now() + customerRefreshTokenMaxAgeSeconds(newRawRefreshToken) * 1000,
     );
 
     const ipAddress =

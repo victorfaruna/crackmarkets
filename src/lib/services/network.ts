@@ -1,5 +1,6 @@
 import api from "./api";
 import { AuthResponse } from "./auth";
+import type { BinaryPlacementMember } from "../referrals/binary-tree";
 
 export interface NetworkMemberDTO {
   id: string;
@@ -25,6 +26,7 @@ export interface NetworkSummaryResponse {
   totalDirects: number;
   totalIndirects: number;
   members: NetworkMemberDTO[];
+  binaryMembers: BinaryPlacementMember[];
 }
 
 export const getNetworkSummary = async (): Promise<

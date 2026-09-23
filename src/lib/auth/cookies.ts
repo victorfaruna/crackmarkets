@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
+import { ACCESS_TOKEN_MAX_AGE_SECONDS } from "./jwt";
 import {
-  ACCESS_TOKEN_MAX_AGE_SECONDS,
-  REFRESH_TOKEN_MAX_AGE_SECONDS,
-} from "./jwt";
+  CUSTOMER_REFRESH_TOKEN_MAX_AGE_SECONDS,
+  isBrowserSessionToken,
+} from "./refresh-duration";
 
 export const ACCESS_COOKIE_NAME = "access_token";
 export const REFRESH_COOKIE_NAME = "refresh_token";
@@ -17,6 +18,7 @@ export function setAuthCookies(
   accessToken: string,
   refreshToken?: string,
 ): NextResponse {
+  const browserSession = refreshToken ? isBrowserSessionToken(refreshToken) : false;
   response.cookies.set({
     name: ACCESS_COOKIE_NAME,
     value: accessToken,
@@ -24,7 +26,7 @@ export function setAuthCookies(
     secure: isProduction,
     sameSite: "lax",
     path: "/",
-    maxAge: ACCESS_TOKEN_MAX_AGE_SECONDS,
+    ...(browserSession ? {} : { maxAge: ACCESS_TOKEN_MAX_AGE_SECONDS }),
   });
 
   if (refreshToken) {
@@ -35,7 +37,7 @@ export function setAuthCookies(
       secure: isProduction,
       sameSite: "lax",
       path: "/",
-      maxAge: REFRESH_TOKEN_MAX_AGE_SECONDS,
+      ...(browserSession ? {} : { maxAge: CUSTOMER_REFRESH_TOKEN_MAX_AGE_SECONDS }),
     });
   }
 

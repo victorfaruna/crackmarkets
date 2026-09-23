@@ -42,6 +42,33 @@ export const referralNodes = pgTable(
   ],
 );
 
+// Placement is separate from sponsorship: a sponsor may refer more than two
+// people, while each position in the display tree has only Left and Right.
+export const binaryPlacements = pgTable(
+  "binary_placements",
+  {
+    userId: uuid("user_id")
+      .primaryKey()
+      .references(() => users.id, { onDelete: "cascade" }),
+    parentUserId: uuid("parent_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    side: varchar("side", { length: 5 }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("binary_placements_parent_side_unique").on(
+      table.parentUserId,
+      table.side,
+    ),
+    index("binary_placements_parent_idx").on(table.parentUserId),
+    check("binary_placements_side_check", sql`${table.side} in ('LEFT', 'RIGHT')`),
+    check("binary_placements_no_self_parent", sql`${table.userId} <> ${table.parentUserId}`),
+  ],
+);
+
 export const wallets = pgTable(
   "wallets",
   {
@@ -166,6 +193,7 @@ export const referralImpressionsRelations = relations(
 );
 
 export type ReferralNode = typeof referralNodes.$inferSelect;
+export type BinaryPlacement = typeof binaryPlacements.$inferSelect;
 export type Wallet = typeof wallets.$inferSelect;
 export type Transaction = typeof transactions.$inferSelect;
 export type ReferralImpression = typeof referralImpressions.$inferSelect;

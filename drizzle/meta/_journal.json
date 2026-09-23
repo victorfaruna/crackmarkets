@@ -15,6 +15,13 @@
       "when": 1789630106104,
       "tag": "0001_medical_centennial",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790118756286,
+      "tag": "0002_faithful_metal_master",
+      "breakpoints": true
     }
   ]
 }

@@ -25,7 +25,7 @@ const TotalBalanceCard = ({ initialData }: TotalBalanceCardProps) => {
 
   const currencyName = initialData?.currency?.name || "USDT";
   const currencyUrl =
-    initialData?.currency?.logoUrl || "/images/stablecoins/usdt.png";
+    initialData?.currency?.logoUrl || "/images/stablecoins/usdt.svg";
   const fiatSign = initialData?.currency?.fiatSign || "$";
 
   const formatted = formatCurrency(numBalance, 2);

@@ -14,6 +14,8 @@ Welcome to **Trackmarkets**. This document is the single source of truth for the
 - **Core Principle**: Broker data is the source of truth for deposits, trades, lots, and trading volume. The platform database is the source of truth for referral relationships, commission calculations, qualifications, wallets, withdrawals, and rewards.
 - **Calculation Boundary**: `src/lib/commissions/calculations.ts` contains pure, four-decimal fixed-point rules for 10-level profit share and lot rebates, strong-leg qualification, and volume-ladder tiers. It does not credit wallets or generate trading data. Commission posting requires an authoritative verified broker event and a separate idempotent ledger workflow, which is not yet integrated.
 - **Referral Lineage Model**: `users.referred_by_id` is the authoritative direct-parent relationship. Registration creates its 10-level closure links from this parent chain; network, overview, and impression counts traverse it through `src/lib/referrals/lineage.ts`. Legacy `referral_nodes` rows may be stale and must be reconciled before a commission-posting workflow uses them.
+- **Binary Placement Model**: `binary_placements` is a separate presentation hierarchy; it never changes `users.referred_by_id` or commission levels. Each non-root user occupies one Left or Right position, and a unique `(parent_user_id, side)` index limits every position to two children. Registration finds the referrer's sponsorship root, locks placement allocation, and fills the earliest open slot breadth first (Left before Right). Referrals without a code start a new tree. Migration `0002` assigns existing referred users stable positions in registration order within each sponsorship root's tree. A user's placement descendants can differ from their sponsored referral descendants.
+- **Binary Migration Gate**: Apply `drizzle/0002_faithful_metal_master.sql` through `yarn db:migrate` before deploying the binary placement registration and network endpoints. The migration backfills existing positions and fails if referral parent cycles prevent a complete assignment; it is never run from a request.
 - **Legacy Data Repair**: Reviewed one-time scripts in `scripts/repair-referral-lineage.sql` and `scripts/backfill-wallets.sql` reconcile stale closure rows and create missing zero-balance wallets. They are not run automatically on requests or deployment.
 
 ---
@@ -68,6 +70,8 @@ ACCOUNT ACTIVATED (email verification temporarily disabled)
        ↓
 REFERRAL LINK GENERATED (10-Level Tree)
        ↓
+BINARY TREE STARTED OR POSITION ASSIGNED (Left / Right, breadth first)
+       ↓
 KYC SUBMISSION
        ↓
 KYC APPROVED?
@@ -103,11 +107,11 @@ BONUS 2: LOT DISTRIBUTION ($2.00 L1–L3 down to $0.50 L10)
 - **Registration Fields**: `first_name`, `last_name`, `email`, `phone_number`, `country`, `password`, `referral_code` (optional).
 - **Initial User State**: `status = "ACTIVE"`, `kyc_status = "NOT_SUBMITTED"`, `funding_status = "LOCKED"`. Email verification is temporarily disabled; existing `EMAIL_VERIFICATION_PENDING` accounts are activated after a valid password login.
 - **KYC Statuses**: `NOT_SUBMITTED`, `PENDING`, `APPROVED`, `REJECTED`.
-- **Trading & Funding Gate**: A user receives their referral code at registration, but trading and funding remain locked until KYC status is `APPROVED`.
+- **Trading & Funding Gate**: A user receives their referral code at registration, but trading and funding remain locked until KYC status is `APPROVED`. A valid referral code records the sponsor and assigns the next available binary position atomically; no referral code starts a new binary root.
 
 ---
 
-## 6. 10-Level Referral Tree & Commission Structure
+## 6. 10-Level Referral Lineage & Commission Structure
 
 ### Bonus 1 — Team Referral Profit
 Calculated on trading profit generated across 10 levels:
@@ -157,6 +161,7 @@ Calculated per traded lot generated across the organization:
   - `password_reset_tokens`: `id`, `user_id`, `token_hash` (unique), `expires_at`, `used_at`, `created_at`.
   - `audit_logs`: `id`, `user_id`, `action`, `ip_address`, `user_agent`, `details` (jsonb), `created_at`.
   - `referral_nodes`: Lineage closure table (`ancestor_id`, `descendant_id`, `depth` 1–10) created atomically upon registration.
+  - `binary_placements`: Separate visual tree (`user_id`, `parent_user_id`, `side` Left/Right). One row per referred user, unique parent/side, no row for an unreferenced root. It does not determine commission attribution.
   - `wallets`: `id`, `user_id` (unique), `balance`, `available_balance`, `total_withdrawn`, `lifetime_earnings`.
   - `transactions`: `id`, `user_id`, `source_user_id`, `amount`, `transaction_type`, `reference_id`, `level`, `status`, `idempotency_key`, `metadata`, `created_at`.
   - `api_rate_limits`: database-backed fixed-window counters for public authentication and referral-impression endpoints.
@@ -167,11 +172,13 @@ Calculated per traded lot generated across the organization:
 ## 8. Authentication & Next.js API Routes
 
 - **Login & Signup Presentation**: `/login` and `/register` share `AuthEntryLayout`, a responsive two-column screen with the generated decorative bull-and-phone hero and supporting copy on the left and a constrained account form on the right. Existing credential validation, referral attribution, country selection, risk acknowledgments, and Turnstile behavior are retained. Recovery and verification pages continue to use `AuthLayout`.
-- **Session Strategy**: Dual-token architecture with HTTP-only cookies (`access_token` 15m JWT + `refresh_token` 7d rotated hash).
-- **Admin Session Strategy**: `/admin` uses an isolated admin-scoped JWT and cookie pair (`admin_access_token` + `admin_refresh_token`). Admin login accepts only active `ADMIN` users, rotates persisted refresh tokens, and never reuses the customer dashboard session.
-- **Proactive Middleware**: `src/middleware.ts` seamlessly refreshes tokens when expired using `/api/auth/refresh`.
+- **Terms of Service**: `/terms` is a public, section-indexed page showing the user-supplied 40-section Terms of Service and risk notice. Registration links to it without adding a new consent gate; the supplied contact placeholders remain until official details are provided.
+- **Customer Landing**: Successful customer login always opens `/dashboard/profile`, whether or not a RoboForex account is linked. Authenticated customers revisiting public auth pages, `/`, or `/onboard` also land on the profile. Administrator authentication continues to open `/admin`.
+- **Session Strategy**: Dual-token architecture with HTTP-only cookies. Customer access JWTs last 15 minutes. Customer refresh tokens rotate on use and last 14 inactive days when “Remember this device” is checked (the login default). Unchecking it issues browser-session cookies backed by a rotating refresh token with a 7-day server expiry. Existing unprefixed customer refresh tokens adopt the 14-day policy on rotation; logout and revocation still end sessions. The refresh token's `session_` prefix preserves the browser-session choice across rotations and is validated through the stored SHA-256 hash.
+- **Admin Session Strategy**: `/admin` uses an isolated admin-scoped JWT and cookie pair (`admin_access_token` + `admin_refresh_token`). Admin login accepts only active `ADMIN` users, rotates persisted refresh tokens on a separate 7-day policy, and never reuses the customer dashboard session.
+- **Proactive Proxy**: `src/proxy.ts` refreshes expired customer tokens using `/api/auth/refresh` and forwards rotated cookies when redirecting authenticated customers from public auth pages to their profile.
 - **API Route Endpoints (`src/app/api/auth/`)**:
-  - `POST /api/auth/register`: Immediate account activation, wallet initialization, and 10-level tree attribution from an active referrer's direct-parent chain while email verification is disabled.
+  - `POST /api/auth/register`: Immediate account activation, wallet initialization, 10-level sponsorship attribution, and atomic Left/Right placement under the referrer's root while email verification is disabled.
   - `POST /api/auth/login`: Credential validation, refresh token storage, HTTP-only cookie attachment.
   - `POST /api/auth/refresh`: Token rotation (revokes old token, issues new pair).
   - `POST /api/auth/logout`: Revokes active refresh token and clears cookies.
@@ -182,7 +189,7 @@ Calculated per traded lot generated across the organization:
   - `GET /api/wallet/transactions`: Query user transactions with category, status, and search filters.
   - `POST /api/wallet/withdraw`: Validate account/KYC/funding/broker state, serialize retries by idempotency key, atomically reserve available balance once, and create a `PENDING` withdrawal request. Completion requires a separately verified payout integration.
   - `GET /api/commissions`: Read completed ledger credits only, filter by trailing week, selected UTC month, or all time; classify leadership rewards by metadata when available, leaving unknown categories unclassified.
-  - `GET /api/network`: Traverse direct-parent relationships to return the full 10-level lineage and exact direct and indirect counts without a 100-member truncation.
+  - `GET /api/network`: Traverse direct-parent relationships to return the full 10-level referral lineage and exact direct and indirect counts without a 100-member truncation. Separately return the authenticated user's binary placement descendants with only the minimal names and position metadata needed for the tree; never synthesize trading volume.
   - `GET /api/events`, `GET /api/events/:id`: Return date-derived event status so stale stored `UPCOMING` flags do not present completed events as live. Date and month filters use half-open ranges adjusted by the client's UTC offset, and include events overlapping the chosen period.
   - `POST /api/admin/auth/login`, `POST /api/admin/auth/refresh`, `POST /api/admin/auth/logout`: Isolated administrator authentication with stricter login rate limiting and audited session activity.
   - `PATCH /api/admin/users/:id`: Admin-only, strictly validated role (`USER`/`SUPPORT`), account, KYC, and funding state changes. Funding unlocks require approved KYC, moving KYC out of approved automatically locks funding, suspensions revoke active sessions, and every change is audited.
@@ -202,6 +209,8 @@ Calculated per traded lot generated across the organization:
 ## 9. Dashboard Views & Architecture
 
 The Trackmarkets Dashboard uses a collapsible drawer with grouped navigation sections:
+
+On screens below the `lg` breakpoint, the existing drawer opens over the page from the header menu button. It closes after selecting a link, tapping the backdrop, pressing Escape, or resizing to desktop width. At `lg` and above, the drawer remains in its desktop position.
 
 **Drawer Structure:**
 ```
@@ -234,7 +243,7 @@ Events                     /dashboard/events           (flat, gated by RoboForex
 3. **10-Level Network Lineage System (`/dashboard/network`)**:
    - **Overview Metrics**: Real-time counter cards for Direct Affiliates (Level 1: 5%), Indirect Affiliates (Levels 2–10), and Total Organization.
    - **System View Tabs**:
-     - **Lineage Tree**: Clean visual hierarchy connecting root user to direct referrals and downlines with expandable child nodes.
+   - **Binary Tree**: Root user at Level 0, two Left/Right positions per occupied node, and breadth-first levels of 1, 2, 4, 8, and onward. The tree uses persisted binary placement data and renders cards and connectors only for occupied positions. Each square card shows the member name, side, immediate direct count, and all deeper indirect descendants; users can focus a branch to explore deeper levels. The tree is a pannable and zoomable canvas on desktop and mobile, with drag, wheel or pinch zoom, and zoom, fit, and reset controls. Broker volume is omitted until authoritative data exists. The Direct Referrals and Total Network tabs still use the separate sponsorship lineage for 10-level commission tiers.
      - **Directs (L1)**: Filtered table focusing strictly on Level 1 direct affiliates with 5% profit share, status, and joined dates.
      - **Total Network**: Full 10-level searchable member directory with multi-tier filter pills (`All`, `Level 1` through `Level 10`).
      - **Tier Breakdown**: Summary grid of all 10 commission tiers (percentages, lot bonuses, and member counts).
@@ -253,9 +262,9 @@ Events                     /dashboard/events           (flat, gated by RoboForex
 8. **Trader Settings (`/dashboard/settings`)**: Profile summary, password change, and security settings.
 
 9. **Trader Profile (`/dashboard/profile`)**:
-   - **Personal Information Card**: Dynamic profile avatar, full name, account badges (Partner, Referral ID, RoboForex ID, Joined date, Referrer status), contact & identity grid (Birthday, Email, Phone, Telegram, Country, Living Address), and interactive privacy & notification switches.
+   - **Personal Information Card**: Dynamic profile avatar with an inline icon fallback when the avatar service is unavailable, full name, account badges (Partner, Referral ID, RoboForex ID, Joined date, Referrer status), contact & identity grid (Birthday, Email, Phone, Telegram, Country, Living Address), and interactive privacy & notification switches.
    - **Partner Referral QR Card**: Live QR code generator with avatar inlay, custom link copy, and native share.
-   - **Platform Integration Cards**: RoboForex, FoxAlgo, and BIX Wallets integration cards. RoboForex actions use the `lazwx` master referral URL; FoxAlgo actions use the copy-trading profile for account `77030815`.
+   - **Platform Integration Cards**: RoboForex, FoxAlgo, and BIX Wallets integration cards. RoboForex actions use the `lazwx` master referral URL. Both FoxAlgo entry points show the trading-choice notice and require its checkbox before opening the copy-trading profile for account `77030815`.
 
 10. **Notifications (`/dashboard/notifications`)**: Centralized notifications center for commissions, network events, security milestones, and system notices with category filtering and mark-as-read workflows.
 
@@ -273,6 +282,9 @@ yarn dev
 
 # Run TypeScript & linting checks
 yarn lint
+
+# Run lint, typecheck, commission rules, and binary tree checks
+yarn verify
 
 # Build production bundle
 yarn build

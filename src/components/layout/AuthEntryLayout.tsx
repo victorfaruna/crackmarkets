@@ -29,7 +29,7 @@ export default function AuthEntryLayout({
   const isRegister = mode === "register";
 
   return (
-    <main className="w-screen auth-entry min-h-dvh bg-shell-background lg:flex">
+    <main className="w-full auth-entry min-h-dvh bg-shell-background lg:flex">
       <section
         className="relative isolate flex min-h-96 overflow-hidden text-on-dark lg:min-h-dvh lg:min-w-0 lg:flex-1"
         aria-label="Welcome to Trackmarkets"
@@ -130,9 +130,19 @@ export default function AuthEntryLayout({
               {isRegister ? "Create your account" : "Welcome back"}
             </h2>
             <p className="mb-6 mt-1 text-sm text-secondary/50">
-              {isRegister
-                ? "Your trading journey starts here."
-                : "Sign in to continue your trading journey."}
+              {isRegister ? (
+                <>
+                  TrackMarkets operates with full transparency. We do not accept
+                  funds or subscription fees.
+                  <span className="mt-2 block">
+                    Sign up on TrackMarkets, use our broker sign-up link, deposit
+                    funds into your broker account, then return to our website
+                    and follow FoxAlgo.
+                  </span>
+                </>
+              ) : (
+                "Sign in to continue your trading journey."
+              )}
             </p>
 
             {children}

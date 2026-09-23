@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { REFRESH_TOKEN_MAX_AGE_SECONDS } from "./jwt";
+import { ADMIN_REFRESH_TOKEN_MAX_AGE_SECONDS } from "./refresh-duration";
 import {
   ADMIN_ACCESS_COOKIE_NAME,
   ADMIN_ACCESS_TOKEN_MAX_AGE_SECONDS,
@@ -31,7 +31,7 @@ export function setAdminAuthCookies(
       secure: isProduction,
       sameSite: "lax",
       path: "/",
-      maxAge: REFRESH_TOKEN_MAX_AGE_SECONDS,
+      maxAge: ADMIN_REFRESH_TOKEN_MAX_AGE_SECONDS,
     });
   }
 

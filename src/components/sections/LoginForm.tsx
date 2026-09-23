@@ -20,7 +20,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const [turnstileToken, setTurnstileToken] = useState("");
 
   // State feedback
@@ -48,6 +48,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
       const res = await loginWithCredentials({
         email: email.trim().toLowerCase(),
         password,
+        remember_me: rememberMe,
         turnstile_token: turnstileToken || undefined,
       });
 
@@ -56,10 +57,6 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
         useAppStore
           .getState()
           .setIsConnectedToRoboForex(isConnectedToRoboForex);
-        const targetRoute = isConnectedToRoboForex
-          ? "/dashboard"
-          : "/dashboard/profile";
-
         setSuccess("Login successful! Redirecting...");
 
         // Sync user state with store
@@ -71,7 +68,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
         });
 
         setTimeout(() => {
-          router.push(targetRoute);
+          router.replace("/dashboard/profile");
         }, 1000);
       } else {
         setError(

@@ -50,7 +50,7 @@ export default function KycBrokerPage() {
   };
 
   return (
-    <section className="w-full max-w-330 min-h-full pt-5 px-5 pb-16 flex flex-col gap-6">
+    <section className="w-full max-w-330 min-h-full pt-5 px-3 pb-16 flex flex-col gap-6 sm:px-5">
       {/* ─── Header ──────────────────────────────────────────────────────────── */}
       <div className="flex flex-col gap-0.5">
         <h1 className="text-secondary text-lg font-medium font-inter">
@@ -84,7 +84,7 @@ export default function KycBrokerPage() {
             </div>
 
             <div className="flex flex-col gap-0.5">
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <h3 className="text-sm font-semibold text-secondary">
                   Identity Verification (KYC)
                 </h3>
@@ -154,7 +154,7 @@ export default function KycBrokerPage() {
             </div>
 
             <div className="flex flex-col gap-0.5">
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <h3 className="text-sm font-semibold text-secondary">
                   RoboForex Broker Account
                 </h3>

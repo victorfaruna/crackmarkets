@@ -19,9 +19,6 @@ export interface TokenPayload {
 export const ACCESS_TOKEN_EXPIRY = "15m";
 export const ACCESS_TOKEN_MAX_AGE_SECONDS = 15 * 60; // 900 seconds
 
-// 7 days for refresh token
-export const REFRESH_TOKEN_MAX_AGE_SECONDS = 7 * 24 * 60 * 60; // 604800 seconds
-
 /**
  * Signs a short-lived access JWT token.
  */

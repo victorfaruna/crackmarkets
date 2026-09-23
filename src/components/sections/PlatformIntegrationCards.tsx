@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import Link from "next/link";
 import { useUser, useLinkRoboForex } from "@/src/lib/hooks/useUser";
 import { useUserStore } from "@/src/lib/stores/userStore";
@@ -22,6 +22,8 @@ export const PlatformIntegrationCards: React.FC = () => {
   const [awaitingConfirmation, setAwaitingConfirmation] = useState(false);
   const [brokerIdInput, setBrokerIdInput] = useState("");
   const [linkError, setLinkError] = useState("");
+  const foxAlgoDialogRef = useRef<HTMLDialogElement>(null);
+  const [foxAlgoAcknowledged, setFoxAlgoAcknowledged] = useState(false);
 
   // Real broker ID from server
   const brokerIdDisplay =
@@ -54,12 +56,23 @@ export const PlatformIntegrationCards: React.FC = () => {
     window.open(ROBOFOREX_MASTER_URL, "_blank", "noopener,noreferrer");
   };
 
+  const openFoxAlgoNotice = () => {
+    setFoxAlgoAcknowledged(false);
+    foxAlgoDialogRef.current?.showModal();
+  };
+
+  const continueToFoxAlgo = () => {
+    if (!foxAlgoAcknowledged) return;
+    window.open(FOXALGO_URL, "_blank", "noopener,noreferrer");
+    foxAlgoDialogRef.current?.close();
+  };
+
   return (
     <div className="w-full max-w-320 flex flex-col gap-4 mt-2">
       {/* ─── Card 1: RoboForex Registration (First Card) ────────────────────── */}
       <div className="w-full rounded-xl bg-[#010312] border border-secondary/15 p-5 sm:p-6 flex flex-col justify-between gap-5 relative shadow-sm text-on-dark">
         {/* Top Badges */}
-        <div className="flex items-center gap-2 self-start sm:self-auto sm:absolute sm:top-5 sm:right-6">
+        <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto sm:absolute sm:top-5 sm:right-6">
           <span
             className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-sm font-semibold border ${
               isConnectedToRoboForex
@@ -126,7 +139,7 @@ export const PlatformIntegrationCards: React.FC = () => {
                   <label className="text-[11px] text-on-dark/60 font-medium">
                     Enter your RoboForex Account ID
                   </label>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                     <input
                       type="text"
                       value={brokerIdInput}
@@ -135,7 +148,7 @@ export const PlatformIntegrationCards: React.FC = () => {
                         setLinkError("");
                       }}
                       placeholder="e.g. 28941054"
-                      className="flex-1 px-3 py-2 rounded-lg bg-background/10 border border-background/20 text-on-dark text-sm font-mono placeholder:text-on-dark/30 focus:outline-none focus:border-accent/60 transition-colors"
+                      className="min-w-0 flex-1 px-3 py-2 rounded-lg bg-background/10 border border-background/20 text-on-dark text-sm font-mono placeholder:text-on-dark/30 focus:outline-none focus:border-accent/60 transition-colors"
                     />
                     <button
                       type="button"
@@ -235,10 +248,9 @@ export const PlatformIntegrationCards: React.FC = () => {
           </p>
 
           <div className="pt-1">
-            <a
-              href={FOXALGO_URL}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              type="button"
+              onClick={openFoxAlgoNotice}
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md bg-accent text-on-dark hover:bg-accent/90 text-sm font-semibold transition-all shadow-sm active:scale-98"
             >
               <svg
@@ -256,7 +268,7 @@ export const PlatformIntegrationCards: React.FC = () => {
                 />
               </svg>
               <span>Register</span>
-            </a>
+            </button>
           </div>
         </div>
 
@@ -271,10 +283,9 @@ export const PlatformIntegrationCards: React.FC = () => {
             </span>
           </div>
 
-          <a
-            href={FOXALGO_URL}
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            type="button"
+            onClick={openFoxAlgoNotice}
             className="text-sm text-on-dark/70 hover:text-on-dark flex items-center gap-1 transition-colors"
           >
             <svg
@@ -292,9 +303,52 @@ export const PlatformIntegrationCards: React.FC = () => {
               />
             </svg>
             <span>More Information</span>
-          </a>
+          </button>
         </div>
       </div>
+
+      <dialog
+        ref={foxAlgoDialogRef}
+        className="modal modal-middle"
+        aria-labelledby="foxalgo-notice-title"
+        aria-describedby="foxalgo-notice-text"
+        onClose={() => setFoxAlgoAcknowledged(false)}
+      >
+        <div className="modal-box max-w-lg border border-secondary/15 bg-background text-secondary">
+          <h3 id="foxalgo-notice-title" className="text-lg font-semibold">
+            Before continuing to FoxAlgo
+          </h3>
+          <p id="foxalgo-notice-text" className="mt-4 text-sm leading-relaxed text-secondary/80">
+            NB: You reserve the choice to trade yourself or follow our FoxAlgo. By clicking this box, TrackMarkets is indemnified of all liabilities from FoxAlgo trading outcome.
+          </p>
+          <label className="mt-5 flex cursor-pointer items-start gap-3 rounded-lg border border-secondary/15 bg-primary/40 p-3 text-sm">
+            <input
+              type="checkbox"
+              aria-describedby="foxalgo-notice-text"
+              checked={foxAlgoAcknowledged}
+              onChange={(event) => setFoxAlgoAcknowledged(event.target.checked)}
+              className="checkbox checkbox-sm mt-0.5 shrink-0 border-secondary/20 bg-primary/30 checked:border-accent checked:bg-accent"
+            />
+            <span>I have read and acknowledge this notice.</span>
+          </label>
+          <form method="dialog" className="modal-action flex-wrap">
+            <button type="submit" className="btn border-secondary/15 bg-primary text-secondary shadow-none">
+              Cancel
+            </button>
+            <button
+              type="button"
+              disabled={!foxAlgoAcknowledged}
+              onClick={continueToFoxAlgo}
+              className="btn border-0 bg-accent text-on-dark hover:bg-accent/90 disabled:opacity-50"
+            >
+              Continue to FoxAlgo
+            </button>
+          </form>
+        </div>
+        <form method="dialog" className="modal-backdrop">
+          <button type="submit" aria-label="Close FoxAlgo notice">Close</button>
+        </form>
+      </dialog>
 
       {/* ─── Card 3: BIX Wallets & Debit Card ───────────────────────────────────── */}
       <div className="hidden w-full rounded-xl bg-secondary border border-secondary/15 p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-5 relative shadow-sm text-on-dark">

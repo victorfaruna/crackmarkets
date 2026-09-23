@@ -135,7 +135,13 @@ const CollapsibleGroup = ({
 
 /* ─── Drawer ──────────────────────────────────────────────────────────── */
 
-export const Drawer = () => {
+export const Drawer = ({
+  mobileOpen,
+  onCloseMobile,
+}: {
+  mobileOpen: boolean;
+  onCloseMobile: () => void;
+}) => {
   const pathname = usePathname();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const isConnectedToRoboForex = useAppStore((s) => s.isConnectedToRoboForex);
@@ -150,9 +156,16 @@ export const Drawer = () => {
 
   return (
     <aside
+      id="dashboard-navigation"
+      aria-label="Dashboard navigation"
       onMouseEnter={() => setIsDrawerOpen(true)}
       onMouseLeave={() => setIsDrawerOpen(false)}
-      className="relative w-57 h-full shrink-0 z-30"
+      onClick={(event) => {
+        if ((event.target as HTMLElement).closest("a")) onCloseMobile();
+      }}
+      className={`fixed bottom-0 left-0 top-19 z-50 h-auto w-57 shrink-0 transition-transform duration-200 lg:relative lg:top-auto lg:bottom-auto lg:z-30 lg:h-full lg:translate-x-0 lg:visible ${
+        mobileOpen ? "visible translate-x-0" : "invisible -translate-x-full"
+      }`}
     >
       <div
         className={`flex bg-shell-background absolute left-0 top-0 z-20 h-full items-center justify-between flex-col gap-6 px-2.5 pb-15 transition-all duration-200 ease-out overflow-hidden ${

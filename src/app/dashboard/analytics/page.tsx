@@ -17,7 +17,7 @@ export default function AnalyticsPage() {
   const isLinked = user?.roboforex_linked === true;
 
   return (
-    <section className="w-full max-w-330 min-h-full pt-5 px-5 pb-16 flex flex-col gap-5">
+    <section className="w-full max-w-330 min-h-full pt-5 px-3 pb-16 flex flex-col gap-5 sm:px-5">
       <div className="flex flex-col gap-0.5">
         <Breadcrum />
         <h1 className="text-secondary text-lg font-medium font-inter mt-1">

@@ -435,6 +435,14 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
         </label>
       </div>
 
+      <p className="text-xs leading-5 text-secondary/60">
+        Please read our{" "}
+        <Link href="/terms" target="_blank" rel="noopener noreferrer" className="font-medium text-accent hover:underline">
+          Terms of Service
+        </Link>{" "}
+        before creating an account.
+      </p>
+
       <TurnstileWidget onToken={setTurnstileToken} />
 
       {/* Register Now Action Button */}

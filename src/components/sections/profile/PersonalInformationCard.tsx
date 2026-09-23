@@ -38,9 +38,8 @@ export const PersonalInformationCard: React.FC = () => {
     ? new Date(user.created_at).toISOString().split("T")[0]
     : "";
 
-  const avatarUrl = fullName
-    ? getUserPlaceholderImage(email)
-    : "/images/v1/placeholder.webp";
+  const avatarUrl = fullName ? getUserPlaceholderImage(email) : null;
+  const [failedAvatarUrl, setFailedAvatarUrl] = useState("");
 
   // Preference switches
   const [receiveNotifications, setReceiveNotifications] = useState(true);
@@ -110,7 +109,7 @@ export const PersonalInformationCard: React.FC = () => {
     <>
       <div className="w-full rounded-2xl border border-secondary/10 bg-primary/40 p-6 sm:p-7 flex flex-col gap-6 shadow-xs">
         {/* ─── Card Header ──────────────────────────────────────────────────────── */}
-        <div className="flex flex-row items-center justify-between gap-4 pb-4 border-b border-secondary/10">
+        <div className="flex flex-row flex-wrap items-center justify-between gap-4 pb-4 border-b border-secondary/10 sm:flex-nowrap">
           <div>
             <h2 className="text-lg sm:text-xl font-medium font-inter text-secondary tracking-tight">
               Personal Information
@@ -150,7 +149,7 @@ export const PersonalInformationCard: React.FC = () => {
             <div className="size-20 sm:size-22 rounded-full overflow-hidden bg-secondary/10 border border-secondary/15 flex items-center justify-center">
               {isLoading && !user ? (
                 <div className="skeleton size-full rounded-full" />
-              ) : avatarUrl ? (
+              ) : avatarUrl && failedAvatarUrl !== avatarUrl ? (
                 <Image
                   unoptimized
                   width={88}
@@ -158,11 +157,7 @@ export const PersonalInformationCard: React.FC = () => {
                   src={avatarUrl}
                   alt={fullName || "User Avatar"}
                   className="w-full h-full object-cover"
-                  onError={(e) => {
-                    const target = e.currentTarget;
-                    target.onerror = null;
-                    target.src = "/images/v1/placeholder.webp";
-                  }}
+                  onError={() => setFailedAvatarUrl(avatarUrl)}
                 />
               ) : (
                 <svg

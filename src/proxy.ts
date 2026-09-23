@@ -10,7 +10,7 @@ const JWT_SECRET = new TextEncoder().encode(
 // Protected routes requiring authentication
 const PROTECTED_PREFIXES = ["/dashboard"];
 
-// Public auth routes that should redirect to dashboard when already logged in
+// Public auth routes that should redirect to the customer profile when already logged in
 const AUTH_ROUTES = [
   "/login",
   "/register",
@@ -193,10 +193,14 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(redirectUrl);
   }
 
-  // 🚫 2. Redirect logged-in users away from auth pages to /dashboard
+  // 🚫 2. Redirect logged-in users away from auth pages to their profile
   if (isAuthRoute && isAuthenticated) {
-    const dashboardUrl = new URL("/dashboard", request.url);
-    return NextResponse.redirect(dashboardUrl);
+    const profileUrl = new URL("/dashboard/profile", request.url);
+    const profileResponse = NextResponse.redirect(profileUrl);
+    newSetCookies?.forEach((cookie) => {
+      profileResponse.headers.append("Set-Cookie", cookie);
+    });
+    return profileResponse;
   }
 
   // ✅ 3. Build response and propagate new cookies if a refresh occurred
